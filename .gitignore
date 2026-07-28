@@ -30,3 +30,6 @@ reports/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Ephemeris data
+de421.bsp
