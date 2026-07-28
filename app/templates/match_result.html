@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ "Match Result"|t(lang) }} — {{ rec.score_percent }}%{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<h1 class="as-page-title">{{ "Kundli Matching Result"|t(lang) }}</h1>
+
+<div class="as-panel" style="text-align:center; max-width: 100%; margin-bottom: 24px;">
+  <div style="font-size:48px;font-weight:700;color:var(--as-orange)">{{ result.percent }}%</div>
+  <p><strong>{{ result.verdict|t(lang) }}</strong> — {{ result.gunas }}/{{ result.max_gunas }} {{ "gunas"|t(lang) }}</p>
+  <p>{{ "Mangal dosha"|t(lang) }}: {{ "Yes"|t(lang) if result.mangal_dosha else "No"|t(lang) }} · {{ "Nadi"|t(lang) }}: {{ result.nadi|t(lang) }} · {{ result.bhakoot|t(lang) }}</p>
+</div>
+
+<h2 class="as-section-title">{{ "Birth Charts Comparison"|t(lang) }}</h2>
+<div class="as-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:24px; margin-bottom: 24px;">
+  <div class="as-panel" style="max-width: 100%;">
+    <h3>{{ result.boy.name }} ({{ "Boy"|t(lang) }})</h3>
+    <p style="font-size:12px;color:var(--as-muted)">{{ "Lagna"|t(lang) }}: {{ result.boy.lagna|t(lang) }} · {{ "Moon Sign"|t(lang) }}: {{ result.boy.moon_sign|t(lang) }} · {{ "Nakshatra"|t(lang) }}: {{ result.boy.nakshatra|t(lang) }}</p>
+    {% with chart=result.boy %}
+      {% include "partials/north_indian_chart.html" %}
+    {% endwith %}
+  </div>
+  <div class="as-panel" style="max-width: 100%;">
+    <h3>{{ result.girl.name }} ({{ "Girl"|t(lang) }})</h3>
+    <p style="font-size:12px;color:var(--as-muted)">{{ "Lagna"|t(lang) }}: {{ result.girl.lagna|t(lang) }} · {{ "Moon Sign"|t(lang) }}: {{ result.girl.moon_sign|t(lang) }} · {{ "Nakshatra"|t(lang) }}: {{ result.girl.nakshatra|t(lang) }}</p>
+    {% with chart=result.girl %}
+      {% include "partials/north_indian_chart.html" %}
+    {% endwith %}
+  </div>
+</div>
+
+<div style="margin-top:16px; display:flex; gap:8px;">
+  <a href="/tools/match" class="as-btn as-btn-outline">{{ "New Match"|t(lang) }}</a>
+  <a href="/tools/remedies?issue=marriage" class="as-btn as-btn-outline">{{ "View remedies"|t(lang) }}</a>
+  <a href="{% if user %}/flow/problem{% else %}/auth/login{% endif %}" class="as-btn as-btn-primary">{{ "Talk to marriage specialist"|t(lang) }}</a>
+</div>
+{% endblock %}

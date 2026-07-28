@@ -1,0 +1,32 @@
+{% set lang = request.cookies.get('lang', 'en') %}
+{% set parts = astro.display_name.split() %}
+{% if parts|length >= 2 %}
+  {% set initials = (parts[0][0] ~ parts[1][0]) | upper %}
+{% else %}
+  {% set initials = astro.display_name[:2] | upper %}
+{% endif %}
+{% set rate = (astro.min_budget // 10) if astro.min_budget > 0 else 15 %}
+
+<div class="as-astro-card">
+  <div class="as-astro-avatar">{{ initials }}</div>
+  {% if astro.verified_identity %}
+    <div class="as-verified">✓ {{ "Verified"|t(lang) }}</div>
+  {% endif %}
+  <div class="as-astro-name">{{ astro.display_name }}</div>
+  <div class="as-astro-meta">{{ astro.years_of_experience }}+ {{ "yrs"|t(lang) }} · {{ astro.primary_language|t(lang) }}</div>
+  <div class="as-astro-rating">
+    {% if astro.average_rating %}★ {{ "%.1f"|format(astro.average_rating) }}{% else %}★ {{ "New"|t(lang) }}{% endif %}
+  </div>
+  <div class="as-astro-price">₹{{ rate }}/{{ "min"|t(lang) }}</div>
+  {% if show_actions %}
+    <div class="as-astro-actions">
+      {% if user %}
+        <a href="/flow/problem" class="as-btn as-btn-green as-btn-sm">{{ "Chat"|t(lang) }}</a>
+        <a href="/flow/problem" class="as-btn as-btn-primary as-btn-sm">{{ "Call"|t(lang) }}</a>
+      {% else %}
+        <a href="/auth/login" class="as-btn as-btn-green as-btn-sm">{{ "Chat"|t(lang) }}</a>
+        <a href="/auth/login" class="as-btn as-btn-primary as-btn-sm">{{ "Call"|t(lang) }}</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

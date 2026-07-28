@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Astrologer Chat – Session #{{ sess.id }}{% endblock %}
+{% block content %}
+<div class="as-breadcrumb"><a href="/astro">Astrologer</a> › Chat › #{{ sess.id }}</div>
+<h1 class="as-page-title">Chat – Session #{{ sess.id }}</h1>
+
+{% if not paid %}
+  <div class="as-alert as-alert-error">Payment is not completed yet. You can view but should not consult until paid.</div>
+{% endif %}
+
+{% if intake %}
+  <div class="as-panel" style="margin-bottom: 20px; background-color: #f7f9fc; border-left: 4px solid var(--as-navy); padding: 16px;">
+    <h3 style="margin-top: 0; color: var(--as-navy)">📋 Client Consultation Background</h3>
+    <table class="as-table" style="font-size: 13px; width: 100%; margin-top: 10px;">
+      <tr>
+        <td style="width: 25%;"><strong>Full Name:</strong></td>
+        <td>{{ intake.full_name }}</td>
+        <td style="width: 25%;"><strong>Birth Details:</strong></td>
+        <td>{{ intake.date_of_birth }} ({{ intake.day_of_birth }}) at {{ intake.birth_time }} in {{ intake.birth_place }}</td>
+      </tr>
+      <tr>
+        <td><strong>Current Address:</strong></td>
+        <td>{{ intake.current_address }}</td>
+        <td><strong>Current Location:</strong></td>
+        <td>{{ intake.current_location }}</td>
+      </tr>
+      <tr>
+        <td><strong>Astrology System:</strong></td>
+        <td><span class="as-badge as-badge-secondary" style="background-color: var(--as-navy);">{{ intake.preferred_system }}</span></td>
+        <td><strong>Concern:</strong></td>
+        <td>{{ intake.problem }}</td>
+      </tr>
+    </table>
+  </div>
+{% endif %}
+
+{% if chart %}
+  <div class="as-panel" style="margin-bottom: 20px; padding: 20px; border-left: 4px solid var(--as-orange);">
+    <h3 style="color: var(--as-navy); margin-top: 0; font-size: 16px;">🪐 Client Birth Chart (Lagna) &amp; Placements</h3>
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-top: 14px;">
+      <div style="flex: 1; min-width: 300px; max-width: 380px; margin: 0 auto;">
+        {% with chart=chart %}
+          {% include "partials/north_indian_chart.html" %}
+        {% endwith %}
+      </div>
+      <div style="flex: 1.2; min-width: 300px;">
+        <table class="as-table" style="font-size: 13px; width: 100%;">
+          <tr>
+            <th>Lagna</th>
+            <th>Moon Sign</th>
+            <th>Sun Sign</th>
+            <th>Nakshatra</th>
+          </tr>
+          <tr>
+            <td><strong>{{ chart.lagna }}</strong></td>
+            <td><strong>{{ chart.moon_sign }}</strong></td>
+            <td><strong>{{ chart.sun_sign }}</strong></td>
+            <td><strong>{{ chart.nakshatra }}</strong></td>
+          </tr>
+        </table>
+        
+        <h4 style="margin: 16px 0 8px; color: var(--as-navy); font-size: 14px;">12 Houses &amp; Planetary Occupations:</h4>
+        <div class="as-table-wrap" style="max-height: 180px; overflow: auto; border: 1px solid var(--as-border); border-radius: 4px;">
+          <table class="as-table" style="font-size: 12px; width: 100%; margin: 0;">
+            <thead>
+              <tr><th>House</th><th>Rashi/Sign</th><th>Occupying Planets</th></tr>
+            </thead>
+            <tbody>
+              {% for h, data in chart.houses.items() %}
+                <tr>
+                  <td>House {{ h }}</td>
+                  <td>{{ data.sign }} ({{ data.rashi_num }})</td>
+                  <td>{{ data.planets|join(', ') if data.planets else '—' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="as-panel" style="min-height:360px;background:#fafafa">
+  <div style="padding:12px;border-bottom:1px solid var(--as-border);margin:-24px -24px 16px;background:var(--as-orange-light)">
+    You are logged in as <strong>{{ astro.display_name }}</strong>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow:auto;padding-right:6px">
+    {% if messages and messages|length > 0 %}
+      {% for m in messages %}
+        {% if m.sender.value == 'astrologer' %}
+          <div style="align-self:flex-end;max-width:78%;background:var(--as-orange-light);border:1px solid #ffcc80;border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;color:var(--as-muted);margin-bottom:4px">You</div>
+            <div style="white-space:pre-wrap">{{ m.body }}</div>
+          </div>
+        {% else %}
+          <div style="align-self:flex-start;max-width:78%;background:#fff;border:1px solid var(--as-border);border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;color:var(--as-muted);margin-bottom:4px">User</div>
+            <div style="white-space:pre-wrap">{{ m.body }}</div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <div style="background:#fff;border:1px dashed var(--as-border);padding:12px;border-radius:8px;color:var(--as-muted)">
+        No messages yet.
+      </div>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/astro/chat/{{ sess.id }}/send" style="margin-top:14px;display:flex;gap:8px">
+    <input class="as-input" name="body" placeholder="Type your reply…" autocomplete="off" />
+    <button type="submit" class="as-btn as-btn-primary">Send</button>
+  </form>
+</div>
+
+<div style="margin-top:16px">
+  <a class="as-btn as-btn-outline" href="/astro">Back to dashboard</a>
+</div>
+{% endblock %}
+

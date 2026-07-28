@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Free Kundli"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+
+<h1 class="as-page-title">{{ "Free Kundli / Birth Chart"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "AI-assisted Vedic chart with lagna, moon sign, nakshatra & 12 houses."|t(lang) }}{% if user %} {{ "Saved to your cloud account."|t(lang) }}{% endif %}</p>
+
+<div class="as-panel">
+  <form method="post" action="/tools/kundli">
+    <div class="as-form-group">
+      <label>{{ "Name"|t(lang) }}</label>
+      <input class="as-input" name="name" required />
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Date of birth"|t(lang) }}</label>
+        <input class="as-input" name="dob" type="date" required />
+      </div>
+      <div class="as-form-group">
+        <label>{{ "Time of birth"|t(lang) }}</label>
+        <input class="as-input" name="birth_time" type="time" value="12:00" required />
+      </div>
+    </div>
+    <div class="as-form-group">
+      <label>{{ "Place of birth"|t(lang) }}</label>
+      <input class="as-input" name="birth_place" placeholder="{{ 'City, India'|t(lang) }}" required />
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Calculation Mode"|t(lang) }}</label>
+        <select class="as-input" name="calculation_mode" style="width:100%">
+          <option value="modern" selected>{{ "Modern Astronomical (JPL/IAU)"|t(lang) }}</option>
+          <option value="traditional">{{ "Traditional Siddhantic (Surya Siddhanta)"|t(lang) }}</option>
+        </select>
+      </div>
+      <div class="as-form-group">
+        <label>{{ "House System"|t(lang) }}</label>
+        <select class="as-input" name="house_system" style="width:100%">
+          <option value="whole_sign" selected>{{ "Whole Sign (Rashi Chart)"|t(lang) }}</option>
+          <option value="equal">{{ "Equal House"|t(lang) }}</option>
+          <option value="sripati">{{ "Sripati System"|t(lang) }}</option>
+          <option value="bhava_chalit">{{ "Bhava Chalit"|t(lang) }}</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%;padding:12px;margin-top:12px">{{ "Generate Kundli"|t(lang) }}</button>
+  </form>
+</div>
+{% endblock %}

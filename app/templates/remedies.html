@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ "Lal Kitab Remedies"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<h1 class="as-page-title">{{ "Lal Kitab & Vedic Remedies"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "General guidance — for personalized remedies, consult a matched astrologer."|t(lang) }}</p>
+
+<form method="get" class="as-form-group" style="max-width:320px">
+  <label>{{ "Concern"|t(lang) }}</label>
+  <select class="as-select" name="issue" onchange="this.form.submit()">
+    <option value="general" {% if issue=='general' %}selected{% endif %}>{{ "General"|t(lang) }}</option>
+    <option value="marriage" {% if issue=='marriage' %}selected{% endif %}>{{ "Love / Marriage"|t(lang) }}</option>
+    <option value="career" {% if issue=='career' %}selected{% endif %}>{{ "Career"|t(lang) }}</option>
+    <option value="finance" {% if issue=='finance' %}selected{% endif %}>{{ "Finance"|t(lang) }}</option>
+  </select>
+</form>
+
+{% for item in items %}
+  <div class="as-panel" style="margin-top:12px; max-width: 100%;">
+    <strong>{{ item.title|t(lang) }}</strong>
+    <p style="margin:8px 0 0">{{ item.text|t(lang) }}</p>
+  </div>
+{% endfor %}
+
+<a href="{% if user %}/flow/problem{% else %}/auth/login{% endif %}" class="as-btn as-btn-primary" style="margin-top:16px">{{ "Get Matched Astrologer"|t(lang) }}</a>
+{% endblock %}

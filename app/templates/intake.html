@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Intake"|t(lang) }} – {{ category.name|t(lang) }} – AstroMatch{% endblock %}
+
+{% block content %}
+<div class="as-breadcrumb">
+  <a href="/">{{ "Home"|t(lang) }}</a> › <a href="/flow/problem">{{ "Problem"|t(lang) }}</a> › {{ "Intake"|t(lang) }}
+</div>
+<h1 class="as-page-title">{{ "Tell us what you need"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "Short form — only fields that improve matching (like premium consult apps)."|t(lang) }}</p>
+
+<div class="as-panel">
+  <div class="as-alert as-alert-info">
+    {{ "Selected:"|t(lang) }} <strong>{{ category.name|t(lang) }}</strong> — {{ "we will filter verified specialists for this topic."|t(lang) }}
+  </div>
+
+  <form method="post" action="/flow/intake">
+    <input type="hidden" name="issue_category_id" value="{{ category.id }}" />
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Issue category"|t(lang) }}</label>
+        <input class="as-input" value="{{ category.name|t(lang) }}" disabled />
+      </div>
+      <div class="as-form-group">
+        <label>{{ "Sub-issue (optional)"|t(lang) }}</label>
+        <input class="as-input" name="sub_issue" placeholder="{{ 'e.g. marriage delay, job switch'|t(lang) }}" />
+      </div>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Language"|t(lang) }}</label>
+        <input class="as-input" name="language" value="{{ 'English'|t(lang) }}" />
+      </div>
+      <div class="as-form-group">
+        <label>{{ "Consultation type"|t(lang) }}</label>
+        <select class="as-select" name="consult_type">
+          <option value="chat">{{ "Chat"|t(lang) }}</option>
+          <option value="call">{{ "Call"|t(lang) }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Budget min (₹)"|t(lang) }}</label>
+        <input class="as-input" name="budget_min" type="number" value="0" min="0" />
+      </div>
+      <div class="as-form-group">
+        <label>{{ "Budget max (₹)"|t(lang) }}</label>
+        <input class="as-input" name="budget_max" type="number" value="0" min="0" />
+        <small style="color:var(--as-muted)">{{ "Leave 0 to ignore budget filter"|t(lang) }}</small>
+      </div>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>{{ "Urgency"|t(lang) }}</label>
+        <select class="as-select" name="urgency">
+          <option value="low">{{ "Low (within 72h)"|t(lang) }}</option>
+          <option value="normal" selected>{{ "Normal (within 24h)"|t(lang) }}</option>
+          <option value="high">{{ "High (within 6h)"|t(lang) }}</option>
+        </select>
+      </div>
+      <div class="as-form-group">
+        <label>{{ "Your goal"|t(lang) }}</label>
+        <input class="as-input" name="goal" placeholder="{{ 'prediction / advice / remedies'|t(lang) }}" />
+      </div>
+    </div>
+
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%;padding:14px;font-size:16px">
+      {{ "Get Top 3 Recommendations"|t(lang) }} →
+    </button>
+  </form>
+</div>
+{% endblock %}

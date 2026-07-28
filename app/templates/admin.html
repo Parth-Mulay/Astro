@@ -1,0 +1,1677 @@
+{% extends "base.html" %}
+{% block title %}Admin Operations Control Center – AstroMatch{% endblock %}
+
+{% block extra_head %}
+<style>
+  :root {
+    --admin-primary: var(--as-navy);
+    --admin-secondary: var(--as-orange);
+    --admin-success: var(--as-green);
+    --admin-warning: var(--as-gold);
+    --admin-danger: #c62828;
+    --admin-light-bg: #f8fafc;
+    --admin-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .admin-container {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 140px);
+    background-color: var(--admin-light-bg);
+  }
+
+  /* Admin Sidebar */
+  .admin-sidebar {
+    background-color: var(--admin-primary);
+    color: #cbd5e1;
+    padding: 20px 10px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .admin-sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin: 20px 0 10px 12px;
+  }
+
+  .admin-sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .admin-sidebar-item {
+    margin-bottom: 4px;
+  }
+
+  .admin-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none !important;
+  }
+
+  .admin-sidebar-link:hover {
+    background-color: rgba(255,255,255,0.08);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .admin-sidebar-link.active {
+    background-color: var(--admin-secondary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Content Area */
+  .admin-content {
+    padding: 24px 30px;
+    overflow-y: auto;
+  }
+
+  /* Panel States */
+  .admin-panel {
+    display: none;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .admin-panel.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Metric Cards Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--admin-card-shadow);
+    border-left: 4px solid var(--admin-primary);
+  }
+
+  .stat-card.success { border-left-color: var(--admin-success); }
+  .stat-card.warning { border-left-color: var(--admin-warning); }
+  .stat-card.danger { border-left-color: var(--admin-danger); }
+  .stat-card.secondary { border-left-color: var(--admin-secondary); }
+
+  .stat-title {
+    font-size: 13px;
+    color: var(--as-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--admin-primary);
+  }
+
+  /* Tables & Lists */
+  .card-container {
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: var(--admin-card-shadow);
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--as-border);
+    padding-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--admin-primary);
+    margin: 0;
+  }
+
+  .search-input {
+    width: 250px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--as-border);
+    font-size: 13px;
+  }
+
+  .as-table th {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .badge-status {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-active { background-color: #dcfce7; color: #15803d; }
+  .badge-paused { background-color: #fee2e2; color: #b91c1c; }
+  .badge-suspended { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 550px;
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    font-size: 20px; cursor: pointer; color: var(--as-muted);
+  }
+
+  .chart-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  @media(max-width: 900px) {
+    .admin-container { grid-template-columns: 1fr; }
+    .admin-sidebar { display: none; } /* On mobile, we fallback to a top scroll menu or just responsive tabs */
+    .chart-container { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+  
+  <!-- ADMIN SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1)">
+      <h3 style="margin:0; font-size:16px; color:#fff">⚙️ AstroMatch Control</h3>
+      <span style="font-size:12px; color:#94a3b8">Session: {{ user.email }}</span>
+    </div>
+    
+    <div class="admin-sidebar-title">General</div>
+    <ul class="admin-sidebar-menu">
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link active" onclick="switchTab('tab-dashboard')">📊 Dashboard</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-analytics')">📈 Analytics</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-audit')">🔐 Security & Audit Logs</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-workflow')">🤖 Workflow Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-files')">📁 File Management</a>
+      </li>
+    </ul>
+
+    <div class="admin-sidebar-title">Members</div>
+    <ul class="admin-sidebar-menu">
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-users')">👥 User Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-astrologers')">🔮 Astrologer Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-moderation')">🛡️ Moderation Center</a>
+      </li>
+    </ul>
+
+    <div class="admin-sidebar-title">Transactions</div>
+    <ul class="admin-sidebar-menu">
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-orders')">🪙 Order Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-payouts')">💸 Weekly Payouts</a>
+      </li>
+    </ul>
+
+    <div class="admin-sidebar-title">Content & Portal</div>
+    <ul class="admin-sidebar-menu">
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-services')">🏷️ Service Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-reports')">📝 Report Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-cms')">📰 Content (CMS)</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-notifications')">✉️ Notifications Center</a>
+      </li>
+    </ul>
+
+    <div class="admin-sidebar-title">Customer Care</div>
+    <ul class="admin-sidebar-menu">
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-support')">🎧 Support Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-feedback')">⭐ Review & Feedback</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-settings')">🛠️ Platform Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- ADMIN CONTENT -->
+  <main class="admin-content">
+    
+    <!-- 1. DASHBOARD PANEL -->
+    <section id="tab-dashboard" class="admin-panel active">
+      <div class="section-header">
+        <h2 class="section-title">Operations Dashboard</h2>
+        <span style="font-size:13px; color:var(--as-muted)">Overall Platform Status at a Glance</span>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">Total Registered Clients</div>
+          <div class="stat-value">{{ clients|length }}</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-title">Active Astrologers</div>
+          <div class="stat-value">{{ astrologers|length }}</div>
+        </div>
+        <div class="stat-card secondary">
+          <div class="stat-title">Total Revenue</div>
+          <div class="stat-value">₹ {{ total_revenue }}</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-title">Active Consultations</div>
+          <div class="stat-value">{{ active_sessions|length }}</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-title">Open Support Tickets</div>
+          <div class="stat-value">{{ refund_requests|length + complaints|length }}</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <!-- SVG Chart 1: Revenue representation -->
+        <div class="card-container">
+          <h4 style="margin-top:0; color:var(--admin-primary)">📊 Revenue Analytics Profile</h4>
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; height:180px; padding:10px 0; border-bottom: 2px solid #e2e8f0;">
+            {% set rev_shares = [20, 35, 45, 60, 50, 75, 95] %}
+            {% for s in rev_shares %}
+              <div style="background-color: var(--admin-secondary); width: 35px; height: {{ s }}%; border-radius: 4px 4px 0 0; text-align: center; color: white; font-size: 11px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px">
+                {{ s }}k
+              </div>
+            {% endfor %}
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--as-muted); margin-top:8px">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+          </div>
+        </div>
+
+        <!-- SVG Chart 2: Session Booking trends -->
+        <div class="card-container">
+          <h4 style="margin-top:0; color:var(--admin-primary)">📈 Session Distributions (Chat vs Call)</h4>
+          <div style="display:flex; align-items:center; justify-content:center; height:180px;">
+            <svg width="150" height="150" viewBox="0 0 42 42" class="donut">
+              <circle class="donut-hole" cx="21" cy="21" r="15.915" fill="#fff"></circle>
+              <circle class="donut-ring" cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="6"></circle>
+              <!-- 70% Chat (Orange), 30% Call (Blue) -->
+              <circle class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--admin-secondary)" stroke-width="6" stroke-dasharray="70 30" stroke-dashoffset="25"></circle>
+              <circle class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--admin-primary)" stroke-width="6" stroke-dasharray="30 70" stroke-dashoffset="95"></circle>
+            </svg>
+            <div style="margin-left: 24px; font-size:13px">
+              <div style="margin-bottom:8px"><span style="display:inline-block; width:12px; height:12px; background:var(--admin-secondary); margin-right:6px; border-radius:2px"></span> 70% Chat Consults</div>
+              <div><span style="display:inline-block; width:12px; height:12px; background:var(--admin-primary); margin-right:6px; border-radius:2px"></span> 30% Call Consults</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Platform Activity Log -->
+      <div class="card-container">
+        <h4 style="margin-top:0; color:var(--admin-primary)">🔒 Recent Security Events</h4>
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Action Event</th>
+                <th>Target Element</th>
+                <th>IP Address</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in audit_logs[:5] %}
+                <tr>
+                  <td><strong>{{ log.action }}</strong></td>
+                  <td>{{ log.target }}</td>
+                  <td><code>{{ log.ip_address }}</code></td>
+                  <td><small>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS PANEL -->
+    <section id="tab-analytics" class="admin-panel">
+      <div class="section-header">
+        <h2 class="section-title">📈 Platform Analytics Dashboard</h2>
+        <span style="font-size:13px; color:var(--as-muted)">Aggregated operational statistics and KPI metrics</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card secondary">
+          <div class="stat-title">Platform Revenue</div>
+          <div class="stat-value">₹ {{ total_revenue }}</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-title">Completed Consults</div>
+          <div class="stat-value">{{ sessions_completed_count }}</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-title">Scheduled Bookings</div>
+          <div class="stat-value">{{ sessions_booked_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Successful Recharges</div>
+          <div class="stat-value">{{ total_recharges_count }}</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
+        <!-- Consultation Distributions Card -->
+        <div class="card-container">
+          <h4 style="margin-top:0; color:var(--admin-primary)">📊 Consultation Breakdowns</h4>
+          <div style="display:flex; flex-direction:column; gap:12px; padding:10px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px">
+              <span style="font-size:14px; font-weight:500">💬 Chat Consultations</span>
+              <strong style="color:var(--admin-secondary)">{{ chat_sessions_count }} sessions</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px">
+              <span style="font-size:14px; font-weight:500">📞 Call Consultations</span>
+              <strong style="color:var(--admin-primary)">{{ call_sessions_count }} sessions</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px">
+              <span style="font-size:14px; font-weight:500">✅ Completed Sessions</span>
+              <strong style="color:var(--admin-success)">{{ sessions_completed_count }} sessions</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px">
+              <span style="font-size:14px; font-weight:500">❌ Cancelled Sessions</span>
+              <strong style="color:var(--admin-danger)">{{ sessions_cancelled_count }} sessions</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Astrologer Ratings & Performance Summary -->
+        <div class="card-container">
+          <h4 style="margin-top:0; color:var(--admin-primary)">🔮 Astrologer Standing</h4>
+          <div class="as-table-wrap" style="max-height: 200px; overflow-y: auto;">
+            <table class="as-table">
+              <thead>
+                <tr>
+                  <th>Astrologer</th>
+                  <th>Rating</th>
+                  <th>Success Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in astrologers_profile %}
+                  <tr>
+                    <td><strong>{{ a.display_name }}</strong></td>
+                    <td>★ {{ "%.2f"|format(a.average_rating) }}</td>
+                    <td>{{ "%.0f"|format(a.topic_success_rate * 100) }}%</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Generator / History Statistics -->
+      <div class="card-container">
+        <h4 style="margin-top:0; color:var(--admin-primary)">📝 System Generation Volume</h4>
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 0;">
+          <div style="text-align: center; padding: 15px; background: var(--admin-light-bg); border-radius: 6px;">
+            <div style="font-size: 12px; color: var(--as-muted); font-weight: 600; text-transform: uppercase;">Kundli Charts</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--admin-primary); margin-top: 5px;">{{ kundlis|length }}</div>
+          </div>
+          <div style="text-align: center; padding: 15px; background: var(--admin-light-bg); border-radius: 6px;">
+            <div style="font-size: 12px; color: var(--as-muted); font-weight: 600; text-transform: uppercase;">Match Records</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--admin-primary); margin-top: 5px;">{{ matches|length }}</div>
+          </div>
+          <div style="text-align: center; padding: 15px; background: var(--admin-light-bg); border-radius: 6px;">
+            <div style="font-size: 12px; color: var(--as-muted); font-weight: 600; text-transform: uppercase;">Saved HTML Reports</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--admin-primary); margin-top: 5px;">{{ reports|length }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. USER MANAGEMENT PANEL -->
+    <section id="tab-users" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Client User Management</h2>
+          <input type="text" id="user-search" class="search-input" placeholder="Search by email..." onkeyup="filterTable('user-table', 'user-search', 1)">
+        </div>
+        
+        <div class="as-table-wrap">
+          <table class="as-table" id="user-table">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Email Address</th>
+                <th>Details Profile</th>
+                <th>Zodiac</th>
+                <th>Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in clients %}
+                {% set p = profiles_map.get(c.id) %}
+                <tr>
+                  <td>#{{ c.id }}</td>
+                  <td><strong>{{ c.email }}</strong></td>
+                  <td>
+                    {% if p %}
+                      <span style="font-size:13px">{{ p.full_name or '—' }}</span><br>
+                      <small style="color:var(--as-muted)">DOB: {{ p.date_of_birth or '—' }} | lang: {{ p.preferred_language }}</small>
+                    {% else %}
+                      <span style="color:var(--as-muted)">No Profile Created</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if p and p.zodiac_sign %}
+                      <span class="as-badge">{{ p.zodiac_sign.capitalize() }}</span>
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td><strong>🪙 {{ p.wallet_balance if p else 0 }} Credits</strong></td>
+                  <td>
+                    <button class="as-btn as-btn-sm as-btn-outline" onclick="openWalletModal({{ c.id }}, '{{ c.email }}', {{ p.wallet_balance if p else 0 }})">🪙 Wallet</button>
+                    <button class="as-btn as-btn-sm as-btn-outline" onclick="openProfileModal({{ c.id }}, '{{ p.full_name if p else '' }}', '{{ p.preferred_language if p else 'English' }}', '{{ p.date_of_birth if (p and p.date_of_birth) else '' }}', '{{ p.birth_time if p else '' }}', '{{ p.birth_place if p else '' }}')">✏️ Profile</button>
+                    <form method="post" action="/admin/user/{{ c.id }}/toggle-suspend" style="display:inline-block; margin:0">
+                      <button type="submit" class="as-btn as-btn-sm {% if c.is_suspended %}as-btn-green{% else %}as-btn-navy{% endif %}">
+                        {% if c.is_suspended %}Reactivate{% else %}Suspend{% endif %}
+                      </button>
+                    </form>
+                    <form method="post" action="/admin/user/{{ c.id }}/delete" style="display:inline-block; margin:0" onsubmit="return confirm('Permanently delete user: {{ c.email }}?')">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="border-color:var(--admin-danger); color:var(--admin-danger) !important">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ASTROLOGER MANAGEMENT PANEL -->
+    <section id="tab-astrologers" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Astrologer Management console</h2>
+          <input type="text" id="astro-search" class="search-input" placeholder="Search by name..." onkeyup="filterTable('astro-table', 'astro-search', 1)">
+        </div>
+
+        <div class="as-table-wrap">
+          <table class="as-table" id="astro-table">
+            <thead>
+              <tr>
+                <th>DisplayName / Email</th>
+                <th>Status</th>
+                <th>Experience</th>
+                <th>Budgets</th>
+                <th>Rating & Success</th>
+                <th>Response</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in astrologers %}
+                {% set a = astrologers_profile_map.get(u.id) %}
+                {% if a %}
+                  <tr>
+                    <td>
+                      <strong>{{ a.display_name }}</strong><br>
+                      <small style="color:var(--as-muted)">{{ u.email }} | {{ a.primary_language }}</small>
+                    </td>
+                    <td>
+                      <span class="badge-status {% if u.is_suspended %}badge-suspended{% elif a.active_status %}badge-active{% else %}badge-paused{% endif %}">
+                        {% if u.is_suspended %}Suspended{% elif a.active_status %}Active{% else %}Paused{% endif %}
+                      </span>
+                    </td>
+                    <td>{{ a.years_of_experience }} Years</td>
+                    <td>🪙 {{ a.min_budget }} - {{ a.max_budget }}</td>
+                    <td>
+                      <strong>★ {{ "%.2f"|format(a.average_rating) }}</strong><br>
+                      <small style="color:var(--as-muted)">Success: {{ "%.0f"|format(a.topic_success_rate * 100) }}% | complaint: {{ "%.0f"|format(a.complaint_rate * 100) }}%</small>
+                    </td>
+                    <td>{{ a.response_time_minutes }} mins</td>
+                    <td>
+                      <form method="post" action="/admin/astrologer/{{ a.id }}/toggle-verified" style="display:inline-block; margin:0">
+                        <button type="submit" class="as-btn as-btn-sm {% if a.verified_identity %}as-btn-green{% else %}as-btn-outline{% endif %}">
+                          {% if a.verified_identity %}Verified ✓{% else %}Unverified{% endif %}
+                        </button>
+                      </form>
+                      <form method="post" action="/admin/astrologer/{{ a.id }}/toggle-active" style="display:inline-block; margin:0">
+                        <button type="submit" class="as-btn as-btn-sm {% if a.active_status %}as-btn-navy{% else %}as-btn-outline{% endif %}">
+                          {% if a.active_status %}Active{% else %}Paused{% endif %}
+                        </button>
+                      </form>
+                      <button class="as-btn as-btn-sm as-btn-outline" onclick="openAstroModal({{ a.id }}, '{{ a.display_name }}', '{{ a.bio|escape }}', {{ a.years_of_experience }}, '{{ a.primary_language }}', {{ a.min_budget }}, {{ a.max_budget }}, {{ a.response_time_minutes }})">✏️ Edit</button>
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. MODERATION CENTER -->
+    <section id="tab-moderation" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Moderation Center</h2>
+        <p class="as-page-sub">Quickly suspend, remove or review user and astrologer account blocks.</p>
+        
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Account ID</th>
+                <th>Role</th>
+                <th>Email Address</th>
+                <th>Account Status</th>
+                <th>Action Control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in clients + astrologers %}
+                <tr>
+                  <td>#{{ u.id }}</td>
+                  <td><span class="as-badge">{{ u.role.value.upper() }}</span></td>
+                  <td><strong>{{ u.email }}</strong></td>
+                  <td>
+                    {% if u.is_suspended %}
+                      <span class="badge-status badge-paused">SUSPENDED / BLOCKED</span>
+                    {% else %}
+                      <span class="badge-status badge-active">ACTIVE / OK</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="/admin/user/{{ u.id }}/toggle-suspend" style="margin:0">
+                      <button type="submit" class="as-btn {% if u.is_suspended %}as-btn-green{% else %}as-btn-primary{% endif %} as-btn-sm">
+                        {% if u.is_suspended %}Lift Suspension / Allow Login{% else %}🛑 Suspend Account Now{% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. ORDER MANAGEMENT PANEL -->
+    <section id="tab-orders" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Order Management & Recharge History</h2>
+          <input type="text" id="order-search" class="search-input" placeholder="Search by email..." onkeyup="filterTable('order-table', 'order-search', 1)">
+        </div>
+
+        <div class="as-table-wrap">
+          <table class="as-table" id="order-table">
+            <thead>
+              <tr>
+                <th>Payment ID</th>
+                <th>Client email</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Consultation Ref</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+                <tr>
+                  <td>#{{ p.id }}</td>
+                  <td>{{ users_map.get(p.user_id, 'Unknown User') }}</td>
+                  <td><strong>₹ {{ p.amount }}</strong></td>
+                  <td>
+                    <span class="badge-status {% if p.status.value == 'completed' or p.status == 'completed' %}badge-active{% elif p.status.value == 'pending' or p.status == 'pending' %}badge-paused{% else %}badge-suspended{% endif %}">
+                      {{ p.status.value if p.status.value is defined else p.status }}
+                    </span>
+                  </td>
+                  <td>{{ '# ' ~ p.session_id if p.session_id else 'Direct Recharge' }}</td>
+                  <td><small>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                  <td>
+                    {% if p.status.value == 'pending' or p.status == 'pending' %}
+                      <form method="post" action="/admin/payment/{{ p.id }}/update-status" style="display:inline-block; margin:0">
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" class="as-btn as-btn-sm as-btn-green">✓ Complete</button>
+                      </form>
+                      <form method="post" action="/admin/payment/{{ p.id }}/update-status" style="display:inline-block; margin:0">
+                        <input type="hidden" name="status" value="failed">
+                        <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="color:var(--admin-danger); border-color:var(--admin-danger)">✗ Fail</button>
+                      </form>
+                    {% endif %}
+                    <form method="post" action="/admin/payment/{{ p.id }}/delete" style="display:inline-block; margin:0" onsubmit="return confirm('Delete payment log #{{ p.id }}?')">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. WEEKLY PAYOUT PANEL -->
+    <section id="tab-payouts" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Weekly Payout Ledger</h2>
+          <span style="font-size:14px; font-weight:bold; color:var(--admin-secondary)">Commission rate: {{ (pricing.commission_rate|float * 100)|int }}%</span>
+        </div>
+        <p class="as-page-sub">Calculates total earned credits from completed consultations. Net pay = Credits * (1 - Commission).</p>
+
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Astrologer</th>
+                <th>Total Consultations</th>
+                <th>Total Credits Booked</th>
+                <th>Processed Payouts</th>
+                <th>Pending Payout Value</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for report in payout_report %}
+                <tr>
+                  <td><strong>{{ report.astrologer.display_name }}</strong></td>
+                  <td>{{ report.total_sessions }} completed</td>
+                  <td>🪙 {{ report.total_earned }}</td>
+                  <td>₹ {{ "%.2f"|format(report.processed_payout) }}</td>
+                  <td><strong style="color:var(--admin-success)">₹ {{ "%.2f"|format(report.pending_payout) }}</strong> <small>({{ report.pending_count }} sessions)</small></td>
+                  <td>
+                    {% if report.pending_payout > 0 %}
+                      <form method="post" action="/admin/payout/process/{{ report.astrologer.id }}" style="margin:0">
+                        <button type="submit" class="as-btn as-btn-sm as-btn-primary">💸 Process Payout</button>
+                      </form>
+                    {% else %}
+                      <span class="badge-status badge-active">Up-To-Date ✓</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. SERVICE CATEGORIES -->
+    <section id="tab-services" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Platform Specialties & Issue Categories</h2>
+          <button class="as-btn as-btn-sm as-btn-primary" onclick="openAddCategoryModal()">➕ Add Specialty</button>
+        </div>
+        
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Specialty Slug</th>
+                <th>Display Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat in categories %}
+                <tr>
+                  <td>#{{ cat.id }}</td>
+                  <td><code>{{ cat.slug }}</code></td>
+                  <td><strong>{{ cat.name }}</strong></td>
+                  <td>
+                    <button class="as-btn as-btn-sm as-btn-outline" onclick="openEditCategoryModal({{ cat.id }}, '{{ cat.slug }}', '{{ cat.name }}')">✏️ Edit</button>
+                    <form method="post" action="/admin/services/category/{{ cat.id }}/delete" style="display:inline-block; margin:0" onsubmit="return confirm('Delete category: {{ cat.name }}?')">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="color:var(--admin-danger); border-color:var(--admin-danger)">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. REPORT MANAGEMENT -->
+    <section id="tab-reports" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Saved Reports Directory</h2>
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Title / Details</th>
+                <th>Client user</th>
+                <th>Generated Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reports %}
+                <tr>
+                  <td><span class="as-badge">{{ r.report_type.value.upper() }}</span></td>
+                  <td><strong>{{ r.title }}</strong></td>
+                  <td>{{ users_map.get(r.user_id, 'Unknown') }}</td>
+                  <td><small>{{ r.created_at.strftime('%Y-%m-%d') }}</small></td>
+                  <td>
+                    <textarea id="report-data-{{ r.id }}" style="display:none;">{{ r.html_content }}</textarea>
+                    <button class="as-btn as-btn-sm as-btn-outline" onclick="openReportViewModal('{{ r.title|escape }}', {{ r.id }})">👁️ Preview</button>
+                    <form method="post" action="/admin/reports/saved/{{ r.id }}/delete" style="display:inline-block; margin:0">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              {% for k in kundlis %}
+                <tr>
+                  <td><span class="as-badge">KUNDLI</span></td>
+                  <td><strong>Birth Chart: {{ k.name }}</strong> (dob: {{ k.date_of_birth }})</td>
+                  <td>{{ users_map.get(k.user_id, 'Guest') }}</td>
+                  <td><small>{{ k.created_at.strftime('%Y-%m-%d') if k.created_at else '—' }}</small></td>
+                  <td>
+                    <form method="post" action="/admin/reports/kundli/{{ k.id }}/delete" style="display:inline-block; margin:0">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              {% for m in matches %}
+                <tr>
+                  <td><span class="as-badge">KUNDLI MATCH</span></td>
+                  <td><strong>{{ m.boy_name }} ⚭ {{ m.girl_name }}</strong> (score: {{ m.score_percent }}%)</td>
+                  <td>{{ users_map.get(m.user_id, 'Guest') }}</td>
+                  <td><small>{{ m.created_at.strftime('%Y-%m-%d') if m.created_at else '—' }}</small></td>
+                  <td>
+                    <form method="post" action="/admin/reports/match/{{ m.id }}/delete" style="display:inline-block; margin:0">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CONTENT MANAGEMENT (CMS) -->
+    <section id="tab-cms" class="admin-panel">
+      <div class="card-container" style="max-width: 700px;">
+        <h2 class="as-section-title">Announcements & Portal Banners</h2>
+        <form method="post" action="/admin/settings/save">
+          <!-- Hidden parameters to prevent overwriting settings -->
+          <input type="hidden" name="price_horoscope" value="{{ pricing.price_horoscope }}">
+          <input type="hidden" name="price_kundli" value="{{ pricing.price_kundli }}">
+          <input type="hidden" name="price_match" value="{{ pricing.price_match }}">
+          <input type="hidden" name="price_ask_ai" value="{{ pricing.price_ask_ai }}">
+          <input type="hidden" name="recharge_option_1" value="{{ pricing.recharge_option_1 }}">
+          <input type="hidden" name="recharge_option_2" value="{{ pricing.recharge_option_2 }}">
+          <input type="hidden" name="recharge_option_3" value="{{ pricing.recharge_option_3 }}">
+          <input type="hidden" name="recharge_option_4" value="{{ pricing.recharge_option_4 }}">
+          <input type="hidden" name="commission_rate" value="{{ pricing.commission_rate }}">
+          <input type="hidden" name="maintenance_mode" value="{{ pricing.maintenance_mode }}">
+          <input type="hidden" name="support_email" value="{{ pricing.support_email }}">
+
+          <div class="as-form-group" style="margin-bottom:16px">
+            <label><strong>Main Homepage announcement Banner (HTML allowed)</strong></label>
+            <textarea class="as-input" name="announcement_text" rows="5" style="width:100%; border-radius:4px; border:1px solid var(--as-border); padding:10px" required>{{ pricing.announcement_text }}</textarea>
+          </div>
+
+          <button type="submit" class="as-btn as-btn-primary">Update portal Announcement</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 10. NOTIFICATIONS CENTER -->
+    <section id="tab-notifications" class="admin-panel">
+      <div class="card-container" style="max-width: 700px;">
+        <h2 class="as-section-title">Broadcaster Alerts (Email & In-App Simulation)</h2>
+        <p class="as-page-sub">Send simulated push alerts or notifications to dashboard recipients.</p>
+        
+        <form method="post" action="/admin/notifications/send">
+          <div class="as-form-group" style="margin-bottom:16px">
+            <label><strong>Notification Title</strong></label>
+            <input class="as-input" type="text" name="title" placeholder="e.g. System Maintenance Alert" required style="width:100%">
+          </div>
+          
+          <div class="as-form-group" style="margin-bottom:16px">
+            <label><strong>Message Content Body</strong></label>
+            <textarea class="as-input" name="body" rows="4" placeholder="Type notification details here..." required style="width:100%"></textarea>
+          </div>
+
+          <div class="as-form-group" style="margin-bottom:16px">
+            <label><strong>Target Audience</strong></label>
+            <select name="target_type" class="as-input" style="width:100%" onchange="toggleEmailInput(this.value)">
+              <option value="all">Send to All Registered Users</option>
+              <option value="clients">Send to Clients Only</option>
+              <option value="astrologers">Send to Astrologers Only</option>
+              <option value="specific">Target Specific User Email</option>
+            </select>
+          </div>
+
+          <div class="as-form-group" id="target-email-div" style="margin-bottom:16px; display:none">
+            <label><strong>Specific Recipient Email</strong></label>
+            <input class="as-input" type="email" name="specific_email" placeholder="user@example.com" style="width:100%">
+          </div>
+
+          <button type="submit" class="as-btn as-btn-primary">🚀 Broadcast Alert Now</button>
+        </form>
+
+        <h3 style="margin-top:40px; color:var(--admin-primary)">Dispatched Notification History</h3>
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Content Body</th>
+                <th>Sent Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for n in notifications[:8] %}
+                <tr>
+                  <td><strong>{{ n.title }}</strong></td>
+                  <td>{{ n.body }}</td>
+                  <td><small>{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. SUPPORT MANAGEMENT -->
+    <section id="tab-support" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Support Tickets & refund Disputes</h2>
+        <p class="as-page-sub">Client complaint logs and refund requests gathered from consultation feedback loops.</p>
+
+        {% if complaints|length > 0 or refund_requests|length > 0 %}
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Feedback ID</th>
+                <th>Session Ref</th>
+                <th>Client User</th>
+                <th>Flag Type</th>
+                <th>Notes / Comments</th>
+                <th>Action Controls</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fb in feedbacks %}
+                {% if fb.complaint_flag or fb.refund_requested %}
+                  <tr>
+                    <td>#{{ fb.id }}</td>
+                    <td>Session #{{ fb.session_id }}</td>
+                    <td>{{ feedback_client_map.get(fb.id, 'Client User') }}</td>
+                    <td>
+                      {% if fb.refund_requested %}
+                        <span class="badge-status badge-paused">REFUND REQUESTED</span>
+                      {% endif %}
+                      {% if fb.complaint_flag %}
+                        <span class="badge-status badge-suspended" style="background:#fff7ed; color:#ea580c; border-color:#fdba74">COMPLAINT FLAG</span>
+                      {% endif %}
+                    </td>
+                    <td><em>"{{ fb.notes }}"</em></td>
+                    <td>
+                      <form method="post" action="/admin/support/{{ fb.id }}/refund" style="display:inline-block; margin:0">
+                        <button type="submit" class="as-btn as-btn-sm as-btn-green">💰 Approve Refund</button>
+                      </form>
+                      <form method="post" action="/admin/support/{{ fb.id }}/resolve" style="display:inline-block; margin:0">
+                        <button type="submit" class="as-btn as-btn-sm as-btn-navy">✓ Resolve (Reject Refund)</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding: 40px; color: var(--as-muted); background: #fff; border: 1px solid var(--as-border); border-radius: 8px;">
+          <p style="margin: 0; font-size: 15px; font-weight: 500;">🎉 No active support tickets or refund disputes.</p>
+          <p style="margin: 5px 0 0; font-size: 13px; color: #94a3b8;">All customer feedback matches normal quality indicators.</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- 12. REVIEW & FEEDBACK -->
+    <section id="tab-feedback" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">All Customer Reviews</h2>
+        <p class="as-page-sub">Feedback submitted by clients after completed consultation sessions.</p>
+        
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Review ID</th>
+                <th>Session ID</th>
+                <th>Quality Metrics</th>
+                <th>User Notes</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fb in feedbacks %}
+                <tr>
+                  <td>#{{ fb.id }}</td>
+                  <td>Session #{{ fb.session_id }}</td>
+                  <td>
+                    <span>Helpfulness: <strong>★ {{ fb.helpfulness_score }}/5</strong></span><br>
+                    <span>Clarity: <strong>★ {{ fb.clarity_score }}/5</strong></span><br>
+                    <span>Relevance: <strong>★ {{ fb.relevance_score }}/5</strong></span>
+                  </td>
+                  <td><em>"{{ fb.notes }}"</em></td>
+                  <td><small>{{ fb.created_at.strftime('%Y-%m-%d') }}</small></td>
+                  <td>
+                    <form method="post" action="/admin/feedback/{{ fb.id }}/delete" style="margin:0" onsubmit="return confirm('Permanently remove review?')">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="color:var(--admin-danger); border-color:var(--admin-danger)">❌ Delete Review</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. AUDIT LOGS -->
+    <section id="tab-audit" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Security & Audit Event Logs</h2>
+        <p class="as-page-sub">A cryptographic or secure timestamped history of all admin modifications.</p>
+
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Log ID</th>
+                <th>Admin Email</th>
+                <th>Action Performed</th>
+                <th>Target Element</th>
+                <th>Host IP Address</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in audit_logs %}
+                <tr>
+                  <td>#{{ log.id }}</td>
+                  <td>{{ users_map.get(log.user_id, 'System') }}</td>
+                  <td><strong>{{ log.action }}</strong></td>
+                  <td>{{ log.target }}</td>
+                  <td><code>{{ log.ip_address }}</code></td>
+                  <td><small>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. CHAT MANAGEMENT -->
+    <section id="tab-chat" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Consultation Chat Logs</h2>
+        <p class="as-page-sub">View chat histories between platform clients and astrologers for quality audit.</p>
+
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Session ID</th>
+                <th>Client User</th>
+                <th>Astrologer</th>
+                <th>Logged At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for chat in chat_logs %}
+                <tr>
+                  <td><strong>#{{ chat.session_id }}</strong></td>
+                  <td>{{ chat.client_email }}</td>
+                  <td>{{ chat.astrologer_name }}</td>
+                  <td><small>{{ chat.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                  <td>
+                    <button class="as-btn as-btn-sm as-btn-primary" onclick="openChatLogModal({{ chat.session_id }}, '{{ chat.client_email }}', '{{ chat.astrologer_name }}')">👁️ Read Logs</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. FILE DIRECTORY -->
+    <section id="tab-files" class="admin-panel">
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">Platform Assets & File Management</h2>
+          <form method="post" action="/admin/files/upload" enctype="multipart/form-data" style="margin:0; display:flex; gap:10px">
+            <input type="file" name="file" required style="font-size:13px">
+            <button type="submit" class="as-btn as-btn-sm as-btn-primary">📤 Upload File</button>
+          </form>
+        </div>
+        
+        {% if files|length > 0 %}
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Size (Bytes)</th>
+                <th>Modified Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in files %}
+                <tr>
+                  <td><strong><a href="{{ file.path }}" target="_blank">{{ file.name }}</a></strong></td>
+                  <td>{{ file.size }} Bytes</td>
+                  <td><small>{{ file.modified.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                  <td>
+                    <form method="post" action="/admin/files/delete" style="margin:0" onsubmit="return confirm('Delete file {{ file.name }}?')">
+                      <input type="hidden" name="filename" value="{{ file.name }}">
+                      <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="color:var(--admin-danger); border-color:var(--admin-danger)">❌ Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding: 40px; color: var(--as-muted); background: #fff; border: 1px dashed var(--as-border); border-radius: 8px; margin-top: 15px;">
+          <p style="margin: 0; font-size: 15px; font-weight: 500;">📂 File directory is empty.</p>
+          <p style="margin: 5px 0 0; font-size: 13px; color: #94a3b8;">Use the "Choose File" and "Upload File" buttons above to upload platform assets.</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- 16. WORKFLOW & SYSTEM TASKS -->
+    <section id="tab-workflow" class="admin-panel">
+      <div class="card-container">
+        <h2 class="as-section-title">Workflows & System Tasks</h2>
+        <p class="as-page-sub">Trigger analytical learning loops, clear caching availability, or seed datasets.</p>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px">
+          
+          <div class="as-panel" style="padding:20px; border:1px solid var(--as-border); border-radius:6px">
+            <h4 style="margin:0 0 10px; color:var(--admin-primary)">📊 Learning Loop Recomputation</h4>
+            <p style="font-size:13px; color:var(--as-muted)">Recomputes astrologer ratings, quality and success metrics dynamically based on latest reviews feedback.</p>
+            <form method="post" action="/admin/workflow/trigger">
+              <input type="hidden" name="workflow_type" value="recompute_metrics">
+              <button type="submit" class="as-btn as-btn-sm as-btn-primary">Compute Metrics Now</button>
+            </form>
+          </div>
+
+          <div class="as-panel" style="padding:20px; border:1px solid var(--as-border); border-radius:6px">
+            <h4 style="margin:0 0 10px; color:var(--admin-primary)">⏰ Expired Booking Slots Cleanup</h4>
+            <p style="font-size:13px; color:var(--as-muted)">Deletes all unbooked availability slots older than 24 hours to clean up db allocation space.</p>
+            <form method="post" action="/admin/workflow/trigger">
+              <input type="hidden" name="workflow_type" value="clear_slots">
+              <button type="submit" class="as-btn as-btn-sm as-btn-primary">Cleanup Stale Slots</button>
+            </form>
+          </div>
+
+          <div class="as-panel" style="padding:20px; border:1px solid var(--as-border); border-radius:6px">
+            <h4 style="margin:0 0 10px; color:var(--admin-primary)">🔮 Simulated Daily Horoscope Broadcast</h4>
+            <p style="font-size:13px; color:var(--as-muted)">Simulates morning horoscope alerts to in-app inbox files for all platform client users.</p>
+            <form method="post" action="/admin/workflow/trigger">
+              <input type="hidden" name="workflow_type" value="simulate_horoscope">
+              <button type="submit" class="as-btn as-btn-sm as-btn-primary">Send Horoscope Alerts</button>
+            </form>
+          </div>
+
+          <div class="as-panel" style="padding:20px; border:1px solid var(--as-border); border-radius:6px">
+            <h4 style="margin:0 0 10px; color:var(--admin-primary)">🌱 Core Database Re-seeding</h4>
+            <p style="font-size:13px; color:var(--as-muted)">Runs initial schema configuration and inserts core astrologers, specialties, and slots datasets.</p>
+            <form method="post" action="/admin/workflow/trigger" onsubmit="return confirm('Confirm complete database re-seeding?')">
+              <input type="hidden" name="workflow_type" value="seed_db">
+              <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="border-color:var(--admin-danger); color:var(--admin-danger) !important">Re-seed Database</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 17. PLATFORM SETTINGS -->
+    <section id="tab-settings" class="admin-panel">
+      <div class="card-container" style="max-width:700px">
+        <h2 class="as-section-title">Global Configurations & Parameters</h2>
+        <form method="post" action="/admin/settings/save">
+          <input type="hidden" name="announcement_text" value="{{ pricing.announcement_text }}">
+
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; color: var(--admin-primary)">🪙 Credit Pricing Configs</h3>
+          <div class="as-form-row" style="margin-top:16px">
+            <div class="as-form-group">
+              <label><strong>Horoscope generation (Credits)</strong></label>
+              <input class="as-input" type="number" name="price_horoscope" value="{{ pricing.price_horoscope }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>AI Matching - Ask Me (Credits)</strong></label>
+              <input class="as-input" type="number" name="price_ask_ai" value="{{ pricing.price_ask_ai }}" required style="width:100%">
+            </div>
+          </div>
+          <div class="as-form-row">
+            <div class="as-form-group">
+              <label><strong>Vedic Kundli Chart (Credits)</strong></label>
+              <input class="as-input" type="number" name="price_kundli" value="{{ pricing.price_kundli }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Kundli Compatibility Match (Credits)</strong></label>
+              <input class="as-input" type="number" name="price_match" value="{{ pricing.price_match }}" required style="width:100%">
+            </div>
+          </div>
+
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; margin-top:30px; color: var(--admin-primary)">🛍️ Wallet recharge Packages (₹)</h3>
+          <div class="as-form-row" style="margin-top:16px">
+            <div class="as-form-group">
+              <label><strong>Option 1 Value</strong></label>
+              <input class="as-input" type="number" name="recharge_option_1" value="{{ pricing.recharge_option_1 }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Option 2 Value</strong></label>
+              <input class="as-input" type="number" name="recharge_option_2" value="{{ pricing.recharge_option_2 }}" required style="width:100%">
+            </div>
+          </div>
+          <div class="as-form-row">
+            <div class="as-form-group">
+              <label><strong>Option 3 Value</strong></label>
+              <input class="as-input" type="number" name="recharge_option_3" value="{{ pricing.recharge_option_3 }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Option 4 Value</strong></label>
+              <input class="as-input" type="number" name="recharge_option_4" value="{{ pricing.recharge_option_4 }}" required style="width:100%">
+            </div>
+          </div>
+
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; margin-top:30px; color: var(--admin-primary)">🛡️ Platform Policies & Contacts</h3>
+          <div class="as-form-row" style="margin-top:16px">
+            <div class="as-form-group">
+              <label><strong>Commission Rate (%)</strong></label>
+              <input class="as-input" type="number" name="commission_rate" value="{{ (pricing.commission_rate|float * 100)|int }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Platform Support Email</strong></label>
+              <input class="as-input" type="email" name="support_email" value="{{ pricing.support_email }}" required style="width:100%">
+            </div>
+          </div>
+
+          <div class="as-form-group" style="margin-top:16px">
+            <label><strong>System Maintenance Mode Toggle</strong></label>
+            <select class="as-input" name="maintenance_mode" style="width:100%">
+              <option value="false" {% if pricing.maintenance_mode == 'false' %}selected{% endif %}>Active Operations (Online)</option>
+              <option value="true" {% if pricing.maintenance_mode == 'true' %}selected{% endif %}>Maintenance Lock (Offline)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="as-btn as-btn-primary" style="width:100%; margin-top:24px; font-weight:bold; padding:12px">Save Configurations</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ==========================================
+     MODALS
+     ========================================== -->
+
+<!-- Modal 1: Edit Wallet Balance -->
+<div class="modal-overlay" id="wallet-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('wallet-modal')">×</button>
+    <h3 style="margin-top:0">🪙 Manage Credits Wallet</h3>
+    <p>Target User: <strong id="wallet-user-email">email</strong></p>
+    <p>Current Balance: <strong id="wallet-user-balance">0</strong> Credits</p>
+    
+    <form method="post" id="wallet-form">
+      <div class="as-form-group" style="margin-bottom:16px">
+        <label><strong>Credits Amount Change</strong></label>
+        <input class="as-input" type="number" name="amount" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:20px">
+        <label><strong>Action Type</strong></label>
+        <select class="as-input" name="action_type" style="width:100%">
+          <option value="add">Add / Deduct (Use Negative to Subtract)</option>
+          <option value="set">Set Absolute Value</option>
+        </select>
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%">Confirm Credits Modification</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Edit Client Profile -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('profile-modal')">×</button>
+    <h3 style="margin-top:0">✏️ Edit Client Profile Details</h3>
+    
+    <form method="post" id="profile-form">
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Full Name</strong></label>
+        <input class="as-input" type="text" name="full_name" id="prof-name" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Preferred language</strong></label>
+        <input class="as-input" type="text" name="preferred_language" id="prof-lang" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Date of Birth (YYYY-MM-DD)</strong></label>
+        <input class="as-input" type="date" name="date_of_birth" id="prof-dob" style="width:100%">
+      </div>
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label><strong>Time of Birth</strong></label>
+          <input class="as-input" type="text" name="birth_time" id="prof-time" style="width:100%">
+        </div>
+        <div class="as-form-group">
+          <label><strong>Place of Birth</strong></label>
+          <input class="as-input" type="text" name="birth_place" id="prof-place" style="width:100%">
+        </div>
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%; margin-top:16px">Save Profile Modifications</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 3: Edit Astrologer Details -->
+<div class="modal-overlay" id="astro-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('astro-modal')">×</button>
+    <h3 style="margin-top:0">🔮 Edit Astrologer Profile</h3>
+    
+    <form method="post" id="astro-form">
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Display Name</strong></label>
+        <input class="as-input" type="text" name="display_name" id="ast-name" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Biography (Bio)</strong></label>
+        <textarea class="as-input" name="bio" id="ast-bio" rows="3" style="width:100%"></textarea>
+      </div>
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label><strong>Years Experience</strong></label>
+          <input class="as-input" type="number" name="years_of_experience" id="ast-exp" required style="width:100%">
+        </div>
+        <div class="as-form-group">
+          <label><strong>Primary Language</strong></label>
+          <input class="as-input" type="text" name="primary_language" id="ast-lang" required style="width:100%">
+        </div>
+      </div>
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label><strong>Min Budget (Credits)</strong></label>
+          <input class="as-input" type="number" name="min_budget" id="ast-min" required style="width:100%">
+        </div>
+        <div class="as-form-group">
+          <label><strong>Max Budget (Credits)</strong></label>
+          <input class="as-input" type="number" name="max_budget" id="ast-max" required style="width:100%">
+        </div>
+      </div>
+      <div class="as-form-group" style="margin-bottom:16px">
+        <label><strong>Response Time Minutes</strong></label>
+        <input class="as-input" type="number" name="response_time_minutes" id="ast-resp" required style="width:100%">
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%">Save Astrologer Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 4: Add Category -->
+<div class="modal-overlay" id="add-cat-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('add-cat-modal')">×</button>
+    <h3 style="margin-top:0">➕ Add Specialty Issue Category</h3>
+    <form method="post" action="/admin/services/category/add">
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Slug Keyword</strong></label>
+        <input class="as-input" type="text" name="slug" placeholder="e.g. career, vastu" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:16px">
+        <label><strong>Display Name</strong></label>
+        <input class="as-input" type="text" name="name" placeholder="e.g. Career Growth, Vastu Shastra" required style="width:100%">
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%">Create Specialty Category</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 5: Edit Category -->
+<div class="modal-overlay" id="edit-cat-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('edit-cat-modal')">×</button>
+    <h3 style="margin-top:0">✏️ Edit Specialty Category</h3>
+    <form method="post" id="edit-cat-form">
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>Slug Keyword</strong></label>
+        <input class="as-input" type="text" name="slug" id="cat-slug" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:16px">
+        <label><strong>Display Name</strong></label>
+        <input class="as-input" type="text" name="name" id="cat-name" required style="width:100%">
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%">Update specialty Category</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 6: View Saved HTML Report -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-box" style="max-width:750px">
+    <button class="modal-close" onclick="closeModal('report-modal')">×</button>
+    <h3 style="margin-top:0" id="report-title-label">Report Preview</h3>
+    <div id="report-content-body" style="padding:16px; border:1px solid var(--as-border); border-radius:6px; background:#fff; overflow-x:auto; font-size:14px">
+      Report details loading...
+    </div>
+  </div>
+</div>
+
+<!-- Modal 7: Chat Log View -->
+<div class="modal-overlay" id="chat-modal">
+  <div class="modal-box" style="max-width:650px">
+    <button class="modal-close" onclick="closeModal('chat-modal')">×</button>
+    <h3 style="margin-top:0">💬 Consultation Chat Log Transcript</h3>
+    <p>Session Ref: <strong id="chat-session-label">#0</strong> | Client: <strong id="chat-client-label">—</strong> | Astrologer: <strong id="chat-astro-label">—</strong></p>
+    
+    <div id="chat-messages-container" style="background:#f1f5f9; padding:16px; height:350px; border-radius:6px; overflow-y:auto; display:flex; flex-direction:column; gap:10px">
+      <!-- Chat bubbles loaded via JS -->
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================
+     SCRIPTS & CONTROLS
+     ========================================== -->
+<script>
+  // Tab Switching Management
+  function switchTab(tabId) {
+    document.querySelectorAll('.admin-panel').forEach(function(panel) {
+      panel.classList.remove('active');
+    });
+    document.querySelectorAll('.admin-sidebar-link').forEach(function(link) {
+      link.classList.remove('active');
+    });
+    
+    const targetPanel = document.getElementById(tabId);
+    if(targetPanel) targetPanel.classList.add('active');
+    
+    event.currentTarget.classList.add('active');
+    
+    // Store current tab in URL hash for persistent reloads
+    history.pushState(null, null, '#' + tabId);
+  }
+
+  // Reload hash recovery
+  window.addEventListener('load', function() {
+    const hash = window.location.hash;
+    if (hash) {
+      const cleanHash = hash.replace('#', '');
+      // Find matching button that triggers that panel switch
+      const links = document.querySelectorAll('.admin-sidebar-link');
+      for (let link of links) {
+        if (link.getAttribute('onclick').includes(cleanHash)) {
+          link.click();
+          break;
+        }
+      }
+    }
+  });
+
+  // Table filtering keyword search helper
+  function filterTable(tableId, inputId, searchColIndex) {
+    const input = document.getElementById(inputId);
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById(tableId);
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+      let td = tr[i].getElementsByTagName("td")[searchColIndex];
+      if (td) {
+        let txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  // Notification page toggle specific recipient
+  function toggleEmailInput(value) {
+    const div = document.getElementById('target-email-div');
+    if (value === 'specific') {
+      div.style.display = 'block';
+    } else {
+      div.style.display = 'none';
+    }
+  }
+
+  // Modal display toggles
+  function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+  }
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+  }
+
+  // Wallet Modal population
+  function openWalletModal(userId, email, balance) {
+    document.getElementById('wallet-user-email').innerText = email;
+    document.getElementById('wallet-user-balance').innerText = balance;
+    document.getElementById('wallet-form').action = "/admin/user/" + userId + "/edit-wallet";
+    openModal('wallet-overlay' in window ? 'wallet-overlay' : 'wallet-modal');
+  }
+
+  // Profile Modal population
+  function openProfileModal(userId, name, lang, dob, time, place) {
+    document.getElementById('prof-name').value = name;
+    document.getElementById('prof-lang').value = lang;
+    document.getElementById('prof-dob').value = dob;
+    document.getElementById('prof-time').value = time;
+    document.getElementById('prof-place').value = place;
+    document.getElementById('profile-form').action = "/admin/user/" + userId + "/edit-profile";
+    openModal('profile-modal');
+  }
+
+  // Astrologer Modal population
+  function openAstroModal(astroId, name, bio, exp, lang, min, max, resp) {
+    document.getElementById('ast-name').value = name;
+    document.getElementById('ast-bio').value = bio;
+    document.getElementById('ast-exp').value = exp;
+    document.getElementById('ast-lang').value = lang;
+    document.getElementById('ast-min').value = min;
+    document.getElementById('ast-max').value = max;
+    document.getElementById('ast-resp').value = resp;
+    document.getElementById('astro-form').action = "/admin/astrologer/" + astroId + "/edit";
+    openModal('astro-modal');
+  }
+
+  // Category Modals
+  function openAddCategoryModal() {
+    openModal('add-cat-modal');
+  }
+  function openEditCategoryModal(catId, slug, name) {
+    document.getElementById('cat-slug').value = slug;
+    document.getElementById('cat-name').value = name;
+    document.getElementById('edit-cat-form').action = "/admin/services/category/" + catId + "/edit";
+    openModal('edit-cat-modal');
+  }
+
+  // HTML Report View Modal
+  function openReportViewModal(title, reportId) {
+    document.getElementById('report-title-label').innerText = title;
+    const reportDataEl = document.getElementById('report-data-' + reportId);
+    document.getElementById('report-content-body').innerHTML = reportDataEl ? reportDataEl.value : '';
+    openModal('report-modal');
+  }
+
+  // Global Chat transcript registry
+  const platformChats = {
+    {% for chat in chat_logs %}
+      "{{ chat.session_id }}": [
+        {% for m in chat.messages %}
+          {
+            "sender": "{{ m.sender.value if m.sender.value is defined else m.sender }}",
+            "body": "{{ m.body|escape }}",
+            "time": "{{ m.created_at.strftime('%H:%M') }}"
+          },
+        {% endfor %}
+      ],
+    {% endfor %}
+  };
+
+  // Chat Viewer Modal
+  function openChatLogModal(sessionId, clientEmail, astroName) {
+    document.getElementById('chat-session-label').innerText = "#" + sessionId;
+    document.getElementById('chat-client-label').innerText = clientEmail;
+    document.getElementById('chat-astro-label').innerText = astroName;
+    
+    const container = document.getElementById('chat-messages-container');
+    container.innerHTML = '';
+    
+    const msgs = platformChats[sessionId] || [];
+    if(msgs.length === 0) {
+      container.innerHTML = '<div style="text-align:center; color:var(--as-muted); padding-top:100px">No chat messages found for this consultation session.</div>';
+    } else {
+      msgs.forEach(function(m) {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.flexDirection = 'column';
+        
+        const bubble = document.createElement('div');
+        bubble.style.padding = '8px 12px';
+        bubble.style.borderRadius = '12px';
+        bubble.style.maxWidth = '80%';
+        bubble.style.fontSize = '13px';
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.style.fontSize = '10px';
+        timeSpan.style.color = '#94a3b8';
+        timeSpan.style.marginTop = '2px';
+        timeSpan.innerText = m.time;
+        
+        if (m.sender === 'user') {
+          row.style.alignItems = 'flex-end';
+          bubble.style.backgroundColor = 'var(--admin-secondary)';
+          bubble.style.color = '#fff';
+          bubble.innerText = m.body;
+          timeSpan.style.alignSelf = 'flex-end';
+        } else {
+          row.style.alignItems = 'flex-start';
+          bubble.style.backgroundColor = '#fff';
+          bubble.style.color = 'var(--admin-primary)';
+          bubble.style.border = '1px solid #e2e8f0';
+          bubble.innerText = m.body;
+          timeSpan.style.alignSelf = 'flex-start';
+        }
+        
+        row.appendChild(bubble);
+        row.appendChild(timeSpan);
+        container.appendChild(row);
+      });
+    }
+    
+    openModal('chat-modal');
+  }
+</script>
+{% endblock %}

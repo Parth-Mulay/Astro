@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Live {{ sess.consult_type.value if sess.consult_type.value is defined else sess.consult_type }} – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">Live consultation</h1>
+<p class="as-page-sub">Session #{{ sess.id }} with <strong>{{ astrologer.display_name }}</strong> — payment confirmed.</p>
+
+<div class="as-panel" style="min-height:360px;background:#fafafa">
+  <div style="padding:12px;border-bottom:1px solid var(--as-border);margin:-24px -24px 16px;background:var(--as-orange-light)">
+    <strong>{{ astrologer.display_name }}</strong> is online · {{ sess.consult_type.value if sess.consult_type.value is defined else sess.consult_type }} mode
+  </div>
+  <div style="color:var(--as-muted);font-size:13px;margin-bottom:10px">
+    This is a stored-message chat (both sides can send). Refresh shows new messages.
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow:auto;padding-right:6px">
+    {% if messages and messages|length > 0 %}
+      {% for m in messages %}
+        {% if m.sender.value == 'user' %}
+          <div style="align-self:flex-end;max-width:78%;background:#fff;border:1px solid var(--as-border);border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;color:var(--as-muted);margin-bottom:4px">You</div>
+            <div style="white-space:pre-wrap">{{ m.body }}</div>
+          </div>
+        {% else %}
+          <div style="align-self:flex-start;max-width:78%;background:var(--as-orange-light);border:1px solid #ffcc80;border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;color:var(--as-muted);margin-bottom:4px">{{ astrologer.display_name }}</div>
+            <div style="white-space:pre-wrap">{{ m.body }}</div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <div style="background:#fff;border:1px dashed var(--as-border);padding:12px;border-radius:8px;color:var(--as-muted)">
+        No messages yet. Send the first message to start the consultation.
+      </div>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/flow/chat/{{ sess.id }}/send" style="margin-top:14px;display:flex;gap:8px">
+    <input class="as-input" name="body" placeholder="Type your message…" autocomplete="off" />
+    <button type="submit" class="as-btn as-btn-primary">Send</button>
+  </form>
+</div>
+
+<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+  <form method="post" action="/flow/session/{{ sess.id }}/complete">
+    <button type="submit" class="as-btn as-btn-outline">End session</button>
+  </form>
+  <a href="/flow/session/{{ sess.id }}" class="as-btn as-btn-primary">Rate &amp; feedback</a>
+</div>
+{% endblock %}

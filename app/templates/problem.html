@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Select Problem – AstroMatch{% endblock %}
+
+{% block content %}
+<div class="as-breadcrumb"><a href="/">Home</a> › <a href="/flow/problem">Talk to Astrologer</a> › Select problem</div>
+<h1 class="as-page-title">What do you need guidance on?</h1>
+<p class="as-page-sub">Matching is driven by <strong>problem type</strong> — not popularity or who is online only.</p>
+
+<div class="as-category-grid">
+  {% set icons = {"relationships": "❤️", "career": "💼", "finance": "💰", "health": "🏥", "family": "👨‍👩‍👧"} %}
+  {% for c in categories %}
+    <a href="/flow/intake?issue={{ c.id }}" class="as-category-card">
+      <div class="emoji">{{ icons.get(c.slug, "🔮") }}</div>
+      <div class="name">{{ c.name }}</div>
+      <div style="font-size:12px;color:var(--as-muted);margin-top:6px">Continue to intake →</div>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

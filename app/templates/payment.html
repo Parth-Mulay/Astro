@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Payment – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">Confirm Consultation Booking</h1>
+{% if error %}<div class="as-alert as-alert-error">{{ error }}</div>{% endif %}
+
+<div class="as-panel" style="max-width: 550px; margin: 0 auto; padding: 24px;">
+  <p style="font-size: 16px; margin-top: 0;">You are initiating a consultation with <strong>{{ astrologer.display_name }}</strong></p>
+  <div style="border-top: 1px solid var(--as-border); border-bottom: 1px solid var(--as-border); padding: 16px 0; margin: 16px 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span>Consultation Fee:</span>
+      <strong style="font-size:24px;color:var(--as-orange)">{{ sess.price }} Credits</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Your Available Balance:</span>
+      <strong style="font-size:16px;">🪙 {{ prof.wallet_balance }} Credits</strong>
+    </div>
+  </div>
+
+  <form method="post" action="/flow/pay/{{ sess.id }}">
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%;padding:14px;font-size: 16px;font-weight: bold;">
+      Pay & Start Chat
+    </button>
+  </form>
+  {% if prof.wallet_balance < sess.price %}
+    <p style="color: #dc3545; font-size: 13px; text-align: center; margin-top: 12px; font-weight: 500;">
+      ⚠️ Your credit balance is insufficient for this booking.
+    </p>
+    <a href="/account/wallet" class="as-btn as-btn-outline" style="width:100%;margin-top:8px;display:block;text-align:center">
+      Purchase Credit Points
+    </a>
+  {% endif %}
+</div>
+{% endblock %}

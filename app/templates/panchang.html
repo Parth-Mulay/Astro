@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Panchang"|t(lang) }} – {{ city|t(lang) }}{% endblock %}
+{% block content %}
+<style>
+  .as-tag-auspicious { background-color: #28a745 !important; color: #fff !important; }
+  .as-tag-moderate { background-color: #ffc107 !important; color: #fff !important; }
+  .as-tag-inauspicious { background-color: #dc3545 !important; color: #fff !important; }
+</style>
+
+
+<h1 class="as-page-title">{{ "Today's Panchang"|t(lang) }}</h1>
+
+<form method="get" action="/tools/panchang" style="margin-bottom:16px;display:flex;gap:8px">
+  <input class="as-input" name="city" value="{{ city }}" placeholder="{{ 'City'|t(lang) }}" style="max-width:240px" />
+  <button class="as-btn as-btn-primary">{{ "Update"|t(lang) }}</button>
+</form>
+
+<div class="as-panel" style="max-width: 100%;">
+  <h2 style="margin:0">{{ data.city|t(lang) }} — {{ data.date }}</h2>
+  <table class="as-table" style="margin-top:16px">
+    <tr><td><strong>{{ "Tithi"|t(lang) }}</strong></td><td>{{ data.tithi|t(lang) }} ({{ data.tithi_details.paksha|t(lang) }} {{ "Paksha"|t(lang) }})</td></tr>
+    <tr><td><strong>{{ "Vara"|t(lang) }}</strong></td><td>{{ data.vara|t(lang) }}</td></tr>
+    <tr><td><strong>{{ "Nakshatra"|t(lang) }}</strong></td><td>{{ data.nakshatra|t(lang) }}</td></tr>
+    <tr><td><strong>{{ "Yoga"|t(lang) }}</strong></td><td>{{ data.yoga|t(lang) }}</td></tr>
+    <tr><td><strong>{{ "Karana"|t(lang) }}</strong></td><td>{{ data.karana|t(lang) }}</td></tr>
+    <tr><td><strong>{{ "Sunrise"|t(lang) }} / {{ "Sunset"|t(lang) }}</strong></td><td>{{ data.sunrise }} / {{ data.sunset }}</td></tr>
+    <tr><td><strong>{{ "Brahma Muhurta"|t(lang) }}</strong></td><td>{{ data.brahma_muhurta.start }} – {{ data.brahma_muhurta.end }}</td></tr>
+    <tr><td><strong>{{ "Abhijit Muhurta"|t(lang) }}</strong></td><td style="color:#28a745; font-weight: 600">{{ data.abhijit }}</td></tr>
+    <tr><td><strong>{{ "Rahu Kalam"|t(lang) }}</strong></td><td style="color:#dc3545; font-weight: 600">{{ data.rahukaal }}</td></tr>
+    <tr><td><strong>{{ "Yamaganda"|t(lang) }}</strong></td><td>{{ data.yamaganda.start }} – {{ data.yamaganda.end }}</td></tr>
+    <tr><td><strong>{{ "Gulika Kalam"|t(lang) }}</strong></td><td>{{ data.gulika_kalam.start }} – {{ data.gulika_kalam.end }}</td></tr>
+    
+    <!-- Day Choghadiya -->
+    <tr>
+      <td><strong>{{ "Day Choghadiya"|t(lang) }}</strong></td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+          {% for ch in data.choghadiya if ch.period == 'day' %}
+            {% if ch.status == 'highly_auspicious' or ch.status == 'auspicious' %}
+              {% set tag_class = 'as-tag-auspicious' %}
+            {% elif ch.status == 'moderate' %}
+              {% set tag_class = 'as-tag-moderate' %}
+            {% else %}
+              {% set tag_class = 'as-tag-inauspicious' %}
+            {% endif %}
+            <span class="as-tag {{ tag_class }}" style="font-size:11px; padding:3px 6px;" title="{{ ch.status|t(lang) }}">
+              {{ ch.name|t(lang) }} ({{ ch.start }} - {{ ch.end }})
+            </span>
+          {% endfor %}
+        </div>
+      </td>
+    </tr>
+    
+    <!-- Night Choghadiya -->
+    <tr>
+      <td><strong>{{ "Night Choghadiya"|t(lang) }}</strong></td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+          {% for ch in data.choghadiya if ch.period == 'night' %}
+            {% if ch.status == 'highly_auspicious' or ch.status == 'auspicious' %}
+              {% set tag_class = 'as-tag-auspicious' %}
+            {% elif ch.status == 'moderate' %}
+              {% set tag_class = 'as-tag-moderate' %}
+            {% else %}
+              {% set tag_class = 'as-tag-inauspicious' %}
+            {% endif %}
+            <span class="as-tag {{ tag_class }}" style="font-size:11px; padding:3px 6px;" title="{{ ch.status|t(lang) }}">
+              {{ ch.name|t(lang) }} ({{ ch.start }} - {{ ch.end }})
+            </span>
+          {% endfor %}
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endblock %}

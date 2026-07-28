@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}My History – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">My History &amp; Cloud Records</h1>
+
+<section class="as-section">
+  <h2 class="as-section-title">Consultations</h2>
+  {% if sessions %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <tr><th>ID</th><th>Status</th><th>Price</th><th>Action</th></tr>
+        {% for s in sessions %}
+          <tr>
+            <td>#{{ s.id }}</td>
+            <td>{{ s.status.value if s.status.value is defined else s.status }}</td>
+            <td>{{ s.price }} Credits</td>
+            <td><a href="/flow/session/{{ s.id }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  {% else %}<p class="as-page-sub">No sessions yet.</p>{% endif %}
+</section>
+
+<section class="as-section">
+  <h2 class="as-section-title">My Saved Kundalis</h2>
+  {% if kundlis %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Birth Details</th>
+            <th>Birth Place</th>
+            <th>Calculation System</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in kundlis %}
+            <tr>
+              <td><strong>{{ k.name }}</strong></td>
+              <td>{{ k.date_of_birth }} ({{ k.birth_time }})</td>
+              <td>{{ k.birth_place }}</td>
+              <td>Vedic Rashi Chart</td>
+              <td>
+                {% set found_r = namespace(id=none) %}
+                {% for r in reports %}
+                  {% if r.ref_id == k.id and (r.report_type == 'kundli' or r.report_type.value == 'kundli') %}
+                    {% set found_r.id = r.id %}
+                  {% endif %}
+                {% endfor %}
+                {% if found_r.id %}
+                  <a href="/account/reports/{{ found_r.id }}" class="as-btn as-btn-outline as-btn-sm" style="padding:4px 8px; font-size:12px;">View Report</a>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="as-page-sub">No custom birth charts saved. <a href="/tools/kundli">Generate your birth chart (Kundli) now</a>.</p>
+  {% endif %}
+</section>
+
+<section class="as-section">
+  <h2 class="as-section-title">My Saved Kundali Matches</h2>
+  {% if matches %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <thead>
+          <tr>
+            <th>Boy's Name</th>
+            <th>Girl's Name</th>
+            <th>Compatibility Score</th>
+            <th>Date Saved</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in matches %}
+            <tr>
+              <td>{{ m.boy_name }}</td>
+              <td>{{ m.girl_name }}</td>
+              <td><span class="as-badge as-badge-success" style="background-color: var(--as-orange);">{{ m.score_percent }}%</span></td>
+              <td>{{ m.created_at.strftime('%Y-%m-%d') if m.created_at else '—' }}</td>
+              <td>
+                {% set found_r = namespace(id=none) %}
+                {% for r in reports %}
+                  {% if r.ref_id == m.id and (r.report_type == 'match' or r.report_type.value == 'match') %}
+                    {% set found_r.id = r.id %}
+                  {% endif %}
+                {% endfor %}
+                {% if found_r.id %}
+                  <a href="/account/reports/{{ found_r.id }}" class="as-btn as-btn-outline as-btn-sm" style="padding:4px 8px; font-size:12px;">View Report</a>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="as-page-sub">No compatibility matches calculated yet. <a href="/tools/match">Calculate Gun Milan Match now</a>.</p>
+  {% endif %}
+</section>
+
+<section class="as-section">
+  <h2 class="as-section-title">My Child Astro Reports (NRI Special)</h2>
+  {% if child_orders %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Child Name</th>
+            <th>Birth Details</th>
+            <th>Country</th>
+            <th>Delivery Email</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for co in child_orders %}
+            <tr>
+              <td>#CAR-{{ co.id }}</td>
+              <td><strong>{{ co.child_name }}</strong> ({{ co.child_gender }})</td>
+              <td>{{ co.date_of_birth }} {{ co.birth_time }} @ {{ co.birth_place }}</td>
+              <td>{{ co.country_of_residence }}</td>
+              <td>{{ co.parent_email }}</td>
+              <td>
+                {% if co.status == 'pending' %}
+                  <span class="as-badge as-badge-warning" style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:12px;">⏳ Analysis (72h)</span>
+                {% else %}
+                  <span class="as-badge as-badge-success" style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:12px;">✅ Completed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% set found_r = namespace(id=none) %}
+                {% for r in reports %}
+                  {% if r.report_type == 'child_astro' or r.report_type.value == 'child_astro' %}
+                    {% if r.title and co.child_name in r.title %}
+                      {% set found_r.id = r.id %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                {% if found_r.id %}
+                  <a href="/account/reports/{{ found_r.id }}" class="as-btn as-btn-outline as-btn-sm" style="padding:4px 8px; font-size:12px;">View Summary</a>
+                {% else %}
+                  <a href="/tools/child-astro-report" class="as-btn as-btn-outline as-btn-sm" style="padding:4px 8px; font-size:12px;">View Details</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="as-page-sub">No Child Astro Reports requested yet. <a href="/tools/child-astro-report">Order Child Astro Report (NRI Special)</a>.</p>
+  {% endif %}
+</section>
+
+<section class="as-section">
+  <h2 class="as-section-title">Saved Consultation Reports</h2>
+  {% if reports %}
+    {% set has_session_reports = namespace(val=false) %}
+    <ul>
+      {% for r in reports %}
+        {% if r.report_type == 'session' or r.report_type.value == 'session' or r.report_type == 'child_astro' or r.report_type.value == 'child_astro' %}
+          {% set has_session_reports.val = true %}
+          <li><a href="/account/reports/{{ r.id }}">{{ r.title }}</a> — {{ r.report_type.value if r.report_type.value is defined else r.report_type }}</li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+    {% if not has_session_reports.val %}
+      <p class="as-page-sub">Book a consultation session or order reports to save detailed astrologer reports in the cloud.</p>
+    {% endif %}
+  {% else %}<p class="as-page-sub">Book a consultation session or order reports to save detailed astrologer reports in the cloud.</p>{% endif %}
+</section>
+{% endblock %}

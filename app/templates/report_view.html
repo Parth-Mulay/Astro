@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block content %}
+<div class="as-breadcrumb"><a href="/account/history">History</a> › Report</div>
+<h1 class="as-page-title">{{ report.title }}</h1>
+<div class="as-panel report-body">
+  {{ report.html_content|safe }}
+</div>
+<button onclick="window.print()" class="as-btn as-btn-outline" style="margin-top:12px">Print / Save as PDF</button>
+{% endblock %}

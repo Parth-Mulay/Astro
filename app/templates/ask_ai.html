@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Jyotish Consultation"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+
+{% if step == "form" %}
+<h1 class="as-page-title" style="text-align: center;">🪔 {{ "Authentic Jyotish Consultation"|t(lang) }}</h1>
+<p class="as-page-sub" style="text-align: center;">{{ "Please enter your birth and consultation details. Your profile will be analyzed to match you with the most suitable Vedic Jyotishi."|t(lang) }}</p>
+
+<div class="as-panel" style="max-width: 650px; margin: 0 auto; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
+  <form method="post" action="/tools/ask-ai">
+    
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-bottom: 20px; color: var(--as-navy)">📋 {{ "Personal & Birth Details"|t(lang) }}</h3>
+    
+    <div class="as-form-group">
+      <label><strong>{{ "Full Name"|t(lang) }}</strong></label>
+      <input class="as-input" name="full_name" required value="{{ prof.full_name if prof else '' }}" placeholder="{{ 'Enter your full name'|t(lang) }}" />
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label><strong>{{ "Date of Birth"|t(lang) }}</strong></label>
+        <input class="as-input" name="dob" type="date" required value="{{ prof.date_of_birth.isoformat() if (prof and prof.date_of_birth) else '' }}" />
+      </div>
+      
+      <div class="as-form-group">
+        <label><strong>{{ "Day of Birth"|t(lang) }}</strong></label>
+        <select class="as-select" name="day_of_birth" required style="width: 100%;">
+          <option value="">{{ "-- Select Day --"|t(lang) }}</option>
+          <option value="Sunday">{{ "Sunday"|t(lang) }}</option>
+          <option value="Monday">{{ "Monday"|t(lang) }}</option>
+          <option value="Tuesday">{{ "Tuesday"|t(lang) }}</option>
+          <option value="Wednesday">{{ "Wednesday"|t(lang) }}</option>
+          <option value="Thursday">{{ "Thursday"|t(lang) }}</option>
+          <option value="Friday">{{ "Friday"|t(lang) }}</option>
+          <option value="Saturday">{{ "Saturday"|t(lang) }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label><strong>{{ "Time of Birth"|t(lang) }}</strong></label>
+        <input class="as-input" name="birth_time" type="time" required value="{{ prof.birth_time if prof else '12:00' }}" />
+      </div>
+      <div class="as-form-group">
+        <label><strong>{{ "Place of Birth"|t(lang) }}</strong></label>
+        <input class="as-input" name="birth_place" required value="{{ prof.birth_place if prof else '' }}" placeholder="{{ 'City, Country'|t(lang) }}" />
+      </div>
+    </div>
+
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-top: 30px; margin-bottom: 20px; color: var(--as-navy)">📍 {{ "Current Location & Residential Info"|t(lang) }}</h3>
+    
+    <div class="as-form-group">
+      <label><strong>{{ "Current Residential Address"|t(lang) }}</strong></label>
+      <input class="as-input" name="current_address" required placeholder="{{ 'Street, City, State, ZIP code'|t(lang) }}" />
+    </div>
+
+    <div class="as-form-group">
+      <label><strong>{{ "Current Location"|t(lang) }}</strong></label>
+      <input class="as-input" name="current_location" required placeholder="{{ 'Current city/town'|t(lang) }}" />
+    </div>
+
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-top: 30px; margin-bottom: 20px; color: var(--as-navy)">🔮 {{ "Consultation Focus"|t(lang) }}</h3>
+    
+    <div class="as-form-group">
+      <label><strong>{{ "Problem or Reason for Consultation"|t(lang) }}</strong></label>
+      <textarea class="as-input" name="problem" rows="4" required placeholder="{{ 'Describe your concern in detail (e.g., career transition, marriage compatibility, health challenges, family issues) so the Jyotishi can review your chart appropriately.'|t(lang) }}" style="resize: vertical;"></textarea>
+    </div>
+
+    <div class="as-form-group">
+      <label><strong>{{ "Preferred Astrology System"|t(lang) }}</strong></label>
+      <div style="display: flex; gap: 20px; margin-top: 8px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+          <input type="radio" name="preferred_system" value="Moon-Based Jyotish" checked />
+          {{ "Moon-Based Jyotish (Vedic Rashi System)"|t(lang) }}
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+          <input type="radio" name="preferred_system" value="Sun-Based Jyotish" />
+          {{ "Sun-Based Jyotish (Western Solar System)"|t(lang) }}
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%; padding:14px; margin-top:20px; font-size:16px;">
+      ✨ {{ "Submit Details & Match Jyotishis"|t(lang) }}
+    </button>
+  </form>
+</div>
+
+{% elif step == "recommendations" %}
+<h1 class="as-page-title" style="text-align: center;">🌟 {{ "Match Recommendations"|t(lang) }}</h1>
+<p class="as-page-sub" style="text-align: center;">{{ "Our Jyotish system has analyzed your problem and identified the best qualified astrologers for your concerns."|t(lang) }}</p>
+
+<div style="max-width: 800px; margin: 0 auto;">
+  
+  <div class="as-panel" style="background-color: var(--as-orange-light); border-left: 5px solid var(--as-orange); margin-bottom: 30px;">
+    <h3 style="margin-top: 0; color: var(--as-navy)">📋 {{ "Consultation Overview"|t(lang) }}</h3>
+    <table class="as-table" style="font-size: 14px; width: 100%;">
+      <tr>
+        <td style="width: 30%;"><strong>{{ "Full Name:"|t(lang) }}</strong></td>
+        <td>{{ intake.full_name }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Birth Details"|t(lang) }}:</strong></td>
+        <td>{{ intake.date_of_birth|t(lang) }} ({{ intake.day_of_birth|t(lang) }}) {{ "at"|t(lang) }} {{ intake.birth_time }} {{ "in"|t(lang) }} {{ intake.birth_place|t(lang) }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Current Location"|t(lang) }}:</strong></td>
+        <td>{{ intake.current_location|t(lang) }} ({{ "Address"|t(lang) }}: {{ intake.current_address|t(lang) }})</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Jyotish System"|t(lang) }}:</strong></td>
+        <td>{{ intake.preferred_system|t(lang) }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Concern Category"|t(lang) }}:</strong></td>
+        <td><span class="as-badge as-badge-success">{{ category.name|t(lang) }}</span></td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Problem Described"|t(lang) }}:</strong></td>
+        <td>{{ intake.problem }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <h2 style="color: var(--as-navy); margin-bottom: 16px;">👤 {{ "Select Your Preferred Jyotishi"|t(lang) }}</h2>
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    {% for m in matches %}
+      <div class="as-panel" style="display: flex; justify-content: space-between; align-items: center; gap: 20px; transition: transform 0.2s;">
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <strong style="font-size: 18px; color: var(--as-navy)">{{ m.astrologer.display_name }}</strong>
+            <span class="as-badge as-badge-success" style="font-size: 11px;">★ {{ m.astrologer.average_rating }}</span>
+            <span style="font-size: 12px; color: var(--as-muted)">{{ m.astrologer.years_of_experience }} {{ "years exp"|t(lang) }}</span>
+          </div>
+          <p style="margin: 0 0 8px; font-size: 14px; color: #555;">{{ m.astrologer.bio|t(lang) }}</p>
+          <div style="font-size: 13px; color: var(--as-muted)">
+            <strong>{{ "Language"|t(lang) }}:</strong> {{ m.astrologer.primary_language|t(lang) }} · 
+            <strong>{{ "Rate"|t(lang) }}:</strong> {{ m.astrologer.min_budget }} {{ "Credits / Session"|t(lang) }}
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <strong style="font-size: 12px; color: var(--as-green)">{{ "Match Reason:"|t(lang) }}</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px; font-size: 12px; color: #444;">
+              {% for reason in m.reasons %}
+                <li>{{ reason|t(lang) }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        
+        <div style="text-align: right; min-width: 150px;">
+          <form method="post" action="/flow/book">
+            <input type="hidden" name="intake_id" value="{{ intake.id }}" />
+            <input type="hidden" name="astrologer_id" value="{{ m.astrologer.id }}" />
+            <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 12px 20px; font-weight: bold;">
+              {{ "Select & Book"|t(lang) }}
+            </button>
+          </form>
+          <div style="font-size: 11px; color: var(--as-muted); margin-top: 6px; text-align: center;">
+            {{ "Form details will be sent directly to"|t(lang) }} {{ m.astrologer.display_name }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ "Astrologers"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<h1 class="as-page-title">{{ "Consult Expert Astrologers"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "verified_specialists"|t(lang) }}</p>
+
+<div class="as-astro-scroll">
+  {% for astro in astrologers %}
+    {% with show_actions=true %}
+      {% include "partials/astrologer_card.html" %}
+    {% endwith %}
+  {% endfor %}
+</div>
+
+<a href="{% if user %}/flow/problem{% else %}/auth/login?next=/flow/problem{% endif %}" class="as-btn as-btn-primary" style="margin-top:20px">{{ "smart_match_top_3"|t(lang) }}</a>
+{% endblock %}

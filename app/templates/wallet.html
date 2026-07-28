@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Credit Points – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">🪙 Credit Points Hub</h1>
+<p class="as-page-sub">Purchase credit points to consult qualified Jyotishis and access premium features (sample Kundali & detailed horoscopes).</p>
+
+{% if message %}
+  <div class="as-alert {% if error %}as-alert-error{% else %}as-alert-success{% endif %}">
+    {{ message }}
+  </div>
+{% endif %}
+
+<div class="as-panel" style="text-align:center; padding: 30px;">
+  <div style="font-size:16px; color:var(--as-muted); margin-bottom: 8px;">Your Available Balance</div>
+  <div style="font-size:48px; font-weight:700; color:var(--as-orange)">🪙 {{ prof.wallet_balance }} Credits</div>
+</div>
+
+<div class="as-panel" style="margin-top:20px; padding: 24px;">
+  <h3 style="margin-top: 0; color: var(--as-navy)">🛍️ Purchase Credit Points Package</h3>
+  <p style="font-size: 13px; color: var(--as-muted); margin-top: -6px;">Choose a credits package below. (Demo payment simulation)</p>
+  
+  <form method="post" action="/account/wallet/recharge">
+    <div class="as-form-group">
+      <label><strong>Select Credits Package</strong></label>
+      <select class="as-select" name="amount" style="width: 100%; margin-top: 8px; padding: 10px;">
+        {% for pkg in packages|default([100, 500, 1000, 2000]) %}
+          <option value="{{ pkg }}" {% if pkg == 500 %}selected{% endif %}>{{ pkg }} Credits — ₹{{ pkg }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 12px; margin-top: 16px; font-size: 15px; font-weight: bold;">
+      Purchase Credits Package
+    </button>
+  </form>
+</div>
+{% endblock %}

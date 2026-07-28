@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ data.sign_name|t(lang) }} — {{ period|title|t(lang) }} {{ "Horoscope"|t(lang) }}{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+<div class="as-breadcrumb"><a href="/tools/horoscope">{{ "Horoscope"|t(lang) }}</a> › {{ period|title|t(lang) }} › {{ data.sign_name|t(lang) }}</div>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+  {% for p in ['daily','weekly','monthly','yearly'] %}
+    <a href="/tools/horoscope/{{ p }}?sign={{ data.sign_slug }}" class="as-btn {% if period==p %}as-btn-primary{% else %}as-btn-outline{% endif %} as-btn-sm">{{ p|title|t(lang) }}</a>
+  {% endfor %}
+</div>
+
+<div class="as-panel" style="max-width: 100%;">
+  <h1 style="margin:0;color:var(--as-navy)">{{ data.symbol }} {{ data.sign_name|t(lang) }} — {{ period|title|t(lang) }} {{ "Horoscope"|t(lang) }}</h1>
+  <p style="color:var(--as-muted)">{{ data.date_label }} · {{ "Luck score"|t(lang) }}: <strong>{{ data.luck_score }}%</strong></p>
+  <div class="as-alert as-alert-info" style="margin-top:16px">{{ data.prediction|t(lang) }}</div>
+  
+  <h3 style="margin-top:20px">{{ "Love"|t(lang) }}</h3>
+  <p>{{ data.love|t(lang) }}</p>
+  
+  <h3>{{ "Career"|t(lang) }}</h3>
+  <p>{{ data.career|t(lang) }}</p>
+  
+  <h3>{{ "Health"|t(lang) }}</h3>
+  <p>{{ data.health|t(lang) }}</p>
+</div>
+
+<div class="as-category-grid" style="margin-top:20px">
+  {% for slug, name, sym in signs %}
+    <a href="/tools/horoscope/{{ period }}?sign={{ slug }}" class="as-category-card" style="padding:12px">
+      <div class="name">{{ sym }} {{ name|t(lang) }}</div>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

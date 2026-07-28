@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}{{ "AstroMatch – AI Astrology & Smart Astrologer Matching"|t(lang) }}{% endblock %}
+
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<div class="as-hero-banner">
+  <div>
+    <span class="as-badge">✨ {{ "Direct Jyotish Consultation & Guidance"|t(lang) }}</span>
+    <h1>{{ "Consult the right astrologer for your problem"|t(lang) }}</h1>
+    <p>{{ "Submit structured consultation details → Match with qualified Jyotishis → Directly send details & connect."|t(lang) }}</p>
+  </div>
+  <div>
+    {% if user %}
+      <a href="/tools/ask-ai" class="as-btn as-btn-primary" style="font-size:16px;padding:12px 28px">{{ "Ask Me — Consultation Form"|t(lang) }}</a>
+    {% else %}
+      <a href="/auth/login" class="as-btn as-btn-primary" style="font-size:16px;padding:12px 28px">{{ "Sign In & Consult"|t(lang) }}</a>
+      <p style="margin:8px 0 0;font-size:12px;opacity:0.85">{{ "Consultations are debited from your Credit Points balance."|t(lang) }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Daily Panchang & Gochar Chart Section -->
+<section class="as-section">
+  <h2 class="as-section-title">{{ "Today's Panchang & Gochar Kundli"|t(lang) }}</h2>
+  <p class="as-page-sub" style="margin-top:-8px">{{ "Real-time planetary transits and auspicious daily timings."|t(lang) }}</p>
+  
+  <div class="as-gochar-container" style="display: block; padding: 0; overflow: hidden; border-radius: 12px; border: 1px solid var(--as-border); background: #fff; box-shadow: var(--as-shadow);">
+    <!-- Upper Section: Banner -->
+    <div class="as-panchang-banner-wrap" style="width: 100%; border-bottom: 1px solid var(--as-border); max-height: 380px; overflow: hidden;">
+      <img src="/static/banner.jpg" alt="AstroMatch Banner" style="width: 100%; display: block; object-fit: cover; max-height: 380px;">
+    </div>
+    
+    <!-- Lower Section: Columns -->
+    <div class="as-panchang-content-wrap" style="padding: 24px;">
+      <!-- Headline -->
+      <h3 class="as-gochar-sub-title" style="margin-top: 0; border-bottom: 2px solid var(--as-orange-light); padding-bottom: 8px; color: var(--as-navy); font-size: 17px; font-weight: 700;">
+        📍 {{ panchang_data.city|t(lang) }} — {{ panchang_data.date|t(lang) }}
+      </h3>
+      
+      <style>
+        .panchang-row-layout {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+        @media (min-width: 768px) {
+          .panchang-row-layout {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      </style>
+      
+      <div class="panchang-row-layout" style="margin-top: 16px;">
+        <!-- Left Side: Panchang Table -->
+        <div>
+          <table class="as-table" style="width: 100%;">
+            <tr><td style="font-weight: 600; color: var(--as-navy); width: 160px;">{{ "Tithi"|t(lang) }}</td><td><strong>{{ panchang_data.tithi|t(lang) }}</strong></td></tr>
+            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Nakshatra"|t(lang) }}</td><td><strong>{{ panchang_data.nakshatra|t(lang) }}</strong></td></tr>
+            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Yoga"|t(lang) }}</td><td>{{ panchang_data.yoga|t(lang) }}</td></tr>
+            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Karana"|t(lang) }}</td><td>{{ panchang_data.karana|t(lang) }}</td></tr>
+            <tr class="as-rahukaal-row"><td style="font-weight: 600; color: var(--as-navy);">{{ "Rahu Kaal"|t(lang) }}</td><td style="color:#c62828; font-weight: 600">{{ panchang_data.rahukaal }}</td></tr>
+            <tr class="as-abhijit-row"><td style="font-weight: 600; color: var(--as-navy);">{{ "Abhijit Muhurat"|t(lang) }}</td><td style="color:var(--as-green); font-weight: 600">{{ panchang_data.abhijit }}</td></tr>
+            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Sunrise"|t(lang) }} / {{ "Sunset"|t(lang) }}</td><td>{{ panchang_data.sunrise }} / {{ panchang_data.sunset }}</td></tr>
+          </table>
+        </div>
+        
+        <!-- Right Side: Daily Shloka -->
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+          <div style="position: relative; background: linear-gradient(135deg, #fffdfb 0%, #fff6ed 100%); background-image: url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><text x='50%' y='55%' font-size='65' fill='rgba(242, 101, 34, 0.05)' font-family='Segoe UI, Arial, sans-serif' text-anchor='middle' dominant-baseline='middle'>ॐ</text></svg>&quot;); background-repeat: no-repeat; background-position: center; background-size: 180px; border-left: 6px solid var(--as-orange); border-top: 1px solid #ffe6cc; border-right: 1px solid #ffe6cc; border-bottom: 1px solid #ffe6cc; padding: 24px; border-radius: 10px; box-shadow: 0 6px 20px rgba(242, 101, 34, 0.08); height: 100%; display: flex; flex-direction: column; justify-content: center; min-height: 250px;">
+            <div style="font-weight: 700; color: var(--as-orange-dark); font-size: 14px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 2px solid var(--as-orange); width: fit-content; padding-bottom: 4px;">
+              {{ daily_shloka.title }}
+            </div>
+            <div style="font-family: 'Georgia', 'Noto Sans', 'Segoe UI', serif; font-size: 18px; color: var(--as-navy); font-weight: 600; line-height: 1.8; white-space: pre-line; text-align: center; margin: auto 0; letter-spacing: 0.2px; text-shadow: 0 1px 0 rgba(255,255,255,0.8);">
+              {{ daily_shloka.text }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bottom: View Button -->
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="/tools/panchang" class="as-btn as-btn-outline as-btn-sm" style="width: 100%;">{{ "View Detailed Panchang"|t(lang) }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="as-home-cols">
+  <div>
+  <section class="as-section">
+    <h2 class="as-section-title">{{ "Consult Expert Astrologers"|t(lang) }}</h2>
+    <p class="as-page-sub" style="margin-top:-8px">{{ "Verified specialists — ranked by your issue, language, budget & availability."|t(lang) }}</p>
+    <div class="as-astro-scroll" id="astro-carousel">
+      {% for astro in featured %}
+        {% with show_actions=true %}
+          {% include "partials/astrologer_card.html" %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+    <p style="font-size:12px;color:var(--as-muted);margin-top:8px">← {{ "Scroll to browse · Consult via structured form for tailored recommendations"|t(lang) }}</p>
+  </section>
+
+  <section class="as-section">
+    <h2 class="as-section-title">{{ "Vedic Astrology Services"|t(lang) }}</h2>
+    <div class="as-service-grid">
+      <a href="/tools/horoscope" class="as-service-tile"><div class="icon">☀️</div><div class="label">{{ "Detailed Horoscope"|t(lang) }}</div></a>
+      <a href="/tools/sample-kundli" class="as-service-tile"><div class="icon">📜</div><div class="label">{{ "Sample Kundali"|t(lang) }}</div></a>
+      <a href="/tools/panchang" class="as-service-tile"><div class="icon">📅</div><div class="label">{{ "Daily Panchang"|t(lang) }}</div></a>
+      <a href="/tools/ask-ai" class="as-service-tile"><div class="icon">💬</div><div class="label">{{ "Ask Me (Consult)"|t(lang) }}</div></a>
+      <a href="/tools/tarot" class="as-service-tile"><div class="icon">🃏</div><div class="label">{{ "Tarot"|t(lang) }}</div></a>
+      <a href="/tools/remedies" class="as-service-tile"><div class="icon">🪔</div><div class="label">{{ "Lal Kitab"|t(lang) }}</div></a>
+      <a href="/tools/astrologers" class="as-service-tile"><div class="icon">🔮</div><div class="label">{{ "Astrologers"|t(lang) }}</div></a>
+    </div>
+  </section>
+
+  <section class="as-section">
+    <h2 class="as-section-title">{{ "Why AstroMatch (Authentic Jyotish Guidance)"|t(lang) }}</h2>
+    <div class="as-service-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+      <div class="as-service-tile" style="cursor:default">
+        <div class="icon">🏷️</div>
+        <div class="label">{{ "Structured Background Details"|t(lang) }}</div>
+        <p style="font-size:12px;color:var(--as-muted);margin:8px 0 0">{{ "Astrologers get full details before starting chat"|t(lang) }}</p>
+      </div>
+      <div class="as-service-tile" style="cursor:default">
+        <div class="icon">📊</div>
+        <div class="label">{{ "Specialty-Based Recommendation"|t(lang) }}</div>
+        <p style="font-size:12px;color:var(--as-muted);margin:8px 0 0">{{ "Specialty, language, rating, budget…"|t(lang) }}</p>
+      </div>
+      <div class="as-service-tile" style="cursor:default">
+        <div class="icon">💡</div>
+        <div class="label">{{ "Credit Points System"|t(lang) }}</div>
+        <p style="font-size:12px;color:var(--as-muted);margin:8px 0 0">{{ "Simple, transparent credit usage for consultations & premium features"|t(lang) }}</p>
+      </div>
+      <div class="as-service-tile" style="cursor:default">
+        <div class="icon">🔄</div>
+        <div class="label">{{ "Direct Interaction"|t(lang) }}</div>
+        <p style="font-size:12px;color:var(--as-muted);margin:8px 0 0">{{ "No automated bot answers, direct chat with qualified Jyotishis"|t(lang) }}</p>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <aside>
+    <div class="as-side-panel">
+      <h3>{{ "Start Consultation"|t(lang) }}</h3>
+      <p style="font-size:13px;color:var(--as-muted);margin:0 0 16px">{{ "Get authentic Jyotish guidance tailored to your specific life concerns."|t(lang) }}</p>
+      <ol class="as-steps">
+        <li>{{ "Fill out the detailed Consultation Form"|t(lang) }}</li>
+        <li>{{ "System analyzes your problem"|t(lang) }}</li>
+        <li>{{ "Select from top matched Jyotishis"|t(lang) }}</li>
+        <li>{{ "Form details are sent directly to them"|t(lang) }}</li>
+        <li>{{ "Start consultation chat immediately"|t(lang) }}</li>
+      </ol>
+      {% if user %}
+        <a href="/tools/ask-ai" class="as-btn as-btn-primary" style="width:100%;margin-top:16px">{{ "Fill Consultation Form"|t(lang) }}</a>
+      {% else %}
+        <a href="/auth/login" class="as-btn as-btn-primary" style="width:100%;margin-top:16px">{{ "Sign in to start"|t(lang) }}</a>
+      {% endif %}
+    </div>
+
+    <div class="as-side-panel" style="margin-top:16px">
+      <h3>{{ "Popular concerns"|t(lang) }}</h3>
+      {% for c in categories[:5] %}
+        <a href="{% if user %}/flow/intake?issue={{ c.id }}{% else %}/auth/login{% endif %}" style="display:block;padding:8px 0;border-bottom:1px dashed var(--as-border);font-size:13px;color:var(--as-navy);text-decoration:none">
+          → {{ c.name|t(lang) }}
+        </a>
+      {% endfor %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

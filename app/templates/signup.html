@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Sign Up"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+<div class="as-breadcrumb"><a href="/">{{ "Home"|t(lang) }}</a> › {{ "Sign Up"|t(lang) }}</div>
+<h1 class="as-page-title" style="text-align: center;">{{ "Join AstroMatch"|t(lang) }}</h1>
+<p class="as-page-sub" style="text-align: center;">{{ "Select your profile type to register and get started."|t(lang) }}</p>
+
+<div class="as-panel" style="max-width: 550px; margin: 0 auto; padding: 24px;">
+  {% if error %}<div class="as-alert as-alert-error">{{ error }}</div>{% endif %}
+
+  <!-- Role Selection Tabs -->
+  <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--as-navy); padding-bottom: 8px;">
+    <button id="btn-client" class="as-btn" style="flex: 1; background: var(--as-navy); color: #fff; border: none; font-weight: bold; padding: 10px; cursor: pointer;" type="button" onclick="switchSignupRole('client')">{{ "Seek Guidance (Client)"|t(lang) }}</button>
+    <button id="btn-astrologer" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 10px; cursor: pointer;" type="button" onclick="switchSignupRole('astrologer')">{{ "Provide Guidance (Jyotishi)"|t(lang) }}</button>
+  </div>
+
+  <form method="post" action="/auth/signup" id="signup-form">
+    <input type="hidden" name="user_type" id="input-user-type" value="client" />
+
+    <!-- Shared fields: Email and Password -->
+    <div class="as-form-group">
+      <label><strong>{{ "Email Address"|t(lang) }}</strong></label>
+      <input class="as-input" name="email" type="email" required placeholder="{{ 'name@example.com'|t(lang) }}" style="width:100%" />
+    </div>
+    
+    <div class="as-form-group">
+      <label><strong>{{ "Password"|t(lang) }}</strong></label>
+      <input class="as-input" name="password" type="password" required minlength="6" placeholder="{{ 'At least 6 characters'|t(lang) }}" style="width:100%" />
+    </div>
+
+    <!-- Client-specific fields -->
+    <div id="client-fields">
+      <div class="as-form-group">
+        <label><strong>{{ "Full Name"|t(lang) }}</strong></label>
+        <input class="as-input" name="full_name" placeholder="{{ 'Enter your full name'|t(lang) }}" style="width:100%" />
+      </div>
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%;padding:14px;margin-top:16px;font-weight:bold;cursor:pointer">
+        {{ "SIGN UP — Get 500 Welcome Credits"|t(lang) }}
+      </button>
+    </div>
+
+    <!-- Astrologer-specific fields (hidden by default) -->
+    <div id="astrologer-fields" style="display: none;">
+      <div class="as-form-group">
+        <label><strong>{{ "Public Display Name"|t(lang) }}</strong></label>
+        <input class="as-input" name="astro_name" placeholder="{{ 'e.g. Acharya Sharma'|t(lang) }}" style="width:100%" />
+      </div>
+      
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label><strong>{{ "Years of Experience"|t(lang) }}</strong></label>
+          <input class="as-input" name="years_of_experience" type="number" value="5" min="0" style="width:100%" />
+        </div>
+        <div class="as-form-group">
+          <label><strong>{{ "Primary Language"|t(lang) }}</strong></label>
+          <input class="as-input" name="primary_language" value="Hindi" placeholder="{{ 'e.g. Hindi, English'|t(lang) }}" style="width:100%" />
+        </div>
+      </div>
+      
+      <div class="as-form-group">
+        <label><strong>{{ "Consultation Rate (Credits / session)"|t(lang) }}</strong></label>
+        <input class="as-input" name="min_budget" type="number" value="199" min="50" style="width:100%" />
+      </div>
+
+      <div class="as-form-group">
+        <label><strong>{{ "Short Bio / Qualifications"|t(lang) }}</strong></label>
+        <textarea class="as-input" name="bio" rows="3" placeholder="{{ 'Briefly describe your specialization, line of lineage, or certifications.'|t(lang) }}" style="width:100%; resize: vertical;"></textarea>
+      </div>
+      
+      <button type="submit" class="as-btn as-btn-navy" style="width:100%;padding:14px;margin-top:16px;font-weight:bold;background-color:var(--as-navy);color:#fff;border:none;cursor:pointer">
+        {{ "REGISTER AS JYOTISHI"|t(lang) }}
+      </button>
+    </div>
+
+  </form>
+  
+  <p style="margin-top:20px;font-size:13px; text-align: center;">
+    {{ "Already have an account?"|t(lang) }} <a href="/auth/login" style="font-weight: bold;">{{ "Sign in here"|t(lang) }}</a>
+  </p>
+</div>
+
+<script>
+function switchSignupRole(role) {
+  const btnClient = document.getElementById('btn-client');
+  const btnAstro = document.getElementById('btn-astrologer');
+  const clientFields = document.getElementById('client-fields');
+  const astrologerFields = document.getElementById('astrologer-fields');
+  const inputUserType = document.getElementById('input-user-type');
+  
+  if (role === 'client') {
+    inputUserType.value = 'client';
+    btnClient.style.background = 'var(--as-navy)';
+    btnClient.style.color = '#fff';
+    btnClient.classList.remove('as-btn-outline');
+    
+    btnAstro.style.background = 'none';
+    btnAstro.style.color = 'var(--as-navy)';
+    btnAstro.classList.add('as-btn-outline');
+    
+    clientFields.style.display = 'block';
+    astrologerFields.style.display = 'none';
+    
+    // Toggle input requirements
+    clientFields.querySelectorAll('input').forEach(el => el.required = true);
+    astrologerFields.querySelectorAll('input, textarea').forEach(el => el.required = false);
+  } else {
+    inputUserType.value = 'astrologer';
+    btnAstro.style.background = 'var(--as-navy)';
+    btnAstro.style.color = '#fff';
+    btnAstro.classList.remove('as-btn-outline');
+    
+    btnClient.style.background = 'none';
+    btnClient.style.color = 'var(--as-navy)';
+    btnClient.classList.add('as-btn-outline');
+    
+    clientFields.style.display = 'none';
+    astrologerFields.style.display = 'block';
+    
+    // Toggle input requirements
+    clientFields.querySelectorAll('input').forEach(el => el.required = false);
+    astrologerFields.querySelectorAll('input[name="astro_name"], input[name="years_of_experience"], input[name="primary_language"], input[name="min_budget"]').forEach(el => el.required = true);
+  }
+}
+</script>
+{% endblock %}

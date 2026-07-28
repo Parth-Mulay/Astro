@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Manage Profile – AstroMatch{% endblock %}
+
+{% block content %}
+<div class="as-breadcrumb"><a href="/astro">Astrologer</a> › Profile manager</div>
+<h1 class="as-page-title">Manage Consultant Profile</h1>
+<p class="as-page-sub">Configure your public consulting bio, hourly credit rate, languages, and issue specialties.</p>
+
+<div class="as-panel" style="max-width: 650px; margin: 0 auto; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
+  <form method="post" action="/astro/profile">
+    
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-bottom: 20px; color: var(--as-navy)">📋 Public Consultant Info</h3>
+    
+    <div class="as-form-group">
+      <label><strong>Display Name</strong></label>
+      <input class="as-input" name="display_name" required value="{{ astro.display_name }}" />
+    </div>
+
+    <div class="as-form-group">
+      <label><strong>Biography (Bio)</strong></label>
+      <textarea class="as-input" name="bio" rows="4" required style="resize: vertical;">{{ astro.bio }}</textarea>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label><strong>Years of Experience</strong></label>
+        <input class="as-input" type="number" name="years_of_experience" required value="{{ astro.years_of_experience }}" min="0" />
+      </div>
+      
+      <div class="as-form-group">
+        <label><strong>Primary Language</strong></label>
+        <input class="as-input" name="primary_language" required value="{{ astro.primary_language }}" placeholder="e.g. Hindi, English" />
+      </div>
+    </div>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label><strong>Consultation Rate (Credits per Session)</strong></label>
+        <input class="as-input" type="number" name="min_budget" required value="{{ astro.min_budget }}" min="10" />
+        <small style="color:var(--as-muted)">This is the dynamic credit fee deducted from client wallets when they book a session with you.</small>
+      </div>
+      
+      <div class="as-form-group">
+        <label><strong>Languages Spoken (Comma Separated)</strong></label>
+        <input class="as-input" name="languages" value="{{ langs }}" placeholder="English, Hindi, Tamil" />
+        <small style="color:var(--as-muted)">List all languages you consult in, separated by commas.</small>
+      </div>
+    </div>
+
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-top: 30px; margin-bottom: 20px; color: var(--as-navy)">🔮 Issue Specialties</h3>
+    <p style="font-size: 13px; color: var(--as-muted); margin-top: -12px; margin-bottom: 16px;">Select the specific concern categories you consult on. This matches you with clients seeking guidance in these domains.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      {% for cat in all_categories %}
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+          <input type="checkbox" name="specialty_ids" value="{{ cat.id }}" {% if cat.id in specialty_ids %}checked{% endif %} />
+          {{ cat.name }}
+        </label>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%; padding:14px; margin-top:10px; font-size:16px; font-weight:bold;">
+      Save Profile Changes
+    </button>
+  </form>
+</div>
+{% endblock %}

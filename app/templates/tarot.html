@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Tarot Reading – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">Online Tarot Reading</h1>
+<p class="as-page-sub">Draw 3 cards for past · present · guidance.</p>
+
+{% if cards %}
+  <div class="as-category-grid">
+    {% for label, card in [('Past', cards[0]), ('Present', cards[1]), ('Guidance', cards[2])] %}
+      <div class="as-panel" style="text-align:center">
+        <div style="font-size:36px">🃏</div>
+        <div class="as-tag">{{ label }}</div>
+        <p style="margin-top:12px;font-size:14px">{{ card }}</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<form method="post" action="/tools/tarot">
+  <button type="submit" class="as-btn as-btn-primary" style="margin-top:16px;padding:12px 24px">Draw cards</button>
+</form>
+{% endblock %}

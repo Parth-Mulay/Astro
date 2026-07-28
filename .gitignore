@@ -1,0 +1,32 @@
+# Python env and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Runtime & dynamic media files
+logs/
+backups/
+uploads/
+reports/
+
+# IDE files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db

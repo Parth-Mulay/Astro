@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Session – AstroMatch{% endblock %}
+
+{% block content %}
+<div class="as-breadcrumb"><a href="/">Home</a> › Session #{{ sess.id }}</div>
+
+<h1 class="as-page-title">Your consultation</h1>
+<p class="as-page-sub">
+  with <strong>{{ astrologer.display_name if astrologer else "Astrologer" }}</strong> ·
+  Status: <span class="as-tag">{{ sess.status.value if sess.status.value is defined else sess.status }}</span>
+</p>
+
+<div class="as-home-cols" style="grid-template-columns:1fr 1fr">
+  <div class="as-panel">
+    <h3 style="margin:0 0 12px;color:var(--as-navy)">Session details</h3>
+    <table style="width:100%;font-size:14px">
+      <tr><td style="padding:6px 0;color:var(--as-muted)">Scheduled</td><td><strong>{{ sess.scheduled_at }}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:var(--as-muted)">Type</td><td>{{ sess.consult_type.value if sess.consult_type.value is defined else sess.consult_type }}</td></tr>
+      <tr><td style="padding:6px 0;color:var(--as-muted)">Amount</td><td><strong style="color:var(--as-orange)">₹{{ sess.price }}</strong> <small>(payment stub)</small></td></tr>
+    </table>
+
+    {% if sess.status.value == 'booked' or sess.status == 'booked' %}
+      <form method="post" action="/flow/session/{{ sess.id }}/complete" style="margin-top:16px">
+        <button type="submit" class="as-btn as-btn-outline">Mark consultation completed</button>
+      </form>
+    {% else %}
+      <div class="as-alert as-alert-success" style="margin-top:16px">Consultation marked completed.</div>
+    {% endif %}
+  </div>
+
+  <div class="as-panel">
+    <h3 style="margin:0 0 12px;color:var(--as-navy)">Rate your session</h3>
+    <p style="font-size:13px;color:var(--as-muted);margin:0 0 16px">This feedback powers the learning loop — relevance, clarity, helpfulness.</p>
+
+    <form method="post" action="/flow/session/{{ sess.id }}/feedback">
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label>Helpfulness (1–5)</label>
+          <input class="as-input" name="helpfulness_score" type="number" min="1" max="5" value="{{ feedback.helpfulness_score if feedback else 3 }}" />
+        </div>
+        <div class="as-form-group">
+          <label>Clarity (1–5)</label>
+          <input class="as-input" name="clarity_score" type="number" min="1" max="5" value="{{ feedback.clarity_score if feedback else 3 }}" />
+        </div>
+      </div>
+      <div class="as-form-group">
+        <label>Relevance to your problem (1–5)</label>
+        <input class="as-input" name="relevance_score" type="number" min="1" max="5" value="{{ feedback.relevance_score if feedback else 3 }}" />
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;font-size:13px">
+        <label><input type="checkbox" name="refund_requested" {% if feedback and feedback.refund_requested %}checked{% endif %} /> Refund requested</label>
+        <label><input type="checkbox" name="complaint_flag" {% if feedback and feedback.complaint_flag %}checked{% endif %} /> Complaint / quality flag</label>
+        <label><input type="checkbox" name="repeat_booking_intent" {% if feedback and feedback.repeat_booking_intent %}checked{% endif %} /> Would book again</label>
+      </div>
+
+      <div class="as-form-group">
+        <label>Notes (optional)</label>
+        <textarea class="as-textarea" name="notes" rows="3">{{ feedback.notes if feedback else "" }}</textarea>
+      </div>
+
+      <button type="submit" class="as-btn as-btn-primary" style="width:100%">Submit feedback</button>
+    </form>
+
+    {% if feedback %}
+      <div class="as-alert as-alert-success" style="margin-top:12px">Thank you — metrics will update on next learning run.</div>
+    {% endif %}
+  </div>
+</div>
+
+<a href="/flow/problem" class="as-btn as-btn-outline" style="margin-top:20px">Book another consultation</a>
+{% endblock %}

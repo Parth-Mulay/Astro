@@ -1,0 +1,147 @@
+<!doctype html>
+{% set lang = request.cookies.get('lang', 'en') %}
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}AstroMatch – AI Astrology & Smart Matching{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/theme.css" />
+  <script>
+    function setLanguage(lang) {
+      document.cookie = "lang=" + lang + "; path=/; max-age=31536000";
+      window.location.reload();
+    }
+  </script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="as-body">
+  <div class="as-topbar">
+    {% if user and user.role.value == 'astrologer' %}
+      <span>🔮 {{ "Astrologer Portal — Professional Consulting Console"|t(lang) }}</span>
+    {% elif user and user.role.value == 'admin' %}
+      <span>⚙️ {{ "Admin Portal — System Management Console"|t(lang) }}</span>
+    {% else %}
+      <span>🪔 {{ "Panchang · Sample Kundali · Horoscope · Jyotish Consultation"|t(lang) }}</span>
+    {% endif %}
+    <span style="display:flex;align-items:center;gap:12px">
+      <!-- Language Switcher Toggle -->
+      <span class="as-lang-switch">
+        <button class="as-lang-btn {% if lang == 'en' %}active{% endif %}" onclick="setLanguage('en')">EN</button>
+        <button class="as-lang-btn {% if lang == 'hi' %}active{% endif %}" onclick="setLanguage('hi')">हिं</button>
+      </span>
+      <span>
+        {% if user %}
+          <a href="/account/profile">{{ user.email.split('@')[0] }}</a>
+        {% else %}
+          <a href="/auth/login">{{ "Sign In"|t(lang) }}</a> · <a href="/auth/signup">{{ "Sign Up"|t(lang) }}</a>
+        {% endif %}
+        · <a href="/auth/login?next=/astro">{{ "Astrologer Login"|t(lang) }}</a>
+      </span>
+    </span>
+  </div>
+
+  <header class="as-header">
+    <div class="as-header-inner">
+      <a href="/" class="as-logo">
+        <div class="as-logo-icon">☉</div>
+        <div>
+          <div class="as-logo-text">AstroMatch</div>
+          <div class="as-logo-sub">{{ "Authentic Jyotish Guidance"|t(lang) }}</div>
+        </div>
+      </a>
+
+      <nav class="as-nav">
+        {% if user and user.role.value == 'astrologer' %}
+          <a href="/astro" style="font-weight:bold; color:var(--as-orange)">🔮 {{ "Astrologer Dashboard"|t(lang) }}</a>
+          <a href="/astro/profile">{{ "My Profile"|t(lang) }}</a>
+        {% elif user and user.role.value == 'admin' %}
+          <a href="/">{{ "Home"|t(lang) }}</a>
+          <a href="/admin" style="font-weight:bold; color:var(--as-orange)">⚙️ {{ "Admin Dashboard"|t(lang) }}</a>
+        {% else %}
+          <a href="/">{{ "Home"|t(lang) }}</a>
+          <a href="/services">{{ "Services"|t(lang) }}</a>
+          <a href="/tools/child-astro-report" style="color:var(--as-orange);font-weight:bold">👶 {{ "Child Astro Report (NRI)"|t(lang) }}</a>
+          <a href="/tools/horoscope">{{ "Horoscope"|t(lang) }}</a>
+          <a href="/tools/sample-kundli">{{ "Sample Kundali"|t(lang) }}</a>
+          <a href="/tools/panchang">{{ "Panchang"|t(lang) }}</a>
+          <a href="/tools/astrologers">{{ "Browse Astrologers"|t(lang) }}</a>
+          <a href="/tools/ask-ai" style="color:var(--as-green);font-weight:bold">💬 {{ "Ask Me"|t(lang) }}</a>
+          <a href="{% if user %}/flow/problem{% else %}/auth/login?next=/flow/problem{% endif %}">{{ "Talk to Astrologer"|t(lang) }}</a>
+        {% endif %}
+      </nav>
+
+      <div class="as-header-actions">
+        {% if user %}
+          <a href="/account/wallet" class="as-wallet">🪙 {{ wallet|default(0) }} {{ "Credits"|t(lang) }}</a>
+          <a href="/account/history" class="as-btn as-btn-outline as-btn-sm">{{ "My Account"|t(lang) }}</a>
+          <form method="post" action="/auth/logout" style="margin:0">
+            <button type="submit" class="as-btn as-btn-outline as-btn-sm">{{ "Logout"|t(lang) }}</button>
+          </form>
+        {% else %}
+          <a href="/auth/login" class="as-btn as-btn-primary as-btn-sm">{{ "Sign In"|t(lang) }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  {% if not (user and (user.role.value == 'astrologer' or user.role.value == 'admin')) %}
+  <div class="as-zodiac-strip">
+    <div class="as-zodiac-inner">
+      {% set zodiac_nav = [
+        ('aries','♈'),('taurus','♉'),('gemini','♊'),('cancer','♋'),
+        ('leo','♌'),('virgo','♍'),('libra','♎'),('scorpio','♏'),
+        ('sagittarius','♐'),('capricorn','♑'),('aquarius','♒'),('pisces','♓')
+      ] %}
+      {% for slug, sym in zodiac_nav %}
+        <a class="as-zodiac-item" href="/tools/horoscope/daily?sign={{ slug }}">{{ sym }} {{ slug|t(lang) }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <main class="as-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="as-footer">
+    <div class="as-footer-inner">
+      <div>
+        <h4>{{ "Horoscope & Charts"|t(lang) }}</h4>
+        <a href="/tools/child-astro-report">{{ "Child Astro Report (NRI)"|t(lang) }}</a>
+        <a href="/tools/horoscope/daily">{{ "Daily Horoscope"|t(lang) }}</a>
+        <a href="/tools/sample-kundli">{{ "Sample Kundali"|t(lang) }}</a>
+        <a href="/tools/panchang">{{ "Panchang"|t(lang) }}</a>
+      </div>
+      <div>
+        <h4>{{ "Consult"|t(lang) }}</h4>
+        <a href="{% if user %}/flow/problem{% else %}/auth/login{% endif %}">{{ "Smart Match"|t(lang) }} ({{ "Top 3"|t(lang) }})</a>
+        <a href="/tools/astrologers">{{ "Browse Astrologers"|t(lang) }}</a>
+        <a href="/tools/tarot">{{ "Tarot Reading"|t(lang) }}</a>
+        <a href="/tools/remedies">{{ "Lal Kitab Remedies"|t(lang) }}</a>
+      </div>
+      <div>
+        <h4>{{ "Account"|t(lang) }}</h4>
+        {% if user %}
+          <a href="/account/profile">{{ "My Profile"|t(lang) }}</a>
+          <a href="/account/history">{{ "History & Reports"|t(lang) }}</a>
+          <a href="/account/wallet">{{ "Credit Points / Recharge"|t(lang) }}</a>
+        {% else %}
+          <a href="/auth/signup">{{ "Sign Up"|t(lang) }}</a>
+          <a href="/auth/login">{{ "Sign In"|t(lang) }}</a>
+        {% endif %}
+      </div>
+      <div>
+        <h4>{{ "Platform"|t(lang) }}</h4>
+        <a href="/flow/problem">{{ "Issue-based matching"|t(lang) }}</a>
+        <a href="/admin">{{ "Quality dashboard"|t(lang) }}</a>
+      </div>
+    </div>
+    <div class="as-footer-bottom">
+      © 2026 AstroMatch · {{ "Vedic tools + monetized consultations"|t(lang) }} · {{ "UI inspired by"|t(lang) }} <a href="https://www.astrosage.com/" style="color:#ffd89b">AstroSage</a>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,540 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Kundli"|t(lang) }} — {{ chart.name }}{% endblock %}
+{% block content %}
+
+
+<style>
+/* Professional Report Tabs */
+.as-report-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 30px;
+  border-bottom: 2px solid var(--as-navy);
+  padding-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.as-report-tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--as-muted);
+  border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.as-report-tab-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.as-report-tab-btn.active {
+  color: #fff;
+  background-color: var(--as-navy);
+}
+.as-report-panel {
+  display: none;
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease;
+}
+.as-report-panel.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dasha tree list */
+.as-dasha-item {
+  margin-top: 8px;
+}
+.as-dasha-header {
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+.as-dasha-header:hover {
+  background-color: #e9ecef;
+}
+.as-dasha-sub {
+  display: none;
+  margin-left: 20px;
+  padding-left: 10px;
+  border-left: 1px dashed #ccc;
+}
+.as-dasha-sub.active {
+  display: block;
+}
+
+/* Yoga card list */
+.as-yoga-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: transform 0.2s;
+}
+.as-yoga-card.active-yoga {
+  border-left: 5px solid #28a745;
+}
+.as-yoga-card.inactive-yoga {
+  border-left: 5px solid #6c757d;
+  opacity: 0.8;
+}
+
+/* Badges */
+.as-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #fff;
+}
+.as-badge-success { background-color: #28a745; }
+.as-badge-secondary { background-color: #6c757d; }
+
+/* Muhurta Progress bars */
+.as-muhurta-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+.as-progress-bar {
+  background-color: #e9ecef;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.as-progress-fill {
+  height: 100%;
+  border-radius: 5px;
+}
+.as-progress-excellent { background-color: #28a745; }
+.as-progress-good { background-color: #17a2b8; }
+.as-progress-average { background-color: #ffc107; }
+.as-progress-challenging { background-color: #dc3545; }
+</style>
+
+<div class="as-breadcrumb"><a href="/tools/kundli">{{ "Free Kundli"|t(lang) }}</a> › {{ "Result"|t(lang) }}</div>
+<h1 class="as-page-title">{{ "Kundli"|t(lang) }} — {{ chart.name }}</h1>
+
+<div class="as-kundli-layout">
+  <!-- Left Column: North Indian Graphical Chart -->
+  <div class="as-kundli-chart-panel">
+    <h2 class="as-section-title">{{ "Birth Chart (Lagna)"|t(lang) }}</h2>
+    {% with chart=chart %}
+      {% include "partials/north_indian_chart.html" %}
+    {% endwith %}
+  </div>
+  
+  <!-- Right Column: Tabular Positions -->
+  <div class="as-kundli-details-panel">
+    <h2 class="as-section-title">{{ "Planetary Positions"|t(lang) }}</h2>
+    <div class="as-panel" style="max-width: 100%; width: 100%;">
+      <table class="as-table">
+        <tr>
+          <th>{{ "Lagna"|t(lang) }}</th>
+          <th>{{ "Moon Sign"|t(lang) }}</th>
+          <th>{{ "Sun Sign"|t(lang) }}</th>
+          <th>{{ "Nakshatra"|t(lang) }}</th>
+        </tr>
+        <tr>
+          <td>{{ chart.lagna|t(lang) }}</td>
+          <td>{{ chart.moon_sign|t(lang) }}</td>
+          <td>{{ chart.sun_sign|t(lang) }}</td>
+          <td>{{ chart.nakshatra|t(lang) }}</td>
+        </tr>
+      </table>
+      <p style="font-size:13px;color:var(--as-muted);margin-top:8px">{{ chart.dob }} · {{ chart.birth_time }} · {{ chart.place }}</p>
+
+      <h3 class="as-section-title" style="margin-top:24px">{{ "12 Houses (Vedic)"|t(lang) }}</h3>
+      <div class="as-table-wrap">
+        <table class="as-table">
+          <tr>
+            <th>{{ "House"|t(lang) }}</th>
+            <th>{{ "Sign"|t(lang) }}</th>
+            <th>{{ "Planets"|t(lang) }}</th>
+          </tr>
+          {% for h, data in chart.houses.items() %}
+            <tr>
+              <td>{{ h }}</td>
+              <td>{{ data.sign|t(lang) }} ({{ data.rashi_num }})</td>
+              <td>{{ data.planets|t(lang)|join(', ') if data.planets else '—' }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Premium Professional Vedic Reports Tabs -->
+<div class="as-report-tabs">
+  <button id="btn-tab-panchang" class="as-report-tab-btn active" onclick="switchReportTab('tab-panchang')">🪔 {{ "Panchang & Muhurtas"|t(lang) }}</button>
+  <button id="btn-tab-divs" class="as-report-tab-btn" onclick="switchReportTab('tab-divs')">☸ {{ "Divisional Charts"|t(lang) }}</button>
+  <button id="btn-tab-dasha" class="as-report-tab-btn" onclick="switchReportTab('tab-dasha')">📅 {{ "Vimshottari Dasha"|t(lang) }}</button>
+  <button id="btn-tab-strength" class="as-report-tab-btn" onclick="switchReportTab('tab-strength')">💪 {{ "Planetary Strength & Yogas"|t(lang) }}</button>
+  <button id="btn-tab-ashtakavarga" class="as-report-tab-btn" onclick="switchReportTab('tab-ashtakavarga')">🔢 {{ "Ashtakavarga Matrix"|t(lang) }}</button>
+  <button id="btn-tab-gochar" class="as-report-tab-btn" onclick="switchReportTab('tab-gochar')">💫 {{ "Gochar (Transit)"|t(lang) }}</button>
+  <button id="btn-tab-eclipses" class="as-report-tab-btn" onclick="switchReportTab('tab-eclipses')">🌑 {{ "Upcoming Eclipses"|t(lang) }}</button>
+</div>
+
+<!-- Tab 1: Panchang & Muhurtas -->
+<div id="tab-panchang" class="as-report-panel active">
+  <div class="as-panel">
+    <h3 class="as-section-title">{{ "Panchang Details"|t(lang) }}</h3>
+    <table class="as-table" style="margin-bottom: 24px;">
+      <tr>
+        <td><strong>{{ "Tithi"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.tithi|t(lang) }} ({{ chart.panchang.tithi_details.paksha|t(lang) }} {{ "Paksha"|t(lang) }})</td>
+        <td><strong>{{ "Brahma Muhurta"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.brahma_muhurta.start }} – {{ chart.panchang.brahma_muhurta.end }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Nakshatra"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.nakshatra|t(lang) }}</td>
+        <td><strong>{{ "Abhijit Muhurta"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.abhijit_muhurta.start }} – {{ chart.panchang.abhijit_muhurta.end }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Yoga"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.yoga|t(lang) }}</td>
+        <td><strong>{{ "Rahu Kalam"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.rahu_kalam.start }} – {{ chart.panchang.rahu_kalam.end }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Karana"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.karana|t(lang) }}</td>
+        <td><strong>{{ "Yamaganda"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.yamaganda.start }} – {{ chart.panchang.yamaganda.end }}</td>
+      </tr>
+      <tr>
+        <td><strong>{{ "Sunrise"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.sunrise }}</td>
+        <td><strong>{{ "Sunset"|t(lang) }}</strong></td>
+        <td>{{ chart.panchang.sunset }}</td>
+      </tr>
+    </table>
+
+    <h3 class="as-section-title">{{ "Muhurta Suitability"|t(lang) }}</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+      {% for act_key, m_data in chart.muhurtas.items() %}
+        <div class="as-muhurta-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>{{ act_key|replace('_', ' ')|title|t(lang) }}</strong>
+            <span class="as-badge {% if m_data.grade == 'Excellent' or m_data.grade == 'Good' %}as-badge-success{% else %}as-badge-secondary{% endif %}">
+              {{ m_data.grade|t(lang) }}
+            </span>
+          </div>
+          <div class="as-progress-bar">
+            {% set class_grade = m_data.grade|lower %}
+            <div class="as-progress-fill as-progress-{{ class_grade }}" style="width: {{ m_data.score }}%"></div>
+          </div>
+          <div style="font-size:12px; color:var(--as-muted); margin-top:8px;">
+            <p><strong>{{ "Positives"|t(lang) }}:</strong> {{ m_data.positives|t(lang)|join(', ') }}</p>
+            {% if m_data.negatives %}
+              <p style="margin-top:4px;"><strong>{{ "Negatives"|t(lang) }}:</strong> {{ m_data.negatives|t(lang)|join(', ') }}</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2: Divisional Charts -->
+<div id="tab-divs" class="as-report-panel">
+  <div class="as-panel">
+    <div style="margin-bottom:20px">
+      <label style="font-weight:bold">{{ "Select Chart"|t(lang) }}:</label>
+      <select id="div-chart-select" onchange="switchDivisionalChart(this.value)" class="as-input" style="width:250px;display:inline-block;margin-left:10px">
+        <option value="D1" selected>{{ "Birth Chart (D1)"|t(lang) }}</option>
+        <option value="D9">{{ "Navamsa Chart (D9)"|t(lang) }}</option>
+        <option value="D10">{{ "Dasamsa Chart (D10)"|t(lang) }}</option>
+      </select>
+    </div>
+    
+    <div id="div-chart-D1" class="div-chart-panel" style="display:block;max-width:400px;margin:0 auto;">
+      <h3 class="as-section-title" style="text-align:center;">{{ "Birth Chart (D1)"|t(lang) }}</h3>
+      {% include "partials/north_indian_chart.html" %}
+    </div>
+    
+    <div id="div-chart-D9" class="div-chart-panel" style="display:none;max-width:400px;margin:0 auto;">
+      <h3 class="as-section-title" style="text-align:center;">{{ "Navamsa Chart (D9)"|t(lang) }}</h3>
+      {% with chart={'houses': chart.vargas_houses['D9']} %}
+        {% include "partials/north_indian_chart.html" %}
+      {% endwith %}
+    </div>
+    
+    <div id="div-chart-D10" class="div-chart-panel" style="display:none;max-width:400px;margin:0 auto;">
+      <h3 class="as-section-title" style="text-align:center;">{{ "Dasamsa Chart (D10)"|t(lang) }}</h3>
+      {% with chart={'houses': chart.vargas_houses['D10']} %}
+        {% include "partials/north_indian_chart.html" %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+
+<!-- Tab 3: Vimshottari Dasha -->
+<div id="tab-dasha" class="as-report-panel">
+  <div class="as-panel">
+    <p style="margin-bottom:15px;color:var(--as-muted)">{{ "Click on any Mahadasha to view its Antardasha periods."|t(lang) }}</p>
+    {% for md in chart.dashas %}
+      <div class="as-dasha-item">
+        <div class="as-dasha-header" onclick="toggleDasha('md-{{ loop.index }}')">
+          ➕ <strong>{{ md.lord|t(lang) }} {{ "Mahadasha"|t(lang) }}</strong> ({{ md.start }} – {{ md.end }})
+        </div>
+        <div id="md-{{ loop.index }}" class="as-dasha-sub">
+          {% set parent_loop = loop.index %}
+          {% for ad in md.antardashas %}
+            <div class="as-dasha-item" style="margin-left: 15px">
+              <div class="as-dasha-header" onclick="toggleDasha('ad-{{ parent_loop }}-{{ loop.index }}')">
+                ➕ {{ ad.lord|t(lang) }} {{ "Antardasha"|t(lang) }} ({{ ad.start }} – {{ ad.end }})
+              </div>
+              <div id="ad-{{ parent_loop }}-{{ loop.index }}" class="as-dasha-sub">
+                <table class="as-table" style="font-size:12px;margin-top:5px;width:100%">
+                  <tr>
+                    <th>{{ "Pratyantar Lord"|t(lang) }}</th>
+                    <th>{{ "Start Date"|t(lang) }}</th>
+                    <th>{{ "End Date"|t(lang) }}</th>
+                  </tr>
+                  {% for pd in ad.pratyantardashas %}
+                    <tr>
+                      <td><strong>{{ pd.lord|t(lang) }}</strong></td>
+                      <td>{{ pd.start }}</td>
+                      <td>{{ pd.end }}</td>
+                    </tr>
+                  {% endfor %}
+                </table>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Tab 4: Planetary Strength & Yogas -->
+<div id="tab-strength" class="as-report-panel">
+  <div class="as-panel">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+      
+      <!-- Shadbala -->
+      <div>
+        <h3 class="as-section-title">{{ "Planetary Strength (Shadbala)"|t(lang) }}</h3>
+        {% for p_name, strength in chart.shadbala.items() %}
+          <div style="margin-bottom:15px">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+              <strong>{{ p_name|t(lang) }}</strong>
+              <span style="color:var(--as-navy); font-weight:bold">{{ strength.total }} {{ "points"|t(lang) }}</span>
+            </div>
+            <div style="background-color:#eee; height:8px; border-radius:4px; overflow:hidden">
+              <div style="background-color:var(--as-navy); height:100%; width:{{ [strength.total/3, 100]|min }}%"></div>
+            </div>
+            <div style="font-size:11px; color:var(--as-muted); margin-top:2px">
+              {{ "Sthanabala"|t(lang) }}: {{ strength.sthanabala }} | {{ "Digbala"|t(lang) }}: {{ strength.digbala }} | {{ "Kalabala"|t(lang) }}: {{ strength.kalabala }} | {{ "Chestabala"|t(lang) }}: {{ strength.chestabala }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Yogas -->
+      <div>
+        <h3 class="as-section-title">{{ "Vedic Yogas"|t(lang) }}</h3>
+        {% for yoga in chart.yogas %}
+          <div class="as-yoga-card {% if yoga.status %}active-yoga{% else %}inactive-yoga{% endif %}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong>{{ yoga.name|t(lang) }}</strong>
+              {% if yoga.status %}
+                <span class="as-badge as-badge-success">{{ "Active"|t(lang) }}</span>
+              {% else %}
+                <span class="as-badge as-badge-secondary">{{ "Not Active"|t(lang) }}</span>
+              {% endif %}
+            </div>
+            <p style="font-size:13px; color:var(--as-muted);">{{ yoga.description|t(lang) }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 5: Ashtakavarga Matrix -->
+<div id="tab-ashtakavarga" class="as-report-panel">
+  <div class="as-panel">
+    <h3 class="as-section-title">{{ "Ashtakavarga Matrix"|t(lang) }}</h3>
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <tr>
+          <th>{{ "Planet"|t(lang) }}</th>
+          <th>AR (1)</th>
+          <th>TA (2)</th>
+          <th>GE (3)</th>
+          <th>CA (4)</th>
+          <th>LE (5)</th>
+          <th>VI (6)</th>
+          <th>LI (7)</th>
+          <th>SC (8)</th>
+          <th>SA (9)</th>
+          <th>CP (10)</th>
+          <th>AQ (11)</th>
+          <th>PI (12)</th>
+        </tr>
+        {% for p_name, pts in chart.ashtakavarga.bav.items() %}
+          <tr>
+            <td><strong>{{ p_name|t(lang) }}</strong></td>
+            {% for pt in pts %}
+              <td>{{ pt }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        <tr style="background-color:#ffd89b; font-weight:bold;">
+          <td>SAV (Total)</td>
+          {% for pt in chart.ashtakavarga.sav %}
+            <td>{{ pt }}</td>
+          {% endfor %}
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 6: Gochar (Transit) -->
+<div id="tab-gochar" class="as-report-panel">
+  <div class="as-panel">
+    <h3 class="as-section-title">{{ "Real-time Gochar Placements"|t(lang) }}</h3>
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <tr>
+          <th>{{ "Planet"|t(lang) }}</th>
+          <th>{{ "Transit Sign"|t(lang) }}</th>
+          <th>{{ "House (from Moon)"|t(lang) }}</th>
+          <th>{{ "House (from Lagna)"|t(lang) }}</th>
+          <th>{{ "Status"|t(lang) }}</th>
+        </tr>
+        {% for p_name, p_data in chart.gochar.placements.items() %}
+          <tr>
+            <td><strong>{{ p_name|t(lang) }}</strong></td>
+            <td>{{ p_data.sign|t(lang) }}</td>
+            <td>{{ p_data.house_relative_moon }}</td>
+            <td>{{ p_data.house_relative_lagna }}</td>
+            <td>
+              {% if p_data.is_retrograde %}
+                <span style="color:#dc3545;font-weight:bold;">{{ "Retrograde"|t(lang) }}</span>
+              {% else %}
+                <span style="color:#28a745;">{{ "Direct"|t(lang) }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <h3 class="as-section-title" style="margin-top:24px;">{{ "Transit Vedic Aspects"|t(lang) }}</h3>
+    {% if chart.gochar.aspects %}
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+        {% for aspect in chart.gochar.aspects %}
+          <div class="as-panel" style="padding:10px; border-left:4px solid var(--as-navy)">
+            <strong>{{ aspect.aspect_type|t(lang) }}</strong><br>
+            <span style="font-size:13px; color:var(--as-muted)">{{ aspect.description|t(lang) }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--as-muted);">{{ "No primary transit aspects on natal chart at this moment."|t(lang) }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tab 7: Eclipses -->
+<div id="tab-eclipses" class="as-report-panel">
+  <div class="as-panel">
+    <h3 class="as-section-title">{{ "Upcoming Solar & Lunar Eclipses"|t(lang) }}</h3>
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <tr>
+          <th>{{ "Eclipse Type"|t(lang) }}</th>
+          <th>{{ "Peak Time"|t(lang) }}</th>
+          <th>{{ "Start Time"|t(lang) }}</th>
+          <th>{{ "End Time"|t(lang) }}</th>
+          <th>{{ "Visibility"|t(lang) }}</th>
+          <th>{{ "Magnitude"|t(lang) }}</th>
+        </tr>
+        {% for ec in chart.eclipses %}
+          <tr>
+            <td><strong>{{ ec.type|t(lang) }}</strong></td>
+            <td>{{ ec.peak_time }}</td>
+            <td>{{ ec.start_time }}</td>
+            <td>{{ ec.end_time }}</td>
+            <td>{{ ec.visibility|t(lang) }}</td>
+            <td>{{ ec.magnitude }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap">
+  <a href="/tools/kundli" class="as-btn as-btn-outline">{{ "New Kundli"|t(lang) }}</a>
+  <a href="/tools/match" class="as-btn as-btn-primary">{{ "Kundli Matching"|t(lang) }}</a>
+  {% if user %}
+    <a href="/account/history" class="as-btn as-btn-navy">{{ "My saved charts"|t(lang) }}</a>
+  {% endif %}
+</div>
+
+<script>
+function switchReportTab(tabId) {
+  // Hide all panels
+  document.querySelectorAll('.as-report-panel').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  // Deactivate all tab buttons
+  document.querySelectorAll('.as-report-tab-btn').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  // Show target panel
+  document.getElementById(tabId).classList.add('active');
+  // Activate clicked tab button
+  var clickedBtn = document.querySelector('[onclick="switchReportTab(\'' + tabId + '\')"]');
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+  }
+}
+
+function switchDivisionalChart(divId) {
+  // Hide all division containers
+  document.querySelectorAll('.div-chart-panel').forEach(function(el) {
+    el.style.display = 'none';
+  });
+  // Show target division
+  document.getElementById('div-chart-' + divId).style.display = 'block';
+}
+
+function toggleDasha(subId) {
+  var el = document.getElementById(subId);
+  if (el) {
+    el.classList.toggle('active');
+  }
+}
+</script>
+{% endblock %}

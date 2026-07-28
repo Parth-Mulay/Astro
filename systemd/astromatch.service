@@ -1,0 +1,17 @@
+[Unit]
+Description=AstroMatch FastAPI Service
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/var/www/astromatch
+EnvironmentFile=/var/www/astromatch/.env
+ExecStart=/var/www/astromatch/.venv/bin/gunicorn app.main:app -c gunicorn.conf.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/astromatch/logs/application.log
+StandardError=append:/var/www/astromatch/logs/error.log
+
+[Install]
+WantedBy=multi-user.target

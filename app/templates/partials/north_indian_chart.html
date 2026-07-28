@@ -1,0 +1,63 @@
+{% set lang = lang|default(request.cookies.get('lang', 'en')) %}
+<div class="as-chart-container">
+  <svg viewBox="0 0 400 400" class="as-chart-svg" xmlns="http://www.w3.org/2000/svg">
+    <!-- Outer Border -->
+    <rect x="0" y="0" width="400" height="400" fill="none" stroke="var(--as-navy)" stroke-width="2.5"/>
+    
+    <!-- Diagonals -->
+    <line x1="0" y1="0" x2="400" y2="400" stroke="var(--as-navy)" stroke-width="2"/>
+    <line x1="400" y1="0" x2="0" y2="400" stroke="var(--as-navy)" stroke-width="2"/>
+    
+    <!-- Inner Diamond -->
+    <line x1="200" y1="0" x2="0" y2="200" stroke="var(--as-navy)" stroke-width="2"/>
+    <line x1="0" y1="200" x2="200" y2="400" stroke="var(--as-navy)" stroke-width="2"/>
+    <line x1="200" y1="400" x2="400" y2="200" stroke="var(--as-navy)" stroke-width="2"/>
+    <line x1="400" y1="200" x2="200" y2="0" stroke="var(--as-navy)" stroke-width="2"/>
+    
+    <!-- Center Square for Om (Vedic/spiritual touch) -->
+    <rect x="180" y="180" width="40" height="40" fill="#fff" stroke="var(--as-navy)" stroke-width="1.5"/>
+    <text x="200" y="207" font-size="20" font-weight="bold" text-anchor="middle" class="as-chart-om">ॐ</text>
+
+    <!-- Houses Render Loop (1 to 12) -->
+    {% set house_coords = {
+      '1':  {'r_x': 200, 'r_y': 155, 'p_x': 200, 'p_y': 80,  's_x': 200, 's_y': 110},
+      '2':  {'r_x': 130, 'r_y': 95,  'p_x': 100, 'p_y': 40,  's_x': 100, 's_y': 65},
+      '3':  {'r_x': 45,  'r_y': 45,  'p_x': 50,  'p_y': 110, 's_x': 50,  's_y': 135},
+      '4':  {'r_x': 155, 'r_y': 200, 'p_x': 90,  'p_y': 180, 's_x': 90,  's_y': 210},
+      '5':  {'r_x': 45,  'r_y': 355, 'p_x': 50,  'p_y': 275, 's_x': 50,  's_y': 300},
+      '6':  {'r_x': 130, 'r_y': 305, 'p_x': 100, 'p_y': 340, 's_x': 100, 's_y': 365},
+      '7':  {'r_x': 200, 'r_y': 245, 'p_x': 200, 'p_y': 325, 's_x': 200, 's_y': 295},
+      '8':  {'r_x': 270, 'r_y': 305, 'p_x': 300, 'p_y': 340, 's_x': 300, 's_y': 365},
+      '9':  {'r_x': 355, 'r_y': 355, 'p_x': 350, 'p_y': 275, 's_x': 350, 's_y': 300},
+      '10': {'r_x': 245, 'r_y': 200, 'p_x': 310, 'p_y': 180, 's_x': 310, 's_y': 210},
+      '11': {'r_x': 355, 'r_y': 45,  'p_x': 350, 'p_y': 110, 's_x': 350, 's_y': 135},
+      '12': {'r_x': 270, 'r_y': 95,  'p_x': 300, 'p_y': 40,  's_x': 300, 's_y': 65}
+    } %}
+
+    {% for h_num, coords in house_coords.items() %}
+      {% set h_data = chart.houses[h_num] %}
+      
+      <!-- Rashi Number (Red) -->
+      <text x="{{ coords.r_x }}" y="{{ coords.r_y }}" text-anchor="middle" class="as-chart-rashi-num">
+        {{ h_data.rashi_num }}
+      </text>
+      
+      <!-- Rashi Name (Green) -->
+      <text x="{{ coords.s_x }}" y="{{ coords.s_y }}" text-anchor="middle" class="as-chart-rashi-name">
+        {% if lang == 'hi' %}
+          {{ h_data.sign|t(lang) }} राशि
+        {% else %}
+          {{ h_data.sign|t(lang) }}
+        {% endif %}
+      </text>
+      
+      <!-- Planets (Blue) -->
+      {% if h_data.planets %}
+        {% set plan_str = h_data.planets|t(lang)|join(', ') %}
+        <text x="{{ coords.p_x }}" y="{{ coords.p_y }}" text-anchor="middle" class="as-chart-planet">
+          {{ plan_str }}
+        </text>
+      {% endif %}
+    {% endfor %}
+  </svg>
+</div>

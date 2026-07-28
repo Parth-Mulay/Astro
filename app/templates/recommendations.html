@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Top 3 Matches – AstroMatch{% endblock %}
+
+{% block content %}
+<div class="as-breadcrumb">
+  <a href="/">Home</a> › <a href="/flow/problem">Smart Match</a> › Recommendations
+</div>
+
+<h1 class="as-page-title">Consult Expert Astrologers — Matched For You</h1>
+<p class="as-page-sub">
+  <strong>{{ category.name if category else "Your issue" }}</strong> ·
+  {{ intake.language }} ·
+  {% if intake.budget_max and intake.budget_max > 0 %}₹{{ intake.budget_min }}–{{ intake.budget_max }}{% else %}Any budget{% endif %} ·
+  {{ intake.consult_type.value if intake.consult_type.value is defined else intake.consult_type }}
+</p>
+
+{% if matches|length == 0 %}
+  <div class="as-panel">
+    <div class="as-alert as-alert-error">
+      No astrologers passed all filters (verified, active, language, budget, specialty, availability).
+    </div>
+    <a href="/flow/problem" class="as-btn as-btn-primary">Try another category</a>
+  </div>
+{% else %}
+  <div class="as-match-grid">
+    {% for m in matches %}
+      {% set astro = m.astrologer %}
+      {% set parts = astro.display_name.split() %}
+      {% if parts|length >= 2 %}
+        {% set initials = (parts[0][0] ~ parts[1][0]) | upper %}
+      {% else %}
+        {% set initials = astro.display_name[:2] | upper %}
+      {% endif %}
+      {% set rate = (astro.min_budget // 10) if astro.min_budget > 0 else 15 %}
+      {% set specs = match_specialties.get(astro.id, []) %}
+
+      <div class="as-match-card">
+        <div class="as-match-card-header">
+          <div class="as-astro-avatar" style="width:64px;height:64px;font-size:20px;margin:0">{{ initials }}</div>
+          <div style="flex:1">
+            <div class="as-astro-name" style="font-size:18px">{{ astro.display_name }}</div>
+            {% if astro.verified_identity %}<span class="as-verified">✓ AAAP Verified</span>{% endif %}
+            <div class="as-astro-meta" style="margin-top:6px">
+              {{ astro.years_of_experience }}+ Years · {{ astro.primary_language }}
+            </div>
+            <div class="as-tags">
+              {% for s in specs %}
+                <span class="as-tag">{{ s }}</span>
+              {% endfor %}
+            </div>
+            <div class="as-astro-price">₹{{ rate }}/min · Session from ₹{{ astro.min_budget }}</div>
+            <div class="as-astro-rating">★ {{ "%.1f"|format(astro.average_rating) if astro.average_rating else "New" }}</div>
+          </div>
+          <div class="as-match-score-badge">
+            <span class="num">{{ "%.0f"|format(m.score * 100) }}%</span>
+            <span class="lbl">Match</span>
+          </div>
+        </div>
+
+        <div class="as-match-body">
+          <strong style="font-size:13px;color:var(--as-navy)">Why recommended</strong>
+          <ul class="as-why-list">
+            {% for r in m.reasons %}
+              <li>{{ r }}</li>
+            {% endfor %}
+          </ul>
+
+          <form method="post" action="/flow/book" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <input type="hidden" name="intake_id" value="{{ intake.id }}" />
+            <input type="hidden" name="astrologer_id" value="{{ astro.id }}" />
+            {% if intake.consult_type.value == 'chat' or intake.consult_type == 'chat' %}
+              <button type="submit" class="as-btn as-btn-green" style="flex:1">Chat Now</button>
+            {% else %}
+              <button type="submit" class="as-btn as-btn-primary" style="flex:1">Call Now</button>
+            {% endif %}
+            <button type="submit" class="as-btn as-btn-navy" style="flex:1">Book Session</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <p style="margin-top:20px;font-size:13px;color:var(--as-muted)">
+    Not satisfied? <a href="/flow/problem">Start a new intake</a> with different language or budget.
+  </p>
+{% endif %}
+{% endblock %}

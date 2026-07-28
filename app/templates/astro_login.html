@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Astrologer Login – AstroMatch{% endblock %}
+{% block content %}
+<div class="as-breadcrumb"><a href="/">Home</a> › Astrologer Login</div>
+<h1 class="as-page-title">Astrologer Portal</h1>
+<p class="as-page-sub">Separate login for astrologers to reply to user chats.</p>
+
+<div class="as-panel" style="max-width:440px">
+  {% if error %}<div class="as-alert as-alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/astro/login">
+    <input type="hidden" name="next" value="{{ next|default('/astro') }}" />
+    <div class="as-form-group">
+      <label>Email</label>
+      <input class="as-input" name="email" type="email" required />
+    </div>
+    <div class="as-form-group">
+      <label>Password</label>
+      <input class="as-input" name="password" type="password" required />
+    </div>
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%;padding:12px">LOGIN</button>
+  </form>
+
+  <div style="margin-top:14px;font-size:13px;color:var(--as-muted)">
+    Seeded astrologers: <code>astro1@example.com</code>, <code>astro2@example.com</code>… password: <code>password</code>
+  </div>
+</div>
+{% endblock %}
+

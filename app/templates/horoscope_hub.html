@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ "Horoscope"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<h1 class="as-page-title">{{ "Horoscope"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "daily_horoscope_desc"|t(lang) }}</p>
+
+<div class="as-service-grid" style="margin-bottom:24px">
+  <a href="/tools/horoscope/daily" class="as-service-tile"><div class="icon">☀️</div><div class="label">{{ "Daily"|t(lang) }}</div></a>
+  <a href="/tools/horoscope/weekly" class="as-service-tile"><div class="icon">📅</div><div class="label">{{ "Weekly"|t(lang) }}</div></a>
+  <a href="/tools/horoscope/monthly" class="as-service-tile"><div class="icon">🗓️</div><div class="label">{{ "Monthly"|t(lang) }}</div></a>
+  <a href="/tools/horoscope/yearly" class="as-service-tile"><div class="icon">🎯</div><div class="label">{{ "Yearly"|t(lang) }} 2026</div></a>
+</div>
+
+<h2 class="as-section-title">{{ "Choose your sign"|t(lang) }}</h2>
+<div class="as-category-grid">
+  {% for slug, name, sym in signs %}
+    <a href="/tools/horoscope/daily?sign={{ slug }}" class="as-category-card">
+      <div class="emoji">{{ sym }}</div>
+      <div class="name">{{ name|t(lang) }}</div>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

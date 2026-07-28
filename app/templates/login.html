@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Sign In"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+<div class="as-breadcrumb"><a href="/">{{ "Home"|t(lang) }}</a> › {{ "Sign In"|t(lang) }}</div>
+<h1 class="as-page-title" style="text-align: center;">{{ "Sign In Portal"|t(lang) }}</h1>
+<p class="as-page-sub" style="text-align: center;">{{ "Choose your portal to sign in."|t(lang) }}</p>
+
+<div class="as-panel" style="max-width:440px; margin: 0 auto; padding: 24px;">
+  {% if error %}<div class="as-alert as-alert-error">{{ error }}</div>{% endif %}
+
+  <!-- Toggle tabs to visually separate Client vs Jyotishi login -->
+  <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--as-navy); padding-bottom: 8px;">
+    <button id="btn-login-client" class="as-btn" style="flex: 1; background: var(--as-navy); color: #fff; border: none; font-weight: bold; padding: 8px; cursor: pointer;" onclick="switchLoginRole('client')">{{ "Client Login"|t(lang) }}</button>
+    <button id="btn-login-astro" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 8px; cursor: pointer;" onclick="switchLoginRole('astro')">{{ "Jyotishi Login"|t(lang) }}</button>
+  </div>
+
+  <form method="post" action="/auth/login" id="login-form">
+    <input type="hidden" name="next" id="login-next" value="{{ next|default('/flow/problem') }}" />
+    <div class="as-form-group">
+      <label>{{ "Email Address"|t(lang) }}</label>
+      <input class="as-input" name="email" type="email" placeholder="{{ 'name@example.com'|t(lang) }}" required style="width:100%" />
+    </div>
+    <div class="as-form-group">
+      <label>{{ "Password"|t(lang) }}</label>
+      <input class="as-input" name="password" type="password" required placeholder="{{ 'Enter password'|t(lang) }}" style="width:100%" />
+    </div>
+    <button type="submit" id="btn-submit-login" class="as-btn as-btn-primary" style="width:100%;padding:12px;font-weight:bold;cursor:pointer">{{ "SIGN IN AS CLIENT"|t(lang) }}</button>
+  </form>
+  <p style="margin-top:16px;font-size:13px; text-align: center;">
+    {{ "New user?"|t(lang) }} <a href="/auth/signup" style="font-weight:bold;">{{ "Sign up here"|t(lang) }}</a>
+  </p>
+</div>
+
+<script>
+function switchLoginRole(role) {
+  const btnClient = document.getElementById('btn-login-client');
+  const btnAstro = document.getElementById('btn-login-astro');
+  const btnSubmit = document.getElementById('btn-submit-login');
+  const inputNext = document.getElementById('login-next');
+  const isHindi = document.cookie.includes('lang=hi');
+  
+  if (role === 'client') {
+    btnClient.style.background = 'var(--as-navy)';
+    btnClient.style.color = '#fff';
+    btnClient.classList.remove('as-btn-outline');
+    
+    btnAstro.style.background = 'none';
+    btnAstro.style.color = 'var(--as-navy)';
+    btnAstro.classList.add('as-btn-outline');
+    
+    btnSubmit.innerText = isHindi ? 'क्लाइंट के रूप में साइन इन करें' : 'SIGN IN AS CLIENT';
+    btnSubmit.style.background = 'var(--as-orange)';
+    inputNext.value = '/flow/problem';
+  } else {
+    btnAstro.style.background = 'var(--as-navy)';
+    btnAstro.style.color = '#fff';
+    btnAstro.classList.remove('as-btn-outline');
+    
+    btnClient.style.background = 'none';
+    btnClient.style.color = 'var(--as-navy)';
+    btnClient.classList.add('as-btn-outline');
+    
+    btnSubmit.innerText = isHindi ? 'ज्योतिषी के रूप में साइन इन करें' : 'SIGN IN AS JYOTISHI';
+    btnSubmit.style.background = 'var(--as-navy)';
+    inputNext.value = '/astro';
+  }
+}
+</script>
+{% endblock %}

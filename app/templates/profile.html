@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}My Profile – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">My Profile (Cloud)</h1>
+
+<div class="as-panel">
+  <form method="post" action="/account/profile">
+    <div class="as-form-group">
+      <label>Full name</label>
+      <input class="as-input" name="full_name" value="{{ prof.full_name }}" />
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>Date of birth</label>
+        <input class="as-input" name="date_of_birth" type="date" value="{{ prof.date_of_birth.isoformat() if prof.date_of_birth else '' }}" />
+      </div>
+      <div class="as-form-group">
+        <label>Birth time</label>
+        <input class="as-input" name="birth_time" value="{{ prof.birth_time }}" />
+      </div>
+    </div>
+    <div class="as-form-group">
+      <label>Birth place</label>
+      <input class="as-input" name="birth_place" value="{{ prof.birth_place }}" />
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label>Zodiac sign</label>
+        <select class="as-select" name="zodiac_sign">
+          {% for s in ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'] %}
+            <option value="{{ s }}" {% if prof.zodiac_sign==s %}selected{% endif %}>{{ s|title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="as-form-group">
+        <label>Preferred language</label>
+        <input class="as-input" name="preferred_language" value="{{ prof.preferred_language }}" />
+      </div>
+    </div>
+    <button type="submit" class="as-btn as-btn-primary">Save profile</button>
+  </form>
+</div>
+
+<p style="margin-top:16px"><a href="/tools/horoscope/daily?sign={{ prof.zodiac_sign }}">View my daily horoscope →</a></p>
+{% endblock %}

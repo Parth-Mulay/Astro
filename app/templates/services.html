@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ "Services"|t(lang) }} — AstroMatch{% endblock %}
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<h1 class="as-page-title">{{ "Services"|t(lang) }}</h1>
+<p class="as-page-sub">{{ "Explore our comprehensive Vedic astrology services and tools."|t(lang) }}</p>
+
+<div class="as-services-container">
+  <!-- Sample Kundali -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">📜</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Sample Kundali"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "View a detailed sample birth chart demonstrating Lagna Rashi, planetary transits, and Vimshottari Dashas."|t(lang) }} <strong style="color:var(--as-orange)">({{ "Costs 50 Credits"|t(lang) }})</strong></p>
+      <a href="/tools/sample-kundli" class="as-btn as-btn-primary as-btn-sm">{{ "View Sample Chart"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Horoscope -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">☀️</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Detailed Horoscope"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "Read detailed Rashi Bhavishya daily, weekly, monthly, and yearly reports calculated by planetary positions."|t(lang) }} <strong style="color:var(--as-orange)">({{ "Costs 20 Credits"|t(lang) }})</strong></p>
+      <a href="/tools/horoscope" class="as-btn as-btn-primary as-btn-sm">{{ "Read Horoscope"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Panchang -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">📅</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Panchang"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "panchang_desc"|t(lang) }}</p>
+      <a href="/tools/panchang" class="as-btn as-btn-primary as-btn-sm">{{ "Check Panchang"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Astrologers -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">🔮</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Astrologers"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "astrologers_desc"|t(lang) }}</p>
+      <a href="/tools/astrologers" class="as-btn as-btn-primary as-btn-sm">{{ "Browse Astrologers"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Talk to Astrologer (Smart Match) -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">🎯</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Talk to Astrologer"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "Match to the top 3 experts specialized in your specific problem category."|t(lang) }}</p>
+      <a href="{% if user %}/flow/problem{% else %}/auth/login{% endif %}" class="as-btn as-btn-navy as-btn-sm">{{ "Talk Now"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Lal Kitab -->
+  <div class="as-service-card">
+    <div class="as-service-card-icon">🪔</div>
+    <div class="as-service-card-content">
+      <h3 class="as-service-card-title">{{ "Lal Kitab Remedies"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "remedies_desc"|t(lang) }}</p>
+      <a href="/tools/remedies" class="as-btn as-btn-primary as-btn-sm">{{ "Get Remedies"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Child Astro Report (NRI Exclusive) -->
+  <div class="as-service-card" style="border: 2px solid #f59e0b; background: #fffdfa;">
+    <div class="as-service-card-icon">👶</div>
+    <div class="as-service-card-content">
+      <div style="display:inline-block; background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-bottom:4px; text-transform:uppercase;">NRI Exclusive</div>
+      <h3 class="as-service-card-title">{{ "Child Astro Report"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "Manual, deep-dive Vedic birth chart analysis for children by senior astrologers. Multi-page PDF delivered within 72 hours."|t(lang) }} <strong style="color:var(--as-orange)">({{ "Costs 100 Credits"|t(lang) }})</strong></p>
+      <a href="/tools/child-astro-report" class="as-btn as-btn-primary as-btn-sm">{{ "Order Report"|t(lang) }}</a>
+    </div>
+  </div>
+
+  <!-- Tarot -->
+  <div class="as-service-card as-service-card-upcoming">
+    <div class="as-service-card-icon">🃏</div>
+    <div class="as-service-card-content">
+      <div style="display:inline-block; background:#fef3c7; color:#b45309; border: 1px solid #fcd34d; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">{{ "Upcoming"|t(lang) }}</div>
+      <h3 class="as-service-card-title">{{ "Tarot Card Reading"|t(lang) }}</h3>
+      <p class="as-service-card-text">{{ "tarot_desc"|t(lang) }}</p>
+      <div style="margin-top: 8px;">
+        <span class="as-btn" style="background: #fffdf5; color: #b45309; border: 1px solid #fcd34d; cursor: not-allowed; font-size: 12px; padding: 6px 12px; font-weight: 600; border-radius: 4px; display: inline-block;">{{ "Coming Soon"|t(lang) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .as-services-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+  }
+  
+  .as-service-card {
+    background: #fff;
+    border: 1px solid var(--as-border);
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    box-shadow: var(--as-shadow);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  
+  .as-service-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--as-orange);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  .as-service-card-upcoming {
+    background: linear-gradient(135deg, #fffdf7 0%, #fcf5e2 100%) !important;
+    border: 2px solid #e5c158 !important;
+    box-shadow: 0 4px 15px rgba(229, 193, 88, 0.12) !important;
+  }
+  
+  .as-service-card-upcoming:hover {
+    border-color: #d4af37 !important;
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2) !important;
+  }
+  
+  .as-service-card-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+  
+  .as-service-card-content {
+    flex: 1;
+  }
+  
+  .as-service-card-title {
+    margin: 0 0 8px;
+    color: var(--as-navy);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  
+  .as-service-card-text {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: var(--as-muted);
+    line-height: 1.5;
+  }
+</style>
+{% endblock %}

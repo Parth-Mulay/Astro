@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Child Astro Report (NRI Special)"|t(lang) }} — AstroMatch{% endblock %}
+{% block content %}
+
+<div class="as-child-hero">
+  <div class="as-hero-badge">🌍 EXCLUSIVE SERVICE FOR NRIs</div>
+  <h1 class="as-hero-title">Child Astro Report</h1>
+  <p class="as-hero-sub">
+    A digital, personalized astrology service based on traditional Vedic Astrology principles. Tailored specifically for children (up to 10 years), manually analyzed by expert astrologers and delivered as a robust multi-page PDF to your inbox within 72 hours.
+  </p>
+  <div class="as-hero-pills">
+    <div class="as-pill">⏱️ 72-Hour Guaranteed Inbox Delivery</div>
+    <div class="as-pill">🔮 100% Manual Astrologer Analysis</div>
+    <div class="as-pill">📜 Multi-Page Tailored PDF Report</div>
+    <div class="as-pill">🪙 {{ cost }} Credits per Report</div>
+  </div>
+</div>
+
+{% if success_message %}
+<div class="as-alert-success">
+  <div style="font-size:24px;margin-right:12px">🎉</div>
+  <div>
+    <strong>Order Confirmed!</strong><br/>
+    {{ success_message }}
+  </div>
+</div>
+{% endif %}
+
+<!-- How It Works Section -->
+<div class="as-section">
+  <h2 class="as-section-title">How It Works</h2>
+  <p class="as-section-sub">Simple 4-step process designed for non-resident Indian (NRI) parents worldwide</p>
+  
+  <div class="as-steps-grid">
+    <div class="as-step-card">
+      <div class="as-step-num">1</div>
+      <h3>Provide Birth Details</h3>
+      <p>Submit precise birth date, exact time, and birth location for your child along with parent contact email.</p>
+    </div>
+    
+    <div class="as-step-card">
+      <div class="as-step-num">2</div>
+      <h3>Manual Chart Analysis</h3>
+      <p>Rather than instant software output, a team of experienced Vedic astrologers analyzes the unique birth chart and divisional charts manually.</p>
+    </div>
+
+    <div class="as-step-card">
+      <div class="as-step-num">3</div>
+      <h3>Deep-Dive Report Generation</h3>
+      <p>A comprehensive multi-page PDF is generated, stripping away confusing jargon in favor of clear, readable guidance.</p>
+    </div>
+
+    <div class="as-step-card">
+      <div class="as-step-num">4</div>
+      <h3>Digital Delivery within 72 hrs</h3>
+      <p>The completed report is delivered straight to your email inbox within 72 hours, saved to your account portal.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Key Features Section -->
+<div class="as-section">
+  <h2 class="as-section-title">Key Features</h2>
+  <p class="as-section-sub">Comprehensive analytics and nurturing recommendations for your child's growth</p>
+
+  <div class="as-features-grid">
+    <div class="as-feature-card">
+      <div class="as-feature-icon">📊</div>
+      <h3>Detailed Birth Analytics</h3>
+      <p>Incorporates comprehensive Kundli and divisional birth charts (such as the Lagna Chart) for thorough planetary evaluation.</p>
+    </div>
+
+    <div class="as-feature-card">
+      <div class="as-feature-icon">👶</div>
+      <h3>Child-Centric Profiles</h3>
+      <p>Primarily focuses on children (typically up to 10 years old), helping parents understand their child’s inherent emotional and mental wiring.</p>
+    </div>
+
+    <div class="as-feature-card">
+      <div class="as-feature-icon">📄</div>
+      <h3>Robust, Multi-Page PDF</h3>
+      <p>Delivers an extensive, tailored report that strips away confusing, jargon-heavy language in favor of readable insights.</p>
+    </div>
+
+    <div class="as-feature-card">
+      <div class="as-feature-icon">🌿</div>
+      <h3>Holistic Life Guidance</h3>
+      <p>Evaluates personality traits, Ayurvedic body constitution (Dosha), innate talents, professional aptitudes, and behavioral patterns.</p>
+    </div>
+
+    <div class="as-feature-card">
+      <div class="as-feature-icon">🪔</div>
+      <h3>Nurturing Recommendations</h3>
+      <p>Offers practical guidance such as lucky colors, gemstones, and sacred auspicious sounds for naming ceremonies (Naamkaran).</p>
+    </div>
+  </div>
+</div>
+
+<!-- What it Does (The Impact) Section -->
+<div class="as-section">
+  <h2 class="as-section-title">What It Does (The Impact)</h2>
+  <p class="as-section-sub">Empowering parents with clarity, understanding, and actionable life roadmaps</p>
+
+  <div class="as-impact-grid">
+    <div class="as-impact-card">
+      <div class="as-impact-badge">Parenting</div>
+      <h3>Promotes Conscious Parenting</h3>
+      <p>Serves as a developmental roadmap for parents, shifting the focus onto a child's natural strengths and unique potential rather than generic future forecasting.</p>
+    </div>
+
+    <div class="as-impact-card">
+      <div class="as-impact-badge">Psychology</div>
+      <h3>Decodes Personality and Talents</h3>
+      <p>Uncovers the psychological and behavioral blueprints of an individual, allowing parents to understand their child's inner motivations and values.</p>
+    </div>
+
+    <div class="as-impact-card">
+      <div class="as-impact-badge">Education</div>
+      <h3>Steers Career Paths Early</h3>
+      <p>Flags natural skill sets and planetary strengths early on to help guide future educational and career choices with confidence.</p>
+    </div>
+
+    <div class="as-impact-card">
+      <div class="as-impact-badge">Growth</div>
+      <h3>Tool for Self-Discovery</h3>
+      <p>Helps navigate child's relationships and personal growth by reviewing karmic patterns without committing to rigid timeline predictions.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Order Form Section -->
+<div class="as-section" id="order-form">
+  <div class="as-panel as-order-panel">
+    <div class="as-order-header">
+      <div class="as-order-icon">📜</div>
+      <div>
+        <h2 style="margin:0;color:var(--as-navy);font-size:22px">Request Child Astro Report</h2>
+        <p style="margin:4px 0 0 0;color:var(--as-muted);font-size:14px">
+          Submit details for manual analysis by our Vedic astrology team (Cost: <strong style="color:var(--as-orange)">{{ cost }} Credits</strong>)
+        </p>
+      </div>
+    </div>
+
+    <form method="post" action="/tools/child-astro-report" style="margin-top:20px">
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label>Child's Full Name *</label>
+          <input class="as-input" name="child_name" placeholder="e.g. Aarav Sharma" required />
+        </div>
+        <div class="as-form-group">
+          <label>Gender *</label>
+          <select class="as-input" name="child_gender" style="width:100%">
+            <option value="boy">Boy</option>
+            <option value="girl">Girl</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label>Date of Birth *</label>
+          <input class="as-input" name="date_of_birth" type="date" required />
+        </div>
+        <div class="as-form-group">
+          <label>Exact Time of Birth *</label>
+          <input class="as-input" name="birth_time" type="time" value="09:30" required />
+        </div>
+      </div>
+
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label>Place of Birth (City & State/Province) *</label>
+          <input class="as-input" name="birth_place" placeholder="e.g. San Jose, California or London, UK" required />
+        </div>
+        <div class="as-form-group">
+          <label>Country of Residence (NRI Location) *</label>
+          <input class="as-input" name="country_of_residence" placeholder="e.g. USA, Canada, UK, UAE, Australia" required />
+        </div>
+      </div>
+
+      <div class="as-form-row">
+        <div class="as-form-group">
+          <label>Parent's Full Name *</label>
+          <input class="as-input" name="parent_name" value="{% if prof %}{{ prof.full_name }}{% endif %}" placeholder="e.g. Rajesh Sharma" required />
+        </div>
+        <div class="as-form-group">
+          <label>Parent Email (For Digital PDF Delivery) *</label>
+          <input class="as-input" name="parent_email" type="email" value="{% if user %}{{ user.email }}{% endif %}" placeholder="e.g. rajesh@example.com" required />
+        </div>
+      </div>
+
+      <div class="as-form-group">
+        <label>Special Notes / Questions for Astrologer Team (Optional)</label>
+        <textarea class="as-input" name="special_notes" rows="3" placeholder="Specify any particular areas of concern (e.g. health, temperament, educational aptitudes, naming suggestions)..."></textarea>
+      </div>
+
+      <div class="as-order-footer">
+        <div class="as-wallet-info">
+          🪙 Wallet Balance: <strong>{% if prof %}{{ prof.wallet_balance }}{% else %}0{% endif %} Credits</strong>
+          {% if prof and prof.wallet_balance < cost %}
+            <span style="color:#d9534f;font-weight:bold;margin-left:8px">(Insufficient credits)</span>
+          {% endif %}
+        </div>
+        <div>
+          {% if not user %}
+            <a href="/auth/login?next=/tools/child-astro-report" class="as-btn as-btn-primary">Sign In to Request Report</a>
+          {% elif prof and prof.wallet_balance < cost %}
+            <a href="/account/wallet" class="as-btn as-btn-orange">Recharge Credits</a>
+          {% else %}
+            <button type="submit" class="as-btn as-btn-primary" style="font-size:16px;padding:12px 24px">
+              📜 Request Child Astro Report ({{ cost }} Credits)
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if orders %}
+<div class="as-section" style="margin-top:40px">
+  <h2 class="as-section-title">My Child Astro Report Orders</h2>
+  <div class="as-panel">
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <thead>
+        <tr style="border-bottom:2px solid var(--as-border);text-align:left">
+          <th style="padding:10px">Order #</th>
+          <th style="padding:10px">Child Name</th>
+          <th style="padding:10px">DOB</th>
+          <th style="padding:10px">Location</th>
+          <th style="padding:10px">Delivery Email</th>
+          <th style="padding:10px">Status</th>
+          <th style="padding:10px">Date Requested</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr style="border-bottom:1px solid #edf2f7">
+          <td style="padding:12px;font-weight:bold">#CAR-{{ o.id }}</td>
+          <td style="padding:12px"><strong>{{ o.child_name }}</strong> ({{ o.child_gender }})</td>
+          <td style="padding:12px">{{ o.date_of_birth.strftime('%Y-%m-%d') }} @ {{ o.birth_time }}</td>
+          <td style="padding:12px">{{ o.birth_place }}, {{ o.country_of_residence }}</td>
+          <td style="padding:12px">{{ o.parent_email }}</td>
+          <td style="padding:12px">
+            {% if o.status == 'pending' %}
+              <span class="as-badge as-badge-warning">⏳ Manual Analysis (72h)</span>
+            {% else %}
+              <span class="as-badge as-badge-success">✅ Completed & Sent</span>
+            {% endif %}
+          </td>
+          <td style="padding:12px;color:var(--as-muted)">{{ o.created_at.strftime('%d %b %Y %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .as-child-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e1b4b 100%);
+    color: #ffffff;
+    padding: 48px 32px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 36px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  }
+
+  .as-hero-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .as-hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    background: linear-gradient(90deg, #ffffff, #fed7aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .as-hero-sub {
+    max-width: 760px;
+    margin: 0 auto 24px auto;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+
+  .as-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .as-pill {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .as-alert-success {
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    color: #065f46;
+    padding: 16px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    font-size: 15px;
+  }
+
+  .as-section {
+    margin-bottom: 44px;
+  }
+
+  .as-section-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--as-navy);
+    margin: 0 0 6px 0;
+  }
+
+  .as-section-sub {
+    font-size: 14px;
+    color: var(--as-muted);
+    margin: 0 0 24px 0;
+  }
+
+  .as-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .as-step-card {
+    background: #ffffff;
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    box-shadow: var(--as-shadow);
+  }
+
+  .as-step-num {
+    width: 36px;
+    height: 36px;
+    background: var(--as-navy);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .as-step-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: var(--as-navy);
+  }
+
+  .as-step-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--as-muted);
+    line-height: 1.5;
+  }
+
+  .as-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .as-feature-card {
+    background: #ffffff;
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--as-shadow);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .as-feature-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--as-orange);
+  }
+
+  .as-feature-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .as-feature-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 17px;
+    color: var(--as-navy);
+  }
+
+  .as-feature-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--as-muted);
+    line-height: 1.5;
+  }
+
+  .as-impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .as-impact-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--as-shadow);
+  }
+
+  .as-impact-badge {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .as-impact-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 17px;
+    color: var(--as-navy);
+  }
+
+  .as-impact-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--as-muted);
+    line-height: 1.5;
+  }
+
+  .as-order-panel {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+
+  .as-order-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--as-border);
+    padding-bottom: 20px;
+  }
+
+  .as-order-icon {
+    font-size: 40px;
+  }
+
+  .as-order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--as-border);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .as-badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .as-badge-success {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+</style>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: astromatch_web
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+      - ./uploads:/workspace/uploads
+      - ./reports:/workspace/reports
+      - ./logs:/workspace/logs
+    environment:
+      - DATABASE_URL=sqlite:////data/app.db
+    ports:
+      - "8000:8000"
+    networks:
+      - astromatch_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: astromatch_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./app/static:/var/www/static:ro
+      - ./uploads:/var/www/uploads:ro
+      - ./reports:/var/www/reports:ro
+      # SSL certificate mount directories for Let's Encrypt Certbot
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - web
+    networks:
+      - astromatch_network
+
+networks:
+  astromatch_network:
+    driver: bridge

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Kundli Matching – AstroMatch{% endblock %}
+{% block content %}
+<h1 class="as-page-title">Kundli Matching (Gun Milan)</h1>
+<p class="as-page-sub">Enter boy &amp; girl birth details for compatibility score &amp; report.</p>
+
+<div class="as-panel">
+  <form method="post" action="/tools/match">
+    <h3 style="color:var(--as-navy)">Boy's details</h3>
+    <div class="as-form-row">
+      <div class="as-form-group"><label>Name</label><input class="as-input" name="boy_name" required /></div>
+      <div class="as-form-group"><label>DOB</label><input class="as-input" name="boy_dob" type="date" required /></div>
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group"><label>Time</label><input class="as-input" name="boy_time" type="time" value="12:00" /></div>
+      <div class="as-form-group"><label>Place</label><input class="as-input" name="boy_place" /></div>
+    </div>
+
+    <h3 style="color:var(--as-navy);margin-top:24px">Girl's details</h3>
+    <div class="as-form-row">
+      <div class="as-form-group"><label>Name</label><input class="as-input" name="girl_name" required /></div>
+      <div class="as-form-group"><label>DOB</label><input class="as-input" name="girl_dob" type="date" required /></div>
+    </div>
+    <div class="as-form-row">
+      <div class="as-form-group"><label>Time</label><input class="as-input" name="girl_time" type="time" value="12:00" /></div>
+      <div class="as-form-group"><label>Place</label><input class="as-input" name="girl_place" /></div>
+    </div>
+
+    <button type="submit" class="as-btn as-btn-primary" style="width:100%;margin-top:16px;padding:12px">Match Horoscope</button>
+  </form>
+</div>
+{% endblock %}
