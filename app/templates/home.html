@@ -4,21 +4,13 @@
 {% block content %}
 {% set lang = request.cookies.get('lang', 'en') %}
 
-<div class="as-hero-banner">
-  <div>
-    <span class="as-badge">✨ {{ "Direct Jyotish Consultation & Guidance"|t(lang) }}</span>
-    <h1>{{ "Consult the right astrologer for your problem"|t(lang) }}</h1>
-    <p>{{ "Submit structured consultation details → Match with qualified Jyotishis → Directly send details & connect."|t(lang) }}</p>
-  </div>
-  <div>
-    {% if user %}
-      <a href="/tools/ask-ai" class="as-btn as-btn-primary" style="font-size:16px;padding:12px 28px">{{ "Ask Me — Consultation Form"|t(lang) }}</a>
-    {% else %}
-      <a href="/auth/login" class="as-btn as-btn-primary" style="font-size:16px;padding:12px 28px">{{ "Sign In & Consult"|t(lang) }}</a>
-      <p style="margin:8px 0 0;font-size:12px;opacity:0.85">{{ "Consultations are debited from your Credit Points balance."|t(lang) }}</p>
-    {% endif %}
-  </div>
+<div class="as-launch-poster-container" style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 24px;">
+  <img src="/static/images/launch_poster.jpg" 
+       alt="AstroMatch Official Muhurat Launch Poster" 
+       style="max-width: 720px; width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: var(--as-shadow);" 
+       fetchpriority="high">
 </div>
+
 
 <!-- Daily Panchang & Gochar Chart Section -->
 <section class="as-section">
