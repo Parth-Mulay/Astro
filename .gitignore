@@ -11,6 +11,9 @@ ENV/
 # Database
 *.db
 *.sqlite3
+*.backup
+*.db.backup
+
 
 # Runtime & dynamic media files
 logs/
