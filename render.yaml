@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: astromatch
+    runtime: python
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app -c gunicorn.conf.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: ENVIRONMENT
+        value: production
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: SESSION_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false

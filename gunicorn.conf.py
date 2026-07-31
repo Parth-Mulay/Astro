@@ -4,7 +4,8 @@ import os
 # Gunicorn configuration file for production FastAPI deployment
 
 # Server Socket
-bind = "0.0.0.0:8000"
+# Render injects $PORT (default 10000); fall back to 8000 for Docker/VPS.
+bind = f"0.0.0.0:{os.getenv('PORT', '8000')}"
 backlog = 2048
 
 # Worker Processes
