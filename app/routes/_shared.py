@@ -832,6 +832,14 @@ def translate_filter(val, lang: str = "en") -> str:
         if replaced:
             return text
         
+    if len(text) > 100:
+        key = text.lower().replace(" ", "_")
+        t_dict = TRANSLATIONS.get(lang, TRANSLATIONS["en"])
+        res = t_dict.get(key) or t_dict.get(text.lower())
+        if res:
+            return res
+        return text
+
     if "," in text:
         parts = [p.strip() for p in text.split(",")]
         translated_parts = [translate_filter(p, lang) for p in parts]
