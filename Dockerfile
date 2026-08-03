@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY app /workspace/app
-COPY de421.bsp /workspace/de421.bsp
+RUN curl -sSLo /workspace/de421.bsp https://jplephem.s3.amazonaws.com/de421.bsp
 COPY gunicorn.conf.py /workspace/gunicorn.conf.py
 
 # Create system directories for persistence
