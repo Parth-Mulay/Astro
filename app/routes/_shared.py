@@ -321,6 +321,7 @@ TRANSLATIONS = {
         "daily_panchang": "दैनिक पंचांग",
         "ask_me_(consult)": "मुझसे पूछें (परामर्श)",
         "why_astromatch_(authentic_jyotish_guidance)": "एस्ट्रोमैच क्यों (सच्चा ज्योतिषीय मार्गदर्शन)",
+        "aligning_destinies": "भाग्य संरेखण",
         "structured_background_details": "संरचित पृष्ठभूमि विवरण",
         "astrologers_get_full_details_before_starting_chat": "चैट शुरू करने से पहले ज्योतिषियों को पूरा विवरण मिलता है",
         "specialty-based_recommendation": "विशेषता-आधारित अनुशंसा",
