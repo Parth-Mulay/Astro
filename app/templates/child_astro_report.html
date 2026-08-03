@@ -245,9 +245,14 @@
           <td style="padding:12px">{{ o.parent_email }}</td>
           <td style="padding:12px">
             {% if o.status == 'pending' %}
-              <span class="as-badge as-badge-warning">⏳ Manual Analysis (72h)</span>
+              <span class="as-badge as-badge-warning">⏳ Result will be generated in 72hr</span>
             {% else %}
               <span class="as-badge as-badge-success">✅ Completed & Sent</span>
+              {% if o.pdf_path %}
+                <div style="margin-top: 4px;">
+                  <a href="{{ o.pdf_path }}" class="as-btn as-btn-orange as-btn-sm" style="padding: 4px 8px; font-size: 11px; text-decoration: none; display: inline-block;" download>📥 Download PDF</a>
+                </div>
+              {% endif %}
             {% endif %}
           </td>
           <td style="padding:12px;color:var(--as-muted)">{{ o.created_at.strftime('%d %b %Y %H:%M') }}</td>

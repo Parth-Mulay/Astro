@@ -136,9 +136,14 @@
               <td>{{ co.parent_email }}</td>
               <td>
                 {% if co.status == 'pending' %}
-                  <span class="as-badge as-badge-warning" style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:12px;">⏳ Analysis (72h)</span>
+                  <span class="as-badge as-badge-warning" style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:12px;">⏳ Result will be generated in 72hr</span>
                 {% else %}
                   <span class="as-badge as-badge-success" style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:12px;">✅ Completed</span>
+                  {% if co.pdf_path %}
+                    <div style="margin-top: 4px;">
+                      <a href="{{ co.pdf_path }}" class="as-btn as-btn-orange as-btn-sm" style="padding: 2px 6px; font-size: 10px; text-decoration: none; display: inline-block;" download>📥 PDF</a>
+                    </div>
+                  {% endif %}
                 {% endif %}
               </td>
               <td>

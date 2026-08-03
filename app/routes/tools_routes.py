@@ -602,6 +602,7 @@ def submit_child_astro_report(
         status="pending"
     )
     session.add(order)
+    session.flush()
     
     summary_html = f"""
     <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
@@ -631,6 +632,7 @@ def submit_child_astro_report(
             report_type=ReportType.child_astro,
             title=f"Child Astro Report — {child_name}",
             html_content=summary_html,
+            ref_id=order.id,
         )
     )
     

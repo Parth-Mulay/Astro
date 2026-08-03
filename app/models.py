@@ -254,6 +254,7 @@ class ChildAstroOrder(SQLModel, table=True):
     special_notes: str = ""
     status: str = Field(default="pending", index=True)  # pending, in_analysis, completed
     price_credits: int = 100
+    pdf_path: Optional[str] = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
 
 

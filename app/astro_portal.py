@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
 from app.auth import set_session, verify_password
 from app.db import get_session
 from app.deps import current_user, require_user
-from app.models import Astrologer, ChatMessage, ChatSender, ConsultationSession, Payment, PaymentStatus, Role, User
+from app.models import Astrologer, ChatMessage, ChatSender, ConsultationSession, Payment, PaymentStatus, Role, User, ChildAstroOrder, SavedReport, InAppNotification, ReportType
 from app.routes._shared import templates
 from app.ui_helpers import page_context
 
@@ -118,6 +118,14 @@ def astro_dashboard(request: Request, session_db: Session = Depends(get_session)
         
     intakes_map = {s.intake_id: session_db.get(Intake, s.intake_id) for s in sessions}
     users_map = {s.user_id: session_db.get(User, s.user_id) for s in sessions}
+    child_orders = session_db.exec(
+        select(ChildAstroOrder).order_by(ChildAstroOrder.created_at.desc())
+    ).all()
+    
+    saved_reports = session_db.exec(
+        select(SavedReport).where(SavedReport.report_type == ReportType.child_astro)
+    ).all()
+    reports_map = {r.ref_id: r.id for r in saved_reports if r.ref_id}
     
     return templates.TemplateResponse(
         request,
@@ -131,7 +139,9 @@ def astro_dashboard(request: Request, session_db: Session = Depends(get_session)
             total_clients=total_clients,
             total_earnings=total_earnings,
             active_sessions_count=active_sessions_count,
-            clients=clients
+            clients=clients,
+            child_orders=child_orders,
+            reports_map=reports_map
         ),
     )
 
@@ -303,4 +313,119 @@ def astro_profile_save(
         
     session_db.commit()
     return RedirectResponse(url="/astro/profile", status_code=303)
+
+
+@router.post("/child-orders/{order_id}/complete")
+def complete_child_order(
+    request: Request,
+    order_id: int,
+    report_content: str = Form(...),
+    pdf_file: UploadFile = File(None),
+    session_db: Session = Depends(get_session)
+):
+    user = _require_astrologer_user(request, session_db)
+    order = session_db.get(ChildAstroOrder, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    import os
+    import shutil
+    from pathlib import Path
+    from app.settings import settings
+
+    if pdf_file and pdf_file.filename:
+        uploads_dir = Path(settings.UPLOADS_DIR)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        
+        safe_filename = f"child_report_{order.id}_{os.path.basename(pdf_file.filename)}"
+        file_path = uploads_dir / safe_filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(pdf_file.file, buffer)
+        
+        order.pdf_path = f"/uploads/{safe_filename}"
+
+    # Update order status
+    order.status = "completed"
+    session_db.add(order)
+    
+    # Update the SavedReport or create it if not found
+    saved_report = session_db.exec(
+        select(SavedReport)
+        .where(SavedReport.ref_id == order.id)
+    ).first()
+    
+    # Fallback to search by title/child_name if ref_id was not populated yet
+    if not saved_report:
+        saved_report = session_db.exec(
+            select(SavedReport)
+            .where(SavedReport.user_id == order.user_id)
+            .where(SavedReport.report_type == ReportType.child_astro)
+            .where(SavedReport.title.like(f"%{order.child_name}%"))
+        ).first()
+        
+    pdf_download_html = ""
+    if order.pdf_path:
+        pdf_download_html = f"""
+        <div style="margin-top: 24px; text-align: center;">
+            <a href="{order.pdf_path}" target="_blank" class="as-btn as-btn-orange" style="display: inline-block; padding: 12px 24px; text-decoration: none; color: white; background: #f97316; border-radius: 6px; font-weight: bold; box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2);">📥 Download Completed PDF Report</a>
+        </div>
+        """
+
+    from datetime import datetime
+    report_html = f"""
+    <div style="font-family: sans-serif; padding: 24px; line-height: 1.7; max-width: 700px; margin: 0 auto; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+            <h2 style="margin: 0; font-size: 24px; letter-spacing: 0.5px;">📜 Child Astro Report (Vedic Analysis)</h2>
+            <p style="margin: 6px 0 0 0; opacity: 0.85; font-size: 14px;">Guaranteed Manual Review & Consultation Guidance</p>
+        </div>
+        
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 24px;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">Child Information</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr><td style="padding: 6px 0; color: #64748b; width: 140px;">Child Name:</td><td style="font-weight: 600; color: #0f172a;">{order.child_name} ({order.child_gender.title()})</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Date of Birth:</td><td style="font-weight: 600; color: #0f172a;">{order.date_of_birth.strftime('%d %B %Y')}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Time of Birth:</td><td style="font-weight: 600; color: #0f172a;">{order.birth_time}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Place of Birth:</td><td style="font-weight: 600; color: #0f172a;">{order.birth_place}, {order.country_of_residence}</td></tr>
+            </table>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 18px; border-bottom: 2px solid var(--as-orange, #f97316); padding-bottom: 8px;">Vedic Astrologer Analysis</h3>
+            <div style="font-size: 15px; color: #334155; white-space: pre-line;">
+                {report_content}
+            </div>
+            {pdf_download_html}
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+            This report was manually analyzed and compiled by our Vedic Astrology expert team on {datetime.utcnow().strftime('%Y-%m-%d')}.
+        </div>
+    </div>
+    """
+    
+    if saved_report:
+        saved_report.html_content = report_html
+        saved_report.ref_id = order.id
+        session_db.add(saved_report)
+    else:
+        saved_report = SavedReport(
+            user_id=order.user_id,
+            report_type=ReportType.child_astro,
+            title=f"Child Astro Report — {order.child_name}",
+            html_content=report_html,
+            ref_id=order.id
+        )
+        session_db.add(saved_report)
+        
+    session_db.add(
+        InAppNotification(
+            user_id=order.user_id,
+            title="Child Astro Report Ready",
+            body=f"Your child astrology report for {order.child_name} is complete and ready to view."
+        )
+    )
+    
+    session_db.commit()
+    return RedirectResponse(url="/astro#tab-child-orders", status_code=303)
+
 

@@ -65,6 +65,36 @@
 .as-tab-panel.active {
   display: block;
 }
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-box {
+  background: #fff;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 600px;
+  padding: 30px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 20px; right: 20px;
+  background: none; border: none;
+  font-size: 24px; cursor: pointer; color: var(--as-muted);
+}
 </style>
 {% endblock %}
 
@@ -97,6 +127,7 @@
   <button class="as-admin-tab-btn active" onclick="switchDashboardTab('tab-queue')">⏳ Consultation Queue</button>
   <button class="as-admin-tab-btn" onclick="switchDashboardTab('tab-clients')">👥 Clients Directory</button>
   <button class="as-admin-tab-btn" onclick="switchDashboardTab('tab-history')">📜 Session History</button>
+  <button class="as-admin-tab-btn" onclick="switchDashboardTab('tab-child-orders')">👶 Child Astro Orders</button>
 </div>
 
 <!-- Tab 1: Session Queue (Active Bookings) -->
@@ -269,6 +300,102 @@
   {% endif %}
 </div>
 
+<!-- Tab 4: Child Astro Orders -->
+<div id="tab-child-orders" class="as-tab-panel">
+  <h2 class="as-section-title">Child Astro Report Orders</h2>
+  {% if child_orders %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Child Info</th>
+            <th>Birth Details</th>
+            <th>Parent Email</th>
+            <th>Special Notes</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in child_orders %}
+            <tr>
+              <td><strong>#CAR-{{ o.id }}</strong></td>
+              <td>
+                <strong>{{ o.child_name }}</strong> ({{ o.child_gender }})<br/>
+                <small style="color:var(--as-muted)">Parent: {{ o.parent_name }}</small>
+              </td>
+              <td>
+                {{ o.date_of_birth }} {{ o.birth_time }}<br/>
+                <small style="color:var(--as-muted)">{{ o.birth_place }}, {{ o.country_of_residence }}</small>
+              </td>
+              <td>{{ o.parent_email }}</td>
+              <td>
+                <span title="{{ o.special_notes }}">
+                  {{ (o.special_notes[:60] + '...') if (o.special_notes and o.special_notes|length > 60) else (o.special_notes if o.special_notes else '—') }}
+                </span>
+              </td>
+              <td>
+                <span class="as-badge {% if o.status == 'completed' %}as-badge-success{% else %}as-badge-warning{% endif %}">
+                  {% if o.status == 'completed' %}
+                    ✅ Completed
+                  {% else %}
+                    ⏳ Pending
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                {% if o.status == 'pending' %}
+                  <button class="as-btn as-btn-primary as-btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="openReportModal({{ o.id }}, '{{ o.child_name|escape }}')">
+                    ✍️ Write Report
+                  </button>
+                {% else %}
+                  <span style="color:var(--as-green); font-weight:bold; font-size:13px">Completed</span>
+                  {% set report_id = reports_map.get(o.id) %}
+                  {% if report_id %}
+                    <br/>
+                    <a href="/account/reports/{{ report_id }}" target="_blank" class="as-btn as-btn-outline as-btn-sm" style="padding:2px 6px; font-size:11px; margin-top:4px; text-decoration:none;">👁️ View Text Report</a>
+                  {% endif %}
+                  {% if o.pdf_path %}
+                    <br/>
+                    <a href="{{ o.pdf_path }}" target="_blank" class="as-btn as-btn-outline as-btn-sm" style="padding:2px 6px; font-size:11px; margin-top:4px; text-decoration:none;">📄 View PDF</a>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="as-page-sub">No Child Astro Reports requested yet.</p>
+  {% endif %}
+</div>
+
+<!-- Report Submission Modal -->
+<div id="report-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeReportModal()">&times;</button>
+    <h3 style="margin-top:0">✍️ Complete Child Astro Report</h3>
+    <p style="color:var(--as-muted); font-size:14px; margin-bottom: 20px;">Writing report for <strong id="modal-child-name"></strong>. This will update the user's report summary.</p>
+    
+    <form id="report-form" method="post" action="" enctype="multipart/form-data">
+      <div style="margin-bottom:20px">
+        <label style="font-weight:bold; display:block; margin-bottom:8px">Vedic Analysis & Recommendations</label>
+        <textarea name="report_content" required style="width:100%; height:200px; padding:10px; border-radius:4px; border:1px solid var(--as-border); font-family:inherit; resize: vertical;" placeholder="Enter details about the child's birth chart, planetary alignments, strengths, and Vedic recommendations..."></textarea>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-weight:bold; display:block; margin-bottom:8px">Upload Completed PDF Report (Optional)</label>
+        <input type="file" name="pdf_file" accept=".pdf" style="width:100%; padding:6px; border:1px solid var(--as-border); border-radius:4px;">
+      </div>
+      <div style="text-align:right">
+        <button type="button" class="as-btn as-btn-outline as-btn-sm" onclick="closeReportModal()" style="margin-right:8px">Cancel</button>
+        <button type="submit" class="as-btn as-btn-primary as-btn-sm">Submit Completed Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   function switchDashboardTab(tabId) {
     document.querySelectorAll('.as-tab-panel').forEach(function(el) {
@@ -280,5 +407,33 @@
     document.getElementById(tabId).classList.add('active');
     event.currentTarget.classList.add('active');
   }
+
+  function openReportModal(orderId, childName) {
+    document.getElementById('modal-child-name').innerText = childName;
+    document.getElementById('report-form').action = '/astro/child-orders/' + orderId + '/complete';
+    document.getElementById('report-modal').classList.add('active');
+  }
+
+  function closeReportModal() {
+    document.getElementById('report-modal').classList.remove('active');
+  }
+
+  // Auto switch tab based on hash parameter
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const hash = window.location.hash;
+    if (hash) {
+      const tabId = hash.substring(1);
+      // Find tab button that matches switchDashboardTab('tabId')
+      const tabBtn = Array.from(document.querySelectorAll('.as-admin-tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (tabBtn) {
+        document.querySelectorAll('.as-tab-panel').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.as-admin-tab-btn').forEach(el => el.classList.remove('active'));
+        
+        const panel = document.getElementById(tabId);
+        if (panel) panel.classList.add('active');
+        tabBtn.classList.add('active');
+      }
+    }
+  });
 </script>
 {% endblock %}

@@ -13,43 +13,51 @@ def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
     
     # Dynamically alter intake table to add new columns if they do not exist
-    import sqlite3
-    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    for col, col_type in [
-        ("full_name", "VARCHAR"),
-        ("date_of_birth", "DATE"),
-        ("day_of_birth", "VARCHAR"),
-        ("birth_time", "VARCHAR"),
-        ("birth_place", "VARCHAR"),
-        ("current_address", "VARCHAR"),
-        ("current_location", "VARCHAR"),
-        ("problem", "VARCHAR"),
-        ("preferred_system", "VARCHAR")
-    ]:
+    if settings.DATABASE_URL.startswith("sqlite"):
+        import sqlite3
+        db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        for col, col_type in [
+            ("full_name", "VARCHAR"),
+            ("date_of_birth", "DATE"),
+            ("day_of_birth", "VARCHAR"),
+            ("birth_time", "VARCHAR"),
+            ("birth_place", "VARCHAR"),
+            ("current_address", "VARCHAR"),
+            ("current_location", "VARCHAR"),
+            ("problem", "VARCHAR"),
+            ("preferred_system", "VARCHAR")
+        ]:
+            try:
+                cursor.execute(f"ALTER TABLE intake ADD COLUMN {col} {col_type}")
+                conn.commit()
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
+
+        # Alter user table for is_suspended
         try:
-            cursor.execute(f"ALTER TABLE intake ADD COLUMN {col} {col_type}")
+            cursor.execute("ALTER TABLE user ADD COLUMN is_suspended BOOLEAN DEFAULT 0")
             conn.commit()
         except sqlite3.OperationalError:
-            # Column already exists
             pass
 
-    # Alter user table for is_suspended
-    try:
-        cursor.execute("ALTER TABLE user ADD COLUMN is_suspended BOOLEAN DEFAULT 0")
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
+        # Alter consultationsession table for payout_processed
+        try:
+            cursor.execute("ALTER TABLE consultationsession ADD COLUMN payout_processed BOOLEAN DEFAULT 0")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
 
-    # Alter consultationsession table for payout_processed
-    try:
-        cursor.execute("ALTER TABLE consultationsession ADD COLUMN payout_processed BOOLEAN DEFAULT 0")
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
+        # Alter childastroorder table for pdf_path
+        try:
+            cursor.execute("ALTER TABLE childastroorder ADD COLUMN pdf_path VARCHAR")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
 
-    conn.close()
+        conn.close()
 
 
 def get_session():
