@@ -1,13 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from skyfield.api import load
 from skyfield import almanac, eclipselib
 from skyfield.framelib import ecliptic_frame
 
-# Cache Skyfield ephemeris
-eph = load('de421.bsp')
-ts = load.timescale()
+from app.ephemeris import eph, ts
 earth = eph['earth']
 moon = eph['moon']
 

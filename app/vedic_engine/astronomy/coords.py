@@ -1,14 +1,11 @@
 from datetime import datetime
 import math
 import logging
-from skyfield.api import load
 from skyfield.framelib import ecliptic_frame
 from skyfield.nutationlib import fundamental_arguments
 from app.vedic_engine.astronomy.ayanamsa import get_ayanamsa
 
-# Cache Skyfield resources
-eph = load('de421.bsp')
-ts = load.timescale()
+from app.ephemeris import eph, ts
 earth = eph['earth']
 
 # Planetary mapping

@@ -1,12 +1,10 @@
 import logging
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
-from skyfield.api import load, wgs84
+from skyfield.api import wgs84
 from skyfield import almanac
 
-# Cache Skyfield ephemeris
-eph = load('de421.bsp')
-ts = load.timescale()
+from app.ephemeris import eph, ts
 moon = eph['moon']
 
 def get_day_timings(local_date: date, lat: float, lon: float, tz_name: str) -> dict:

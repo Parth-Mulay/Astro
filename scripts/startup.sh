@@ -45,7 +45,7 @@ fi
 # 5. Verify Skyfield ephemeris
 if [ ! -f "de421.bsp" ]; then
     echo "Downloading Skyfield ephemeris de421.bsp..."
-    python -c "from skyfield.api import load; load('de421.bsp')"
+    python -c "from skyfield.api import Loader; load = Loader('.'); load('de421.bsp')"
 fi
 
 echo "=== Startup Verification Successful ==="

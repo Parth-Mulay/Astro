@@ -428,9 +428,7 @@ async def redirect_astrologers_from_client_pages(request: Request, call_next):
 def _startup():
     create_db_and_tables()
     try:
-        from skyfield.api import load
-        load('de421.bsp')
-        load.timescale()
+        from app.ephemeris import eph, ts
     except Exception as e:
         import logging
         logging.error(f"Failed to pre-load Skyfield ephemeris: {e}")
