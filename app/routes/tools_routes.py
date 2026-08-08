@@ -237,7 +237,7 @@ def ask_ai_page(request: Request, session: Session = Depends(get_session)):
                     "error": True
                 }
             )
-    return templates.TemplateResponse(request, "ask_ai.html", {"user": user, "prof": prof, "step": "form", "cost": cost})
+    return templates.TemplateResponse(request, "ask_ai.html", {"user": user, "prof": prof, "step": "form", "cost": cost, "intake": None})
 
 
 @router.post("/ask-ai")

@@ -199,10 +199,10 @@
       </p>
       
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <a href="/auth/login?next=/tools/ask-ai/recommendations?intake_id={{ intake.id }}" class="as-btn" style="background: linear-gradient(135deg, var(--as-orange) 0%, var(--as-orange-dark) 100%); color: #fff; font-weight: bold; padding: 12px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; box-shadow: 0 4px 12px rgba(242, 101, 34, 0.2);">
+        <a href="/auth/login?next=/tools/ask-ai/recommendations?intake_id={{ intake.id if intake else '' }}" class="as-btn" style="background: linear-gradient(135deg, var(--as-orange) 0%, var(--as-orange-dark) 100%); color: #fff; font-weight: bold; padding: 12px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; box-shadow: 0 4px 12px rgba(242, 101, 34, 0.2);">
           🔑 Sign In
         </a>
-        <a href="/auth/register?next=/tools/ask-ai/recommendations?intake_id={{ intake.id }}" class="as-btn" style="background: #fff; color: var(--as-navy); border: 2px solid var(--as-navy); font-weight: bold; padding: 10px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; transition: all 0.2s;">
+        <a href="/auth/signup?next=/tools/ask-ai/recommendations?intake_id={{ intake.id if intake else '' }}" class="as-btn" style="background: #fff; color: var(--as-navy); border: 2px solid var(--as-navy); font-weight: bold; padding: 10px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; transition: all 0.2s;">
           ✨ Create New Account
         </a>
       </div>
