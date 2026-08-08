@@ -900,9 +900,9 @@ def submit_feedback(
 
 
 @app.get("/sitemap.xml")
-def sitemap(request: Request):
+def sitemap():
     from fastapi import Response
-    base = str(request.base_url).rstrip("/")
+    base = "https://astro-6eq0.onrender.com"
     xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -958,3 +958,15 @@ def sitemap(request: Request):
 </urlset>
 """
     return Response(content=xml_content, media_type="application/xml")
+
+
+@app.get("/robots.txt")
+def robots():
+    from fastapi import Response
+    content = """User-agent: *
+Allow: /
+Allow: /sitemap.xml
+
+Sitemap: https://astro-6eq0.onrender.com/sitemap.xml
+"""
+    return Response(content=content, media_type="text/plain")
