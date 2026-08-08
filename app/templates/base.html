@@ -151,10 +151,9 @@
           <a href="/tools/child-astro-report" style="color:var(--as-orange);font-weight:bold">👶 {{ "Child Astro Report (NRI)"|t(lang) }}</a>
           <a href="/tools/horoscope">{{ "Horoscope"|t(lang) }}</a>
           <a href="/tools/sample-kundli">{{ "Sample Kundali"|t(lang) }}</a>
-          <a href="/tools/panchang">{{ "Panchang"|t(lang) }}</a>
           <a href="/tools/astrologers">{{ "Browse Astrologers"|t(lang) }}</a>
           <a href="/tools/ask-ai" style="color:var(--as-green);font-weight:bold">💬 {{ "Ask Me"|t(lang) }}</a>
-          <a href="{% if user %}/flow/problem{% else %}/auth/login?next=/flow/problem{% endif %}">{{ "Talk to Astrologer"|t(lang) }}</a>
+          <a href="/tools/temple-of-the-week">{{ "Temple of the Week"|t(lang) }}</a>
         {% endif %}
       </nav>
 
@@ -220,12 +219,11 @@
       </div>
       <div>
         <h4>{{ "Platform"|t(lang) }}</h4>
-        <a href="/flow/problem">{{ "Issue-based matching"|t(lang) }}</a>
-        <a href="/admin">{{ "Quality dashboard"|t(lang) }}</a>
+        <a href="/tools/ask-ai">{{ "Smart Matching"|t(lang) }}</a>
       </div>
     </div>
     <div class="as-footer-bottom">
-      © 2026 AstroMatch · {{ "Vedic tools + monetized consultations"|t(lang) }} · {{ "UI inspired by"|t(lang) }} <a href="https://www.astrosage.com/" style="color:#ffd89b">AstroSage</a>
+      © 2026 AstroMatch · {{ "Vedic + Spiritual Consultation"|t(lang) }}
     </div>
   </footer>
 

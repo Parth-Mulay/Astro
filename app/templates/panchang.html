@@ -11,67 +11,49 @@
 
 <h1 class="as-page-title">{{ "Today's Panchang"|t(lang) }}</h1>
 
-<form method="get" action="/tools/panchang" style="margin-bottom:16px;display:flex;gap:8px">
-  <input class="as-input" name="city" value="{{ city }}" placeholder="{{ 'City'|t(lang) }}" style="max-width:240px" />
-  <button class="as-btn as-btn-primary">{{ "Update"|t(lang) }}</button>
-</form>
-
-<div class="as-panel" style="max-width: 100%;">
-  <h2 style="margin:0">{{ data.city|t(lang) }} — {{ data.date }}</h2>
-  <table class="as-table" style="margin-top:16px">
-    <tr><td><strong>{{ "Tithi"|t(lang) }}</strong></td><td>{{ data.tithi|t(lang) }} ({{ data.tithi_details.paksha|t(lang) }} {{ "Paksha"|t(lang) }})</td></tr>
-    <tr><td><strong>{{ "Vara"|t(lang) }}</strong></td><td>{{ data.vara|t(lang) }}</td></tr>
-    <tr><td><strong>{{ "Nakshatra"|t(lang) }}</strong></td><td>{{ data.nakshatra|t(lang) }}</td></tr>
-    <tr><td><strong>{{ "Yoga"|t(lang) }}</strong></td><td>{{ data.yoga|t(lang) }}</td></tr>
-    <tr><td><strong>{{ "Karana"|t(lang) }}</strong></td><td>{{ data.karana|t(lang) }}</td></tr>
-    <tr><td><strong>{{ "Sunrise"|t(lang) }} / {{ "Sunset"|t(lang) }}</strong></td><td>{{ data.sunrise }} / {{ data.sunset }}</td></tr>
-    <tr><td><strong>{{ "Brahma Muhurta"|t(lang) }}</strong></td><td>{{ data.brahma_muhurta.start }} – {{ data.brahma_muhurta.end }}</td></tr>
-    <tr><td><strong>{{ "Abhijit Muhurta"|t(lang) }}</strong></td><td style="color:#28a745; font-weight: 600">{{ data.abhijit }}</td></tr>
-    <tr><td><strong>{{ "Rahu Kalam"|t(lang) }}</strong></td><td style="color:#dc3545; font-weight: 600">{{ data.rahukaal }}</td></tr>
-    <tr><td><strong>{{ "Yamaganda"|t(lang) }}</strong></td><td>{{ data.yamaganda.start }} – {{ data.yamaganda.end }}</td></tr>
-    <tr><td><strong>{{ "Gulika Kalam"|t(lang) }}</strong></td><td>{{ data.gulika_kalam.start }} – {{ data.gulika_kalam.end }}</td></tr>
+<div class="panchang-card" style="border: 1px solid #ebd09c; border-radius: 8px; overflow: hidden; background: #fff; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 600px; margin: 24px auto;">
+  <!-- Yellow Header -->
+  <div style="background: #ebb22a; color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-size: 20px; font-weight: bold; letter-spacing: 0.5px;">{{ data.date_label }}</span>
+    <span style="font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; opacity: 0.95;">
+      Find Other Dates 📅
+    </span>
+  </div>
+  
+  <!-- Tamil Calendar Info Sub-header -->
+  <div style="background: #fbeeb5; color: #5c3c00; padding: 10px 16px; font-weight: bold; font-size: 14px; border-bottom: 1px solid #ebd09c;">
+    Tamil Calendar : {{ data.calendar_name }}
+  </div>
+  
+  <!-- Content Area -->
+  <div style="padding: 16px;">
+    <!-- Auspicious Time / Nalla Neram -->
+    <div style="margin-bottom: 16px; color: #5c3c00; font-size: 14px;">
+      <div style="font-weight: bold; margin-bottom: 6px;">Nalla neram today (Auspicious Time) :</div>
+      <div style="font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre-line; padding-left: 12px;">
+        {{ data.nalla_neram }}
+      </div>
+    </div>
     
-    <!-- Day Choghadiya -->
-    <tr>
-      <td><strong>{{ "Day Choghadiya"|t(lang) }}</strong></td>
-      <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
-          {% for ch in data.choghadiya if ch.period == 'day' %}
-            {% if ch.status == 'highly_auspicious' or ch.status == 'auspicious' %}
-              {% set tag_class = 'as-tag-auspicious' %}
-            {% elif ch.status == 'moderate' %}
-              {% set tag_class = 'as-tag-moderate' %}
-            {% else %}
-              {% set tag_class = 'as-tag-inauspicious' %}
-            {% endif %}
-            <span class="as-tag {{ tag_class }}" style="font-size:11px; padding:3px 6px;" title="{{ ch.status|t(lang) }}">
-              {{ ch.name|t(lang) }} ({{ ch.start }} - {{ ch.end }})
-            </span>
-          {% endfor %}
-        </div>
-      </td>
-    </tr>
-    
-    <!-- Night Choghadiya -->
-    <tr>
-      <td><strong>{{ "Night Choghadiya"|t(lang) }}</strong></td>
-      <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
-          {% for ch in data.choghadiya if ch.period == 'night' %}
-            {% if ch.status == 'highly_auspicious' or ch.status == 'auspicious' %}
-              {% set tag_class = 'as-tag-auspicious' %}
-            {% elif ch.status == 'moderate' %}
-              {% set tag_class = 'as-tag-moderate' %}
-            {% else %}
-              {% set tag_class = 'as-tag-inauspicious' %}
-            {% endif %}
-            <span class="as-tag {{ tag_class }}" style="font-size:11px; padding:3px 6px;" title="{{ ch.status|t(lang) }}">
-              {{ ch.name|t(lang) }} ({{ ch.start }} - {{ ch.end }})
-            </span>
-          {% endfor %}
-        </div>
-      </td>
-    </tr>
-  </table>
+    <!-- Table -->
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      {% for label, val in [
+        ('Natchatram', data.natchatram),
+        ('Thithi', data.thithi),
+        ('Yogam', data.yogam),
+        ('Ragukaalam', data.ragukaalam),
+        ('Yamagandam', data.yamagandam),
+        ('Kuligai', data.kuligai),
+        ('Chandrashtamam', data.chandrashtamam),
+        ('Importance', data.importance)
+      ] %}
+      <tr style="border-bottom: 1px dashed #ebd09c;">
+        <td style="font-weight: bold; color: #5c3c00; padding: 8px 4px; width: 140px;">{{ label }}</td>
+        <td style="color: #5c3c00; padding: 8px 4px; width: 20px; text-align: center;">:</td>
+        <td style="color: #4a3000; padding: 8px 4px;">{{ val }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
 {% endblock %}

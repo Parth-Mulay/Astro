@@ -29,6 +29,8 @@ from app.models import (
     SystemConfig,
     User,
     UserProfile,
+    PanchangData,
+    TempleOfTheWeek,
 )
 
 DELETION_ORDER = [
@@ -49,6 +51,8 @@ DELETION_ORDER = [
     ChildAstroOrder,
     InAppNotification,
     AuditLog,
+    PanchangData,
+    TempleOfTheWeek,
 ]
 
 

@@ -97,7 +97,7 @@ class AvailabilitySlot(SQLModel, table=True):
 
 class Intake(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True, nullable=True)
     issue_category_id: int = Field(foreign_key="issuecategory.id", index=True)
 
     sub_issue: str = ""
@@ -295,5 +295,31 @@ class InAppNotification(SQLModel, table=True):
     body: str
     is_read: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
+class PanchangData(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    date_label: str = Field(default="07-08-2026 - Friday")
+    calendar_name: str = Field(default="Parabhava - Aadi - 22")
+    nalla_neram: str = Field(default="06.00AM-09.00AM, 10.00AM-10.30AM, 01.00PM-03.00PM, 05.00PM-06.00PM, 08.00PM-11.00PM")
+    natchatram: str = Field(default="Karthigai upto 04.46PM then Rohini")
+    thithi: str = Field(default="Theipirai Navami upto 01.50PM then Dasami")
+    yogam: str = Field(default="Siddha")
+    ragukaalam: str = Field(default="10.30AM-12.00Noon")
+    yamagandam: str = Field(default="04.00PM-04.30PM")
+    kuligai: str = Field(default="07.30AM-09.00AM")
+    chandrashtamam: str = Field(default="Thulam")
+    importance: str = Field(default="Aadi Kirthigai")
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TempleOfTheWeek(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(default="")
+    location: str = Field(default="")
+    description: str = Field(default="")
+    image_url: str = Field(default="/static/images/temple_of_the_week.jpg")
+    is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

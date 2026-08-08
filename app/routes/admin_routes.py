@@ -29,7 +29,9 @@ from app.models import (
     KundliMatchRecord,
     PaymentStatus,
     SessionStatus,
-    ConsultType
+    ConsultType,
+    PanchangData,
+    TempleOfTheWeek,
 )
 from app.routes._shared import templates
 from app.ui_helpers import page_context
@@ -225,9 +227,137 @@ def admin_dashboard(request: Request, session_db: Session = Depends(get_session)
         sessions_booked_count=sessions_booked_count,
         chat_sessions_count=chat_sessions_count,
         call_sessions_count=call_sessions_count,
-        total_recharges_count=total_recharges_count
+        total_recharges_count=total_recharges_count,
+        panchang_record=session_db.exec(select(PanchangData)).first() or PanchangData(),
+        temples=session_db.exec(select(TempleOfTheWeek).order_by(TempleOfTheWeek.created_at.desc())).all()
     )
     return templates.TemplateResponse(request, "admin.html", ctx)
+
+
+@router.post("/temple/add")
+def admin_add_temple(
+    request: Request,
+    name: str = Form(...),
+    location: str = Form(...),
+    description: str = Form(...),
+    image_file: Optional[UploadFile] = File(None),
+    session_db: Session = Depends(get_session)
+):
+    admin = require_admin(request, session_db)
+    
+    # Handle image upload
+    image_url = "/static/images/temple_of_the_week.jpg"  # default fallback
+    if image_file and image_file.filename:
+        APP_DIR = Path(__file__).resolve().parent.parent
+        filename = f"temple_{int(datetime.utcnow().timestamp())}_{image_file.filename}"
+        target_path = APP_DIR / "static" / "images" / filename
+        os.makedirs(target_path.parent, exist_ok=True)
+        with open(target_path, "wb") as f:
+            f.write(image_file.file.read())
+        image_url = f"/static/images/{filename}"
+        
+    # Deactivate existing temples
+    existing_temples = session_db.exec(select(TempleOfTheWeek)).all()
+    for t in existing_temples:
+        t.is_active = False
+        session_db.add(t)
+        
+    # Add new active temple
+    new_temple = TempleOfTheWeek(
+        name=name.strip(),
+        location=location.strip(),
+        description=description.strip(),
+        image_url=image_url,
+        is_active=True
+    )
+    session_db.add(new_temple)
+    session_db.commit()
+    
+    log_audit(session_db, "add_temple", f"Added temple: {name}", user_id=admin.id, ip_address=request.client.host if request.client else "")
+    return RedirectResponse(url="/admin#tab-temple", status_code=303)
+
+
+@router.post("/temple/{temple_id}/activate")
+def admin_activate_temple(
+    request: Request,
+    temple_id: int,
+    session_db: Session = Depends(get_session)
+):
+    admin = require_admin(request, session_db)
+    temple = session_db.get(TempleOfTheWeek, temple_id)
+    if not temple:
+        raise HTTPException(status_code=404, detail="Temple not found")
+        
+    # Deactivate all
+    existing_temples = session_db.exec(select(TempleOfTheWeek)).all()
+    for t in existing_temples:
+        t.is_active = False
+        session_db.add(t)
+        
+    # Activate selected
+    temple.is_active = True
+    session_db.add(temple)
+    session_db.commit()
+    
+    log_audit(session_db, "activate_temple", f"Activated temple: {temple.name}", user_id=admin.id, ip_address=request.client.host if request.client else "")
+    return RedirectResponse(url="/admin#tab-temple", status_code=303)
+
+
+@router.post("/temple/{temple_id}/delete")
+def admin_delete_temple(
+    request: Request,
+    temple_id: int,
+    session_db: Session = Depends(get_session)
+):
+    admin = require_admin(request, session_db)
+    temple = session_db.get(TempleOfTheWeek, temple_id)
+    if not temple:
+        raise HTTPException(status_code=404, detail="Temple not found")
+
+    temple_name = temple.name
+    session_db.delete(temple)
+    session_db.commit()
+
+    log_audit(session_db, "delete_temple", f"Deleted temple: {temple_name}", user_id=admin.id, ip_address=request.client.host if request.client else "")
+    return RedirectResponse(url="/admin#tab-temple", status_code=303)
+
+
+@router.post("/panchang/update")
+def admin_update_panchang(
+    request: Request,
+    date_label: str = Form(...),
+    calendar_name: str = Form(...),
+    nalla_neram: str = Form(...),
+    natchatram: str = Form(...),
+    thithi: str = Form(...),
+    yogam: str = Form(...),
+    ragukaalam: str = Form(...),
+    yamagandam: str = Form(...),
+    kuligai: str = Form(...),
+    chandrashtamam: str = Form(...),
+    importance: str = Form(...),
+    session_db: Session = Depends(get_session)
+):
+    admin = require_admin(request, session_db)
+    record = session_db.exec(select(PanchangData)).first()
+    if not record:
+        record = PanchangData()
+    record.date_label = date_label.strip()
+    record.calendar_name = calendar_name.strip()
+    record.nalla_neram = nalla_neram.strip()
+    record.natchatram = natchatram.strip()
+    record.thithi = thithi.strip()
+    record.yogam = yogam.strip()
+    record.ragukaalam = ragukaalam.strip()
+    record.yamagandam = yamagandam.strip()
+    record.kuligai = kuligai.strip()
+    record.chandrashtamam = chandrashtamam.strip()
+    record.importance = importance.strip()
+    record.last_updated = datetime.utcnow()
+    session_db.add(record)
+    session_db.commit()
+    log_audit(session_db, "update_panchang", f"Panchang date: {date_label}", user_id=admin.id, ip_address=request.client.host if request.client else "")
+    return RedirectResponse(url="/admin#tab-panchang", status_code=303)
 
 
 # -------------------------------------------------------------

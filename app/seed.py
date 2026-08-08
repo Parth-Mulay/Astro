@@ -15,6 +15,8 @@ from app.models import (
     IssueCategory,
     Role,
     User,
+    PanchangData,
+    TempleOfTheWeek,
 )
 
 
@@ -182,6 +184,34 @@ def run_seed() -> None:
             response_min=15,
             topic_success=0.62,
         )
+        existing_panchang = session.exec(select(PanchangData)).first()
+        if not existing_panchang:
+            session.add(PanchangData(
+                date_label="07-08-2026 - Friday",
+                calendar_name="Parabhava - Aadi - 22",
+                nalla_neram="06.00AM-09.00AM, 10.00AM-10.30AM\n01.00PM-03.00PM, 05.00PM-06.00PM\n08.00PM-11.00PM",
+                natchatram="Karthigai upto 04.46PM then Rohini",
+                thithi="Theipirai Navami upto 01.50PM then Dasami",
+                yogam="Siddha",
+                ragukaalam="10.30AM-12.00Noon",
+                yamagandam="04.00PM-04.30PM",
+                kuligai="07.30AM-09.00AM",
+                chandrashtamam="Thulam",
+                importance="Aadi Kirthigai"
+            ))
+            session.commit()
+
+        # Seed default active Temple of the Week
+        existing_temple = session.exec(select(TempleOfTheWeek)).first()
+        if not existing_temple:
+            session.add(TempleOfTheWeek(
+                name="Konark Sun Temple",
+                location="Odisha",
+                description="The Konark Sun Temple is a 13th-century CE monument dedicated to the Sun God Surya. Built as a colossal chariot with twelve pairs of stone-carved wheels drawn by seven horses, the temple's structural alignment serves as a precise astronomical sundial. It harmonizes Vedic architecture with astrological cosmic transits.",
+                image_url="/static/images/temple_of_the_week.jpg",
+                is_active=True
+            ))
+            session.commit()
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@
     <div class="as-panchang-content-wrap" style="padding: 24px;">
       <!-- Headline -->
       <h3 class="as-gochar-sub-title" style="margin-top: 0; border-bottom: 2px solid var(--as-orange-light); padding-bottom: 8px; color: var(--as-navy); font-size: 17px; font-weight: 700;">
-        📍 {{ panchang_data.city|t(lang) }} — {{ panchang_data.date|t(lang) }}
+        📍 India — {{ current_datetime }}
       </h3>
       
       <style>
@@ -45,17 +45,41 @@
       </style>
       
       <div class="panchang-row-layout" style="margin-top: 16px;">
-        <!-- Left Side: Panchang Table -->
-        <div>
-          <table class="as-table" style="width: 100%;">
-            <tr><td style="font-weight: 600; color: var(--as-navy); width: 160px;">{{ "Tithi"|t(lang) }}</td><td><strong>{{ panchang_data.tithi|t(lang) }}</strong></td></tr>
-            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Nakshatra"|t(lang) }}</td><td><strong>{{ panchang_data.nakshatra|t(lang) }}</strong></td></tr>
-            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Yoga"|t(lang) }}</td><td>{{ panchang_data.yoga|t(lang) }}</td></tr>
-            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Karana"|t(lang) }}</td><td>{{ panchang_data.karana|t(lang) }}</td></tr>
-            <tr class="as-rahukaal-row"><td style="font-weight: 600; color: var(--as-navy);">{{ "Rahu Kaal"|t(lang) }}</td><td style="color:#c62828; font-weight: 600">{{ panchang_data.rahukaal }}</td></tr>
-            <tr class="as-abhijit-row"><td style="font-weight: 600; color: var(--as-navy);">{{ "Abhijit Muhurat"|t(lang) }}</td><td style="color:var(--as-green); font-weight: 600">{{ panchang_data.abhijit }}</td></tr>
-            <tr><td style="font-weight: 600; color: var(--as-navy);">{{ "Sunrise"|t(lang) }} / {{ "Sunset"|t(lang) }}</td><td>{{ panchang_data.sunrise }} / {{ panchang_data.sunset }}</td></tr>
-          </table>
+        <!-- Left Side: Panchang Table (Third Reference Image Style) -->
+        <div style="border: 1px solid #ebd09c; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+          <!-- Gold sub-header -->
+          <div style="background: #ebb22a; color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px;">
+            <span>{{ panchang_data.date_label }}</span>
+            <span style="font-size: 12px; opacity: 0.95;">Find Other Dates 📅</span>
+          </div>
+          <div style="background: #fbeeb5; color: #5c3c00; padding: 8px 16px; font-weight: bold; font-size: 13px; border-bottom: 1px solid #ebd09c;">
+            Tamil Calendar : {{ panchang_data.calendar_name }}
+          </div>
+          <div style="padding: 16px;">
+            <div style="margin-bottom: 12px; color: #5c3c00; font-size: 13px;">
+              <strong style="display: block; margin-bottom: 4px;">Nalla neram today (Auspicious Time) :</strong>
+              <div style="font-family: monospace; font-size: 12px; line-height: 1.5; white-space: pre-line; padding-left: 10px;">{{ panchang_data.nalla_neram }}</div>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              {% for label, val in [
+                ('Natchatram', panchang_data.natchatram),
+                ('Thithi', panchang_data.thithi),
+                ('Yogam', panchang_data.yogam),
+                ('Ragukaalam', panchang_data.ragukaalam),
+                ('Yamagandam', panchang_data.yamagandam),
+                ('Kuligai', panchang_data.kuligai),
+                ('Chandrashtamam', panchang_data.chandrashtamam),
+                ('Importance', panchang_data.importance)
+              ] %}
+              <tr style="border-bottom: 1px dashed #ebd09c;">
+                <td style="font-weight: bold; color: #5c3c00; padding: 6px 4px; width: 140px;">{{ label }}</td>
+                <td style="color: #5c3c00; padding: 6px 4px; width: 20px; text-align: center;">:</td>
+                <td style="color: #4a3000; padding: 6px 4px;">{{ val }}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
         </div>
         
         <!-- Right Side: Daily Shloka -->
@@ -82,25 +106,12 @@
 <div class="as-home-cols">
   <div>
   <section class="as-section">
-    <h2 class="as-section-title">{{ "Consult Expert Astrologers"|t(lang) }}</h2>
-    <p class="as-page-sub" style="margin-top:-8px">{{ "Verified specialists — ranked by your issue, language, budget & availability."|t(lang) }}</p>
-    <div class="as-astro-scroll" id="astro-carousel">
-      {% for astro in featured %}
-        {% with show_actions=true %}
-          {% include "partials/astrologer_card.html" %}
-        {% endwith %}
-      {% endfor %}
-    </div>
-    <p style="font-size:12px;color:var(--as-muted);margin-top:8px">← {{ "Scroll to browse · Consult via structured form for tailored recommendations"|t(lang) }}</p>
-  </section>
-
-  <section class="as-section">
     <h2 class="as-section-title">{{ "Vedic Astrology Services"|t(lang) }}</h2>
     <div class="as-service-grid">
       <a href="/tools/horoscope" class="as-service-tile"><div class="icon">☀️</div><div class="label">{{ "Detailed Horoscope"|t(lang) }}</div></a>
       <a href="/tools/sample-kundli" class="as-service-tile"><div class="icon">📜</div><div class="label">{{ "Sample Kundali"|t(lang) }}</div></a>
       <a href="/tools/panchang" class="as-service-tile"><div class="icon">📅</div><div class="label">{{ "Daily Panchang"|t(lang) }}</div></a>
-      <a href="/tools/ask-ai" class="as-service-tile"><div class="icon">💬</div><div class="label">{{ "Ask Me (Consult)"|t(lang) }}</div></a>
+      <a href="/tools/ask-ai" class="as-service-tile" style="border: 2px solid #FF671F; background: #fffcf9; box-shadow: 0 4px 12px rgba(255, 103, 31, 0.1);"><div class="icon">💬</div><div class="label" style="color: #FF671F; font-weight: bold;">{{ "Ask Me (Consult)"|t(lang) }}</div></a>
       <a href="/tools/tarot" class="as-service-tile"><div class="icon">🃏</div><div class="label">{{ "Tarot"|t(lang) }}</div></a>
       <a href="/tools/remedies" class="as-service-tile"><div class="icon">🪔</div><div class="label">{{ "Lal Kitab"|t(lang) }}</div></a>
       <a href="/tools/astrologers" class="as-service-tile"><div class="icon">🔮</div><div class="label">{{ "Astrologers"|t(lang) }}</div></a>
@@ -145,11 +156,9 @@
         <li>{{ "Form details are sent directly to them"|t(lang) }}</li>
         <li>{{ "Start consultation chat immediately"|t(lang) }}</li>
       </ol>
-      {% if user %}
-        <a href="/tools/ask-ai" class="as-btn as-btn-primary" style="width:100%;margin-top:16px">{{ "Fill Consultation Form"|t(lang) }}</a>
-      {% else %}
-        <a href="/auth/login" class="as-btn as-btn-primary" style="width:100%;margin-top:16px">{{ "Sign in to start"|t(lang) }}</a>
-      {% endif %}
+      <a href="/tools/ask-ai" class="as-btn" style="width: 100%; margin-top: 16px; background: linear-gradient(135deg, #FF671F 0%, #FF8000 100%); color: white; font-weight: bold; font-size: 15px; border: none; padding: 12px; border-radius: 6px; box-shadow: 0 4px 15px rgba(255, 103, 31, 0.4); text-align: center; display: block; text-decoration: none;">
+        💬 {{ "Ask Me (Consult Now)"|t(lang) }}
+      </a>
     </div>
 
     <div class="as-side-panel" style="margin-top:16px">

@@ -21,6 +21,8 @@ from app.models import (
     Urgency,
     ChildAstroOrder,
     InAppNotification,
+    PanchangData,
+    TempleOfTheWeek,
 )
 from app.matching import recommend_astrologers
 from app.routes._shared import templates
@@ -125,11 +127,16 @@ def sample_kundli(request: Request, session: Session = Depends(get_session)):
 
 
 @router.get("/panchang", response_class=HTMLResponse)
-def panchang_page(request: Request, city: str = "New Delhi", session: Session = Depends(get_session)):
+def panchang_page(request: Request, session: Session = Depends(get_session)):
     user = current_user(request, session)
-    data = get_panchang(city)
+    data = session.exec(select(PanchangData)).first()
+    if not data:
+        data = PanchangData()
+        session.add(data)
+        session.commit()
+        session.refresh(data)
     return templates.TemplateResponse(
-        request, "panchang.html", {"user": user, "data": data, "city": city}
+        request, "panchang.html", {"user": user, "data": data}
     )
 
 
@@ -210,24 +217,26 @@ def classify_question(question: str) -> str:
 
 @router.get("/ask-ai", response_class=HTMLResponse)
 def ask_ai_page(request: Request, session: Session = Depends(get_session)):
-    user = require_user(request, session)
-    if user.role.value == 'astrologer':
+    user = current_user(request, session)
+    if user and user.role.value == 'astrologer':
         return RedirectResponse(url="/astro", status_code=303)
         
     cost = int(get_config(session, "price_ask_ai", "25"))
     from app.account import get_or_create_profile
-    prof = get_or_create_profile(session, user)
-    if prof.wallet_balance < cost:
-        return templates.TemplateResponse(
-            request,
-            "wallet.html",
-            {
-                "user": user,
-                "prof": prof,
-                "message": f"Insufficient credit balance. You need {cost} Credits to request a consultation, but you only have {prof.wallet_balance} Credits.",
-                "error": True
-            }
-        )
+    prof = None
+    if user:
+        prof = get_or_create_profile(session, user)
+        if prof.wallet_balance < cost:
+            return templates.TemplateResponse(
+                request,
+                "wallet.html",
+                {
+                    "user": user,
+                    "prof": prof,
+                    "message": f"Insufficient credit balance. You need {cost} Credits to request a consultation, but you only have {prof.wallet_balance} Credits.",
+                    "error": True
+                }
+            )
     return templates.TemplateResponse(request, "ask_ai.html", {"user": user, "prof": prof, "step": "form", "cost": cost})
 
 
@@ -245,15 +254,21 @@ def submit_consultation(
     preferred_system: str = Form(...),
     session: Session = Depends(get_session)
 ):
-    user = require_user(request, session)
-    if user.role.value == 'astrologer':
+    user = current_user(request, session)
+    if user and user.role.value == 'astrologer':
         return RedirectResponse(url="/astro", status_code=303)
         
     cost = int(get_config(session, "price_ask_ai", "25"))
     from app.account import get_or_create_profile, deduct_wallet
-    prof = get_or_create_profile(session, user)
-    if prof.wallet_balance < cost:
-        return RedirectResponse(url="/account/wallet", status_code=303)
+    
+    if user:
+        prof = get_or_create_profile(session, user)
+        if prof.wallet_balance < cost:
+            return RedirectResponse(url="/account/wallet", status_code=303)
+        deduct_wallet(session, user.id, cost)
+        user_id = user.id
+    else:
+        user_id = None
         
     slug = classify_question(problem)
     category = session.exec(
@@ -264,11 +279,8 @@ def submit_consultation(
         
     d = date.fromisoformat(dob) if dob else None
     
-    # Deduct wallet for Ask Me AI matchmaking form
-    deduct_wallet(session, user.id, cost)
-    
     intake = Intake(
-        user_id=user.id,
+        user_id=user_id,
         issue_category_id=category.id if category else 1,
         sub_issue=problem[:200],
         language="English",
@@ -299,10 +311,20 @@ def ask_ai_recommendations(
     intake_id: int,
     session: Session = Depends(get_session)
 ):
-    user = require_user(request, session)
+    user = current_user(request, session)
     intake = session.get(Intake, intake_id)
-    if not intake or intake.user_id != user.id:
+    if not intake:
         raise HTTPException(status_code=404, detail="Intake not found")
+        
+    if user and intake.user_id is None:
+        intake.user_id = user.id
+        session.add(intake)
+        session.commit()
+        session.refresh(intake)
+        
+    if intake.user_id is not None and (not user or intake.user_id != user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+        
     matches = recommend_astrologers(session, intake=intake, top_k=3)
     category = session.get(IssueCategory, intake.issue_category_id)
     
@@ -661,6 +683,27 @@ def submit_child_astro_report(
             "cost": cost,
             "success_message": f"Order successfully placed for {child_name}! Our team of expert astrologers has started analyzing the birth charts. Digital delivery guaranteed within 72 hours to {parent_email}.",
             "latest_order": order
+        }
+    )
+
+
+@router.get("/temple-of-the-week", response_class=HTMLResponse)
+def temple_of_the_week_page(request: Request, session: Session = Depends(get_session)):
+    user = current_user(request, session)
+    temple = session.exec(select(TempleOfTheWeek).where(TempleOfTheWeek.is_active == True)).first()
+    if not temple:
+        temple = TempleOfTheWeek(
+            name="Konark Sun Temple",
+            location="Odisha",
+            description="The Konark Sun Temple is a 13th-century CE monument dedicated to the Sun God Surya. Built as a colossal chariot with twelve pairs of stone-carved wheels drawn by seven horses, the temple's structural alignment serves as a precise astronomical sundial. It harmonizes Vedic architecture with astrological cosmic transits.",
+            image_url="/static/images/temple_of_the_week.jpg"
+        )
+    return templates.TemplateResponse(
+        request,
+        "temple_of_the_week.html",
+        {
+            "user": user,
+            "temple": temple
         }
     )
 

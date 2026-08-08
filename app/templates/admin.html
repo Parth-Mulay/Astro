@@ -286,6 +286,12 @@
         <a class="admin-sidebar-link" onclick="switchTab('tab-reports')">📝 Report Management</a>
       </li>
       <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-panchang')">🪔 Panchang Management</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-temple')">🛕 Temple of the Week</a>
+      </li>
+      <li class="admin-sidebar-item">
         <a class="admin-sidebar-link" onclick="switchTab('tab-cms')">📰 Content (CMS)</a>
       </li>
       <li class="admin-sidebar-item">
@@ -1226,6 +1232,181 @@
           </div>
 
         </div>
+      </div>
+    </section>
+
+    <!-- 19. TEMPLE OF THE WEEK MANAGEMENT -->
+    <section id="tab-temple" class="admin-panel">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+        <!-- Add New Temple Form -->
+        <div class="card-container" style="max-width: 600px;">
+          <h2 class="as-section-title">🛕 Add Temple of the Week</h2>
+          <p class="as-page-sub">Upload a new temple image, name, location, and description. Adding a new temple sets it as active automatically.</p>
+          
+          <form method="post" action="/admin/temple/add" enctype="multipart/form-data" style="margin-top: 20px;">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+            
+            <div class="as-form-group">
+              <label><strong>Temple Name</strong></label>
+              <input class="as-input" name="name" required style="width:100%" placeholder="e.g. Konark Sun Temple">
+            </div>
+            
+            <div class="as-form-group" style="margin-top: 12px;">
+              <label><strong>Location</strong></label>
+              <input class="as-input" name="location" required style="width:100%" placeholder="e.g. Odisha, India">
+            </div>
+            
+            <div class="as-form-group" style="margin-top: 12px;">
+              <label><strong>Description</strong></label>
+              <textarea class="as-input" name="description" rows="5" required style="width:100%" placeholder="Enter structural, historical, and astrological significance..."></textarea>
+            </div>
+            
+            <div class="as-form-group" style="margin-top: 12px;">
+              <label><strong>Temple Image File</strong></label>
+              <input type="file" name="image_file" accept="image/*" style="display: block; margin-top: 4px;">
+              <p style="font-size: 11px; color: var(--as-muted); margin-top: 4px;">For best results, upload a wide aspect-ratio image.</p>
+            </div>
+            
+            <button type="submit" class="as-btn as-btn-primary" style="width: 100%; margin-top: 20px; padding: 12px; font-weight: bold;">
+              ➕ Add & Set Active
+            </button>
+          </form>
+        </div>
+
+        <!-- Existing Temples List -->
+        <div class="card-container">
+          <h2 class="as-section-title">📜 Existing Temples</h2>
+          <p class="as-page-sub">View and select the active temple to display on the platform.</p>
+          
+          <div class="as-table-wrap" style="margin-top: 16px;">
+            <table class="as-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in temples %}
+                  <tr>
+                    <td style="width: 100px;">
+                      <img src="{{ t.image_url }}" alt="{{ t.name }}" style="width: 80px; height: auto; border-radius: 4px; border: 1px solid var(--as-border);">
+                    </td>
+                    <td><strong>{{ t.name }}</strong></td>
+                    <td>{{ t.location }}</td>
+                    <td>
+                      {% if t.is_active %}
+                        <span class="as-badge as-badge-success" style="font-size:11px; font-weight:bold;">🟢 Active</span>
+                      {% else %}
+                        <span class="as-badge" style="font-size:11px; background:#e2e8f0; color:#475569;">Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if not t.is_active %}
+                        <form method="post" action="/admin/temple/{{ t.id }}/activate" style="margin: 0;">
+                          <!-- CSRF Token -->
+                          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+                          <button type="submit" class="as-btn as-btn-sm as-btn-primary">Activate</button>
+                        </form>
+                      {% else %}
+                        <span style="font-size: 13px; color: var(--as-muted); font-style: italic;">Currently Displayed</span>
+                      {% endif %}
+                      <form method="post" action="/admin/temple/{{ t.id }}/delete" style="margin: 0; margin-top: 6px;" onsubmit="return confirm('Are you sure you want to delete the temple \'{{ t.name }}\'? This cannot be undone.');">
+                        <!-- CSRF Token -->
+                        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+                        <button type="submit" class="as-btn as-btn-sm as-btn-outline" style="border-color:var(--admin-danger); color:var(--admin-danger) !important;">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18. PANCHANG MANAGEMENT -->
+    <section id="tab-panchang" class="admin-panel">
+      <div class="card-container" style="max-width: 700px;">
+        <h2 class="as-section-title">🪔 Panchang Management</h2>
+        <p class="as-page-sub">Manually edit and update the Panchang information displayed across the platform. (Typically updated every 10 days)</p>
+        
+        <form method="post" action="/admin/panchang/update" style="margin-top: 20px;">
+          <!-- CSRF Token -->
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+          
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; color: var(--admin-primary); font-size: 16px;">📅 Date & Calendar Info</h3>
+          <div class="as-form-row" style="margin-top:16px">
+            <div class="as-form-group">
+              <label><strong>Date Label</strong></label>
+              <input class="as-input" name="date_label" value="{{ panchang_record.date_label }}" required style="width:100%" placeholder="e.g. 07-08-2026 - Friday">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Calendar Name</strong></label>
+              <input class="as-input" name="calendar_name" value="{{ panchang_record.calendar_name }}" required style="width:100%" placeholder="e.g. Parabhava - Aadi - 22">
+            </div>
+          </div>
+          
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; color: var(--admin-primary); font-size: 16px; margin-top: 24px;">✨ Auspicious Times</h3>
+          <div class="as-form-group" style="margin-top:16px">
+            <label><strong>Nalla Neram (Auspicious Time)</strong></label>
+            <textarea class="as-input" name="nalla_neram" rows="3" required style="width:100%; font-family: monospace;" placeholder="06.00AM-09.00AM, 10.00AM-10.30AM&#10;01.00PM-03.00PM, 05.00PM-06.00PM&#10;08.00PM-11.00PM">{{ panchang_record.nalla_neram }}</textarea>
+          </div>
+          
+          <h3 style="border-bottom: 2px solid var(--admin-secondary); padding-bottom: 6px; color: var(--admin-primary); font-size: 16px; margin-top: 24px;">🎛️ Panchang Attributes</h3>
+          <div class="as-form-row" style="margin-top:16px">
+            <div class="as-form-group">
+              <label><strong>Natchatram</strong></label>
+              <input class="as-input" name="natchatram" value="{{ panchang_record.natchatram }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Thithi</strong></label>
+              <input class="as-input" name="thithi" value="{{ panchang_record.thithi }}" required style="width:100%">
+            </div>
+          </div>
+          
+          <div class="as-form-row">
+            <div class="as-form-group">
+              <label><strong>Yogam</strong></label>
+              <input class="as-input" name="yogam" value="{{ panchang_record.yogam }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Ragukaalam</strong></label>
+              <input class="as-input" name="ragukaalam" value="{{ panchang_record.ragukaalam }}" required style="width:100%">
+            </div>
+          </div>
+          
+          <div class="as-form-row">
+            <div class="as-form-group">
+              <label><strong>Yamagandam</strong></label>
+              <input class="as-input" name="yamagandam" value="{{ panchang_record.yamagandam }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Kuligai</strong></label>
+              <input class="as-input" name="kuligai" value="{{ panchang_record.kuligai }}" required style="width:100%">
+            </div>
+          </div>
+          
+          <div class="as-form-row">
+            <div class="as-form-group">
+              <label><strong>Chandrashtamam</strong></label>
+              <input class="as-input" name="chandrashtamam" value="{{ panchang_record.chandrashtamam }}" required style="width:100%">
+            </div>
+            <div class="as-form-group">
+              <label><strong>Importance</strong></label>
+              <input class="as-input" name="importance" value="{{ panchang_record.importance }}" required style="width:100%">
+            </div>
+          </div>
+          
+          <button type="submit" class="as-btn as-btn-primary" style="width:100%; margin-top:24px; padding:12px; font-weight:bold;">
+            💾 Save & Update Panchang
+          </button>
+        </form>
       </div>
     </section>
 

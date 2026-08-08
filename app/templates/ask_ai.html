@@ -127,8 +127,9 @@
   <h2 style="color: var(--as-navy); margin-bottom: 16px;">👤 {{ "Select Your Preferred Jyotishi"|t(lang) }}</h2>
   <div style="display: flex; flex-direction: column; gap: 20px;">
     {% for m in matches %}
-      <div class="as-panel" style="display: flex; justify-content: space-between; align-items: center; gap: 20px; transition: transform 0.2s;">
-        <div style="flex: 1;">
+      <div class="as-panel" style="display: flex; justify-content: space-between; align-items: center; gap: 20px; transition: transform 0.2s; position: relative;">
+        <!-- Info wrapper (blurred if guest) -->
+        <div style="flex: 1; {% if not user %}filter: blur(5px); pointer-events: none; user-select: none;{% endif %}">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
             <strong style="font-size: 18px; color: var(--as-navy)">{{ m.astrologer.display_name }}</strong>
             <span class="as-badge as-badge-success" style="font-size: 11px;">★ {{ m.astrologer.average_rating }}</span>
@@ -150,14 +151,23 @@
           </div>
         </div>
         
-        <div style="text-align: right; min-width: 150px;">
-          <form method="post" action="/flow/book">
-            <input type="hidden" name="intake_id" value="{{ intake.id }}" />
-            <input type="hidden" name="astrologer_id" value="{{ m.astrologer.id }}" />
-            <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 12px 20px; font-weight: bold;">
-              {{ "Select & Book"|t(lang) }}
+        <!-- Action area (unblurred, triggers modal for guest) -->
+        <div style="text-align: right; min-width: 150px; z-index: 10;">
+          {% if user %}
+            <form method="post" action="/flow/book">
+              <!-- CSRF Token -->
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+              <input type="hidden" name="intake_id" value="{{ intake.id }}" />
+              <input type="hidden" name="astrologer_id" value="{{ m.astrologer.id }}" />
+              <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 12px 20px; font-weight: bold;">
+                💬 {{ "Chat"|t(lang) }}
+              </button>
+            </form>
+          {% else %}
+            <button class="as-btn as-btn-primary" style="width: 100%; padding: 12px 20px; font-weight: bold; background: linear-gradient(135deg, var(--as-orange) 0%, var(--as-gold) 100%); border: none;" onclick="openAuthModal()">
+              💬 {{ "Chat"|t(lang) }}
             </button>
-          </form>
+          {% endif %}
           <div style="font-size: 11px; color: var(--as-muted); margin-top: 6px; text-align: center;">
             {{ "Form details will be sent directly to"|t(lang) }} {{ m.astrologer.display_name }}
           </div>
@@ -168,5 +178,59 @@
 
 </div>
 {% endif %}
+
+<!-- Premium Auth Modal for Guests -->
+<div id="auth-modal" style="display: none; position: fixed; inset: 0; background: rgba(26, 43, 74, 0.65); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; transition: all 0.3s ease;">
+  <div style="background: #ffffff; width: 100%; max-width: 440px; border-radius: 16px; border: 1px solid #ebd09c; box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; overflow: hidden; animation: modalSlide 0.3s ease-out;">
+    <!-- Gold Top Bar decoration -->
+    <div style="height: 6px; background: linear-gradient(90deg, var(--as-orange) 0%, var(--as-gold) 100%);"></div>
+    
+    <!-- Close Button -->
+    <button onclick="closeAuthModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; color: var(--as-muted); cursor: pointer; transition: color 0.2s;">
+      ✕
+    </button>
+    
+    <!-- Modal Body -->
+    <div style="padding: 30px; text-align: center;">
+      <div style="font-size: 48px; margin-bottom: 16px;">🔮</div>
+      <h3 style="color: var(--as-navy); font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 8px;">Unlock Live Consultation</h3>
+      <p style="color: var(--as-muted); font-size: 14px; line-height: 1.5; margin: 0 0 24px;">
+        To connect with your matched Jyotishi, please sign in or create an account. Your birth details and queries will be loaded automatically!
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <a href="/auth/login?next=/tools/ask-ai/recommendations?intake_id={{ intake.id }}" class="as-btn" style="background: linear-gradient(135deg, var(--as-orange) 0%, var(--as-orange-dark) 100%); color: #fff; font-weight: bold; padding: 12px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; box-shadow: 0 4px 12px rgba(242, 101, 34, 0.2);">
+          🔑 Sign In
+        </a>
+        <a href="/auth/register?next=/tools/ask-ai/recommendations?intake_id={{ intake.id }}" class="as-btn" style="background: #fff; color: var(--as-navy); border: 2px solid var(--as-navy); font-weight: bold; padding: 10px; border-radius: 6px; display: block; text-decoration: none; text-align: center; font-size: 15px; transition: all 0.2s;">
+          ✨ Create New Account
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes modalSlide {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</style>
+
+<script>
+function openAuthModal() {
+  document.getElementById('auth-modal').style.display = 'flex';
+}
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+}
+// Close when clicking backdrop
+window.onclick = function(event) {
+  var modal = document.getElementById('auth-modal');
+  if (event.target == modal) {
+    modal.style.display = 'none';
+  }
+}
+</script>
 
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set lang = request.cookies.get('lang', 'en') %}
+{% block title %}{{ "Temple of the Week"|t(lang) }} – AstroMatch{% endblock %}
+{% block content %}
+
+<div style="max-width: 800px; margin: 32px auto; padding: 0 16px;">
+  <!-- Section Title -->
+  <h1 class="as-page-title" style="text-align: center; margin-bottom: 8px;">🛕 {{ "Temple of the Week"|t(lang) }}</h1>
+  <p class="as-page-sub" style="text-align: center; margin-bottom: 32px;">{{ "Discover the spiritual heritage, geometry, and cosmic significance of India's ancient temples."|t(lang) }}</p>
+
+  <!-- Temple Details Panel -->
+  <div class="as-panel" style="padding: 0; overflow: hidden; border-radius: 12px; border: 1px solid var(--as-border); background: #fff; box-shadow: var(--as-shadow);">
+    <!-- Temple Image -->
+    <div style="width: 100%; max-height: 480px; overflow: hidden; border-bottom: 3px solid var(--as-orange);">
+      <img src="{{ temple.image_url }}" alt="{{ temple.name }}" style="width: 100%; height: auto; display: block; object-fit: cover;">
+    </div>
+    
+    <!-- Temple Meta & Info -->
+    <div style="padding: 32px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <h2 style="color: var(--as-navy); font-size: 26px; font-weight: 700; margin: 0;">{{ temple.name }}</h2>
+        <span class="as-badge as-badge-success" style="font-size: 13px; font-weight: 700; padding: 6px 12px; background: var(--as-orange-light); color: var(--as-orange-dark); border: 1px solid var(--as-orange);">
+          📍 {{ temple.location }}
+        </span>
+      </div>
+      
+      <!-- Divider -->
+      <div style="height: 1px; background: var(--as-border); margin: 20px 0;"></div>
+      
+      <!-- Description -->
+      <h3 style="color: var(--as-navy); font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px;">{{ "Historical & Astrological Significance"|t(lang) }}</h3>
+      <p style="color: #4b5563; font-size: 15px; line-height: 1.8; margin: 0; white-space: pre-line;">
+        {{ temple.description }}
+      </p>
+    </div>
+  </div>
+  
+  <!-- Back to Home CTA -->
+  <div style="margin-top: 32px; text-align: center;">
+    <a href="/" class="as-btn as-btn-outline" style="padding: 12px 24px; font-weight: 600;">
+      🏠 {{ "Back to Homepage"|t(lang) }}
+    </a>
+  </div>
+</div>
+
+{% endblock %}

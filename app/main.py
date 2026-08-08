@@ -235,8 +235,14 @@ class CSRFASGIMiddleware:
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(CSRFASGIMiddleware)
 
+class CachedStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "public, max-age=31536000, must-revalidate"
+        return response
+
 # Static and Dynamic Uploads/Reports Mounting
-app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+app.mount("/static", CachedStaticFiles(directory=ROOT / "static"), name="static")
 app.mount("/uploads", StaticFiles(directory=Path(settings.UPLOADS_DIR)), name="uploads")
 app.mount("/reports", StaticFiles(directory=Path(settings.REPORTS_DIR)), name="reports")
 
@@ -538,12 +544,20 @@ SHLOKAS = [
 def home(request: Request, session: Session = Depends(get_session)):
     from datetime import date, time
     from app.services.kundli import build_kundli
-    from app.services.panchang import get_panchang
+    from app.models import PanchangData
 
     user = current_user(request, session)
     today = date.today()
     transit_chart = build_kundli("Gochar Chart", today, time(12, 0), "New Delhi")
-    panchang_data = get_panchang("New Delhi", today)
+    
+    panchang_data = session.exec(select(PanchangData)).first()
+    if not panchang_data:
+        panchang_data = PanchangData()
+        session.add(panchang_data)
+        session.commit()
+        session.refresh(panchang_data)
+        
+    current_datetime = datetime.now().strftime("%A, %d %B %Y — %I:%M %p")
     
     # Calculate daily shloka based on ordinal date to repeat every 10 days
     shloka_index = today.toordinal() % len(SHLOKAS)
@@ -557,6 +571,7 @@ def home(request: Request, session: Session = Depends(get_session)):
         transit_chart=transit_chart,
         panchang_data=panchang_data,
         daily_shloka=daily_shloka,
+        current_datetime=current_datetime,
     )
     return templates.TemplateResponse(request, "home.html", ctx)
 

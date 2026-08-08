@@ -3,6 +3,8 @@ import requests
 from datetime import datetime, date, time, timedelta
 from zoneinfo import ZoneInfo
 from timezonefinder import TimezoneFinder
+from functools import lru_cache
+import copy
 
 from app.vedic_engine.astronomy.coords import get_planetary_positions
 from app.vedic_engine.charts.houses import build_houses
@@ -18,6 +20,10 @@ from app.vedic_engine.transit.gochar import calculate_gochar
 from app.vedic_engine.eclipse.eclipse_engine import get_upcoming_eclipses
 from app.vedic_engine.muhurta.muhurta_engine import get_all_muhurtas
 
+# Pre-instantiate globally to avoid reading files repeatedly
+tf = TimezoneFinder()
+
+@lru_cache(maxsize=1024)
 def get_lat_lon(place_name: str) -> tuple[float, float, str]:
     place_clean = place_name.strip()
     if not place_clean:
@@ -42,8 +48,8 @@ def get_lat_lon(place_name: str) -> tuple[float, float, str]:
         
     return 28.6139, 77.2090, f"{place_clean} (Fallback: New Delhi)"
 
-def get_timezone_offset(lat: float, lon: float, dt_local: datetime) -> tuple[str, float, datetime]:
-    tf = TimezoneFinder()
+@lru_cache(maxsize=1024)
+def get_timezone_offset_cached(lat: float, lon: float, year: int, month: int, day: int, hour: int, minute: int) -> tuple[str, float]:
     try:
         tz_name = tf.timezone_at(lng=lon, lat=lat)
     except Exception:
@@ -54,19 +60,25 @@ def get_timezone_offset(lat: float, lon: float, dt_local: datetime) -> tuple[str
         
     try:
         tz = ZoneInfo(tz_name)
+        dt_local = datetime(year, month, day, hour, minute)
         dt_aware = dt_local.replace(tzinfo=tz)
         utcoffset = dt_aware.utcoffset()
         if utcoffset is not None:
             offset_hours = utcoffset.total_seconds() / 3600.0
-            return tz_name, offset_hours, dt_aware
+            return tz_name, offset_hours
     except Exception as e:
         logging.warning(f"Timezone resolution failed: {e}")
         
-    tz = ZoneInfo("Asia/Kolkata")
-    dt_aware = dt_local.replace(tzinfo=tz)
-    return "Asia/Kolkata", 5.5, dt_aware
+    return "Asia/Kolkata", 5.5
 
-def calculate_professional_kundli(
+def get_timezone_offset(lat: float, lon: float, dt_local: datetime) -> tuple[str, float, datetime]:
+    tz_name, offset_hours = get_timezone_offset_cached(lat, lon, dt_local.year, dt_local.month, dt_local.day, dt_local.hour, dt_local.minute)
+    tz = ZoneInfo(tz_name)
+    dt_aware = dt_local.replace(tzinfo=tz)
+    return tz_name, offset_hours, dt_aware
+
+@lru_cache(maxsize=256)
+def _calculate_professional_kundli_uncached(
     name: str, 
     dob: date, 
     birth_time: time, 
@@ -234,3 +246,14 @@ def calculate_professional_kundli(
     }
     
     return chart
+
+def calculate_professional_kundli(
+    name: str, 
+    dob: date, 
+    birth_time: time, 
+    place: str, 
+    calc_mode: str = "modern", 
+    house_system: str = "whole_sign"
+) -> dict:
+    res = _calculate_professional_kundli_uncached(name, dob, birth_time, place, calc_mode, house_system)
+    return copy.deepcopy(res)

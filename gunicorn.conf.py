@@ -1,6 +1,8 @@
 import multiprocessing
 import os
 
+os.makedirs("logs", exist_ok=True)
+
 # Gunicorn configuration file for production FastAPI deployment
 
 # Server Socket
