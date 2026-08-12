@@ -964,8 +964,12 @@ def sitemap():
 def robots():
     from fastapi import Response
     content = """User-agent: *
-Allow: /
-Allow: /sitemap.xml
+Disallow: /auth/
+Disallow: /account/
+Disallow: /admin/
+Disallow: /flow/
+Disallow: /payment/
+Disallow: /astro/
 
 Sitemap: https://astro-6eq0.onrender.com/sitemap.xml
 """
