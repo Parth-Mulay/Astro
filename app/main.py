@@ -12,7 +12,7 @@ from collections import defaultdict
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
 
@@ -135,7 +135,7 @@ class CSRFASGIMiddleware:
         path = request.url.path
         is_safe_method = request.method in ["GET", "HEAD", "OPTIONS"]
         is_excluded = (
-            path in ["/health", "/status", "/version"]
+            path in ["/health", "/status", "/version", "/robots.txt", "/sitemap.xml"]
             or path.startswith("/static")
             or path.startswith("/uploads")
             or path.startswith("/payment/razorpay/webhook")
@@ -143,7 +143,7 @@ class CSRFASGIMiddleware:
 
         cookie_token = request.cookies.get("csrf_token")
         generated_token = None
-        if not cookie_token:
+        if not cookie_token and not is_excluded:
             generated_token = secrets.token_urlsafe(32)
             cookie_token = generated_token
 
@@ -280,7 +280,7 @@ rate_limit_records = defaultdict(list)
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     path = request.url.path
-    if path in ["/health", "/status", "/version"] or path.startswith("/static") or path.startswith("/uploads"):
+    if path in ["/health", "/status", "/version", "/robots.txt", "/sitemap.xml"] or path.startswith("/static") or path.startswith("/uploads"):
         return await call_next(request)
         
     client_ip = request.client.host if request.client else "unknown"
@@ -901,7 +901,6 @@ def submit_feedback(
 
 @app.get("/sitemap.xml")
 def sitemap():
-    from fastapi import Response
     base = "https://astro-6eq0.onrender.com"
     xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -924,6 +923,16 @@ def sitemap():
     <loc>{base}/tools/sample-kundli</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>{base}/tools/kundli</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>{base}/tools/match</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>{base}/tools/panchang</loc>
@@ -951,19 +960,23 @@ def sitemap():
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>{base}/tools/child-astro-report</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>{base}/tools/temple-of-the-week</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-</urlset>
-"""
+</urlset>"""
     return Response(content=xml_content, media_type="application/xml")
 
 
 @app.get("/robots.txt")
 def robots():
-    from fastapi import Response
     content = """User-agent: *
+Allow: /
 Disallow: /auth/
 Disallow: /account/
 Disallow: /admin/
