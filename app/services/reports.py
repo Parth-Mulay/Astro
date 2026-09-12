@@ -38,5 +38,5 @@ def session_report_html(sess_id: int, astrologer_name: str, price: int, category
     <h1>Consultation Summary</h1>
     <p>Session #{sess_id} with <strong>{astrologer_name}</strong></p>
     <p>Category: {category} · Amount paid: ₹{price}</p>
-    <p>Thank you for using AstroMatch. Your feedback improves future recommendations.</p>
+    <p>Thank you for using Bhakti Astro Match. Your feedback improves future recommendations.</p>
     """

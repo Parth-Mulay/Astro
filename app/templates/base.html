@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="google-site-verification" content="OIGdmilVqgmX3ASLPLGYuAjgQut5x8oF5CE3CdXmVm8" />
-  <title>{% block title %}AstroMatch – AI Astrology & Smart Matching{% endblock %}</title>
+  <title>{% block title %}Bhakti Astro Match – AI Astrology & Smart Matching{% endblock %}</title>
   <link rel="canonical" href="https://astro-6eq0.onrender.com{% if request and request.url.path != '/' %}{{ request.url.path }}{% else %}/{% endif %}" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +48,7 @@
   <header class="as-header">
     <div class="as-header-inner">
       <a href="/" class="as-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 120" class="as-logo-svg" style="height: 52px; width: auto; display: block;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" class="as-logo-svg" style="height: 52px; width: auto; display: block;">
           <defs>
             <!-- Orange Gradient for Logo -->
             <linearGradient id="logo-orange-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -59,17 +59,23 @@
           </defs>
 
           <style>
+            .text-bhakti {
+              font-family: 'Cinzel', serif;
+              font-weight: 700;
+              font-size: 38px;
+              fill: #0B1A30;
+            }
             .text-astro {
               font-family: 'Cinzel', serif;
               font-weight: 700;
-              font-size: 44px;
-              fill: #0B1A30;
+              font-size: 38px;
+              fill: url(#logo-orange-gradient);
             }
             .text-match {
               font-family: 'Cinzel', serif;
               font-weight: 700;
-              font-size: 44px;
-              fill: url(#logo-orange-gradient);
+              font-size: 38px;
+              fill: #0B1A30;
             }
             .text-tagline {
               font-family: 'Montserrat', sans-serif;
@@ -124,18 +130,18 @@
 
           <!-- TEXT GROUP (Right: starts at X=135) -->
           <g transform="translate(135, 10)">
-            <!-- AstroMatch text -->
+            <!-- Bhakti Astro Match text -->
             <text x="0" y="46" class="logo-text">
-              <tspan class="text-astro">Astro</tspan><tspan class="text-match">Match</tspan>
+              <tspan class="text-bhakti">Bhakti </tspan><tspan class="text-astro">Astro </tspan><tspan class="text-match">Match</tspan>
             </text>
 
             <!-- Divider —— ✦ —— -->
-            <line x1="10" y1="64" x2="110" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
-            <path d="M 125 58 Q 125 64 119 64 Q 125 64 125 70 Q 125 64 131 64 Q 125 64 125 58 Z" fill="url(#logo-orange-gradient)" />
-            <line x1="140" y1="64" x2="240" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
+            <line x1="10" y1="64" x2="180" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
+            <path d="M 195 58 Q 195 64 189 64 Q 195 64 195 70 Q 195 64 201 64 Q 195 64 195 58 Z" fill="url(#logo-orange-gradient)" />
+            <line x1="210" y1="64" x2="380" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
 
             <!-- Tagline (translated via jinja) -->
-            <text x="125" y="86" text-anchor="middle" class="text-tagline">{{ "ALIGNING DESTINIES"|t(lang) }}</text>
+            <text x="195" y="86" text-anchor="middle" class="text-tagline">{{ "ALIGNING DESTINIES"|t(lang) }}</text>
           </g>
         </svg>
       </a>
@@ -225,7 +231,7 @@
       </div>
     </div>
     <div class="as-footer-bottom">
-      © 2026 AstroMatch · {{ "Vedic + Spiritual Consultation"|t(lang) }}
+      © 2026 Bhakti Astro Match · {{ "Vedic + Spiritual Consultation"|t(lang) }}
     </div>
   </footer>
 
