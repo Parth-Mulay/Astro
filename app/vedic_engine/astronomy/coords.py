@@ -6,17 +6,17 @@ from skyfield.nutationlib import fundamental_arguments
 from app.vedic_engine.astronomy.ayanamsa import get_ayanamsa
 
 from app.ephemeris import eph, ts
-earth = eph['earth']
+earth = eph['earth'] if eph else None
 
 # Planetary mapping
 PLANETS_MAP = {
-    "Sun": eph['sun'],
-    "Moon": eph['moon'],
-    "Mars": eph['mars'],
-    "Mercury": eph['mercury'],
-    "Jupiter": eph['jupiter barycenter'],
-    "Venus": eph['venus'],
-    "Saturn": eph['saturn barycenter'],
+    "Sun": eph['sun'] if eph else None,
+    "Moon": eph['moon'] if eph else None,
+    "Mars": eph['mars'] if eph else None,
+    "Mercury": eph['mercury'] if eph else None,
+    "Jupiter": eph['jupiter barycenter'] if eph else None,
+    "Venus": eph['venus'] if eph else None,
+    "Saturn": eph['saturn barycenter'] if eph else None,
 }
 
 def get_obliquity(T: float) -> float:

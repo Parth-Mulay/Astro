@@ -5,8 +5,8 @@ from skyfield import almanac, eclipselib
 from skyfield.framelib import ecliptic_frame
 
 from app.ephemeris import eph, ts
-earth = eph['earth']
-moon = eph['moon']
+earth = eph['earth'] if eph else None
+moon = eph['moon'] if eph else None
 
 def get_upcoming_eclipses(start_dt: datetime, search_days: int = 365, tz_name: str = "Asia/Kolkata") -> list:
     """

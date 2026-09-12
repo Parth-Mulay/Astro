@@ -5,7 +5,7 @@ from skyfield.api import wgs84
 from skyfield import almanac
 
 from app.ephemeris import eph, ts
-moon = eph['moon']
+moon = eph['moon'] if eph else None
 
 def get_day_timings(local_date: date, lat: float, lon: float, tz_name: str) -> dict:
     """
