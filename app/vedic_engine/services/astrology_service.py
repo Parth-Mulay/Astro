@@ -21,7 +21,11 @@ from app.vedic_engine.eclipse.eclipse_engine import get_upcoming_eclipses
 from app.vedic_engine.muhurta.muhurta_engine import get_all_muhurtas
 
 # Pre-instantiate globally to avoid reading files repeatedly
-tf = TimezoneFinder()
+try:
+    tf = TimezoneFinder()
+except Exception as e:
+    logging.warning(f"TimezoneFinder init failed: {e}")
+    tf = None
 
 @lru_cache(maxsize=1024)
 def get_lat_lon(place_name: str) -> tuple[float, float, str]:
