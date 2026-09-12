@@ -47,61 +47,64 @@ from app.settings import settings
 
 # --- LOGGING INITIALIZATION ---
 def setup_logging():
-    logs_dir = Path(settings.LOGS_DIR)
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    
-    formatter = logging.Formatter(
-        "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    
-    # Application handler
-    app_handler = RotatingFileHandler(
-        logs_dir / "application.log",
-        maxBytes=10*1024*1024,
-        backupCount=5,
-        encoding="utf-8"
-    )
-    app_handler.setLevel(logging.INFO if settings.LOG_LEVEL == "INFO" else logging.DEBUG)
-    app_handler.setFormatter(formatter)
-    
-    # Error handler
-    error_handler = RotatingFileHandler(
-        logs_dir / "error.log",
-        maxBytes=10*1024*1024,
-        backupCount=5,
-        encoding="utf-8"
-    )
-    error_handler.setLevel(logging.ERROR)
-    error_handler.setFormatter(formatter)
-    
-    # Access handler
-    access_handler = RotatingFileHandler(
-        logs_dir / "access.log",
-        maxBytes=10*1024*1024,
-        backupCount=5,
-        encoding="utf-8"
-    )
-    access_handler.setLevel(logging.INFO)
-    access_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
-    
-    # Setup loggers
-    root_logger = logging.getLogger()
-    for h in root_logger.handlers[:]:
-        root_logger.removeHandler(h)
-    root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(app_handler)
-    root_logger.addHandler(error_handler)
-    
-    app_logger = logging.getLogger("application")
-    app_logger.setLevel(logging.INFO)
-    app_logger.addHandler(app_handler)
-    app_logger.addHandler(error_handler)
-    
-    access_logger = logging.getLogger("access")
-    access_logger.setLevel(logging.INFO)
-    access_logger.addHandler(access_handler)
-    access_logger.propagate = False
+    try:
+        logs_dir = Path(settings.LOGS_DIR)
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        
+        formatter = logging.Formatter(
+            "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        
+        # Application handler
+        app_handler = RotatingFileHandler(
+            logs_dir / "application.log",
+            maxBytes=10*1024*1024,
+            backupCount=5,
+            encoding="utf-8"
+        )
+        app_handler.setLevel(logging.INFO if settings.LOG_LEVEL == "INFO" else logging.DEBUG)
+        app_handler.setFormatter(formatter)
+        
+        # Error handler
+        error_handler = RotatingFileHandler(
+            logs_dir / "error.log",
+            maxBytes=10*1024*1024,
+            backupCount=5,
+            encoding="utf-8"
+        )
+        error_handler.setLevel(logging.ERROR)
+        error_handler.setFormatter(formatter)
+        
+        # Access handler
+        access_handler = RotatingFileHandler(
+            logs_dir / "access.log",
+            maxBytes=10*1024*1024,
+            backupCount=5,
+            encoding="utf-8"
+        )
+        access_handler.setLevel(logging.INFO)
+        access_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
+        
+        # Setup loggers
+        root_logger = logging.getLogger()
+        for h in root_logger.handlers[:]:
+            root_logger.removeHandler(h)
+        root_logger.setLevel(logging.INFO)
+        root_logger.addHandler(app_handler)
+        root_logger.addHandler(error_handler)
+        
+        app_logger = logging.getLogger("application")
+        app_logger.setLevel(logging.INFO)
+        app_logger.addHandler(app_handler)
+        app_logger.addHandler(error_handler)
+        
+        access_logger = logging.getLogger("access")
+        access_logger.setLevel(logging.INFO)
+        access_logger.addHandler(access_handler)
+        access_logger.propagate = False
+    except (PermissionError, OSError):
+        logging.basicConfig(level=logging.INFO)
 
 setup_logging()
 logger = logging.getLogger("application")
@@ -109,9 +112,12 @@ access_logger = logging.getLogger("access")
 
 ROOT = Path(__file__).resolve().parent
 
-# Ensure runtime directories exist
-Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
-Path(settings.REPORTS_DIR).mkdir(parents=True, exist_ok=True)
+# Ensure runtime directories exist if writable
+for d in [settings.UPLOADS_DIR, settings.REPORTS_DIR]:
+    try:
+        Path(d).mkdir(parents=True, exist_ok=True)
+    except (PermissionError, OSError):
+        pass
 
 app = FastAPI(
     title="AstroMatch – Astrology Platform",
