@@ -48,7 +48,7 @@
   <header class="as-header">
     <div class="as-header-inner">
       <a href="/" class="as-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" class="as-logo-svg" style="height: 52px; width: auto; display: block;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" class="as-logo-svg" style="height: 52px; width: auto; display: block;">
           <defs>
             <!-- Orange Gradient for Logo -->
             <linearGradient id="logo-orange-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -62,20 +62,14 @@
             .text-bhakti {
               font-family: 'Cinzel', serif;
               font-weight: 700;
-              font-size: 38px;
+              font-size: 42px;
               fill: #0B1A30;
             }
             .text-astro {
               font-family: 'Cinzel', serif;
               font-weight: 700;
-              font-size: 38px;
+              font-size: 42px;
               fill: url(#logo-orange-gradient);
-            }
-            .text-match {
-              font-family: 'Cinzel', serif;
-              font-weight: 700;
-              font-size: 38px;
-              fill: #0B1A30;
             }
             .text-tagline {
               font-family: 'Montserrat', sans-serif;
@@ -130,18 +124,18 @@
 
           <!-- TEXT GROUP (Right: starts at X=135) -->
           <g transform="translate(135, 10)">
-            <!-- Bhakti Astro Match text -->
+            <!-- Bhakti Astro text -->
             <text x="0" y="46" class="logo-text">
-              <tspan class="text-bhakti">Bhakti </tspan><tspan class="text-astro">Astro </tspan><tspan class="text-match">Match</tspan>
+              <tspan class="text-bhakti">Bhakti </tspan><tspan class="text-astro">Astro</tspan>
             </text>
 
             <!-- Divider —— ✦ —— -->
-            <line x1="10" y1="64" x2="180" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
-            <path d="M 195 58 Q 195 64 189 64 Q 195 64 195 70 Q 195 64 201 64 Q 195 64 195 58 Z" fill="url(#logo-orange-gradient)" />
-            <line x1="210" y1="64" x2="380" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
+            <line x1="10" y1="64" x2="120" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
+            <path d="M 135 58 Q 135 64 129 64 Q 135 64 135 70 Q 135 64 141 64 Q 135 64 135 58 Z" fill="url(#logo-orange-gradient)" />
+            <line x1="150" y1="64" x2="260" y2="64" stroke="url(#logo-orange-gradient)" stroke-width="1" opacity="0.7" />
 
             <!-- Tagline (translated via jinja) -->
-            <text x="195" y="86" text-anchor="middle" class="text-tagline">{{ "ALIGNING DESTINIES"|t(lang) }}</text>
+            <text x="135" y="86" text-anchor="middle" class="text-tagline">{{ "ALIGNING DESTINIES"|t(lang) }}</text>
           </g>
         </svg>
       </a>
