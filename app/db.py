@@ -5,9 +5,23 @@ from sqlmodel import SQLModel, Session, create_engine
 from app.settings import settings
 
 
+import os
+import shutil
+
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+if db_url.startswith("sqlite"):
+    # On read-only filesystems (e.g. Vercel), fallback to /tmp/app.db and pre-copy seeded app.db
+    if not os.access('.', os.W_OK) or db_url == "sqlite:///./app.db":
+        tmp_db_path = "/tmp/app.db"
+        if not os.path.exists(tmp_db_path) and os.path.exists("app.db"):
+            try:
+                shutil.copy("app.db", tmp_db_path)
+            except Exception:
+                pass
+        db_url = f"sqlite:///{tmp_db_path}"
 
 connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 engine = create_engine(db_url, echo=False, connect_args=connect_args)

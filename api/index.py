@@ -9,6 +9,7 @@ if root_dir not in sys.path:
 
 try:
     from app.main import app
+    handler = app
 except Exception as err:
     print(f"Error importing app.main in api/index.py: {err}", file=sys.stderr)
     traceback.print_exc()
