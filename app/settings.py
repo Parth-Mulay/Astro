@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +20,20 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"
     LOG_LEVEL: str = "INFO"
 
+    @field_validator("RATE_LIMIT_PER_MINUTE", mode="before")
+    @classmethod
+    def parse_rate_limit(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return 60
+            try:
+                return int(v)
+            except ValueError:
+                return 60
+        if v is None:
+            return 60
+        return v
+
 
 settings = Settings()
-
