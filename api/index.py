@@ -8,9 +8,12 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 try:
+    from mangum import Mangum
     from app.main import app
-    handler = app
+
+    handler = Mangum(app, lifespan="off")
+    app = handler
 except Exception as err:
-    print(f"Error importing app.main in api/index.py: {err}", file=sys.stderr)
+    print(f"Error initializing app in api/index.py: {err}", file=sys.stderr)
     traceback.print_exc()
     raise err

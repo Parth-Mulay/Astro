@@ -14,3 +14,4 @@ requests>=2.31.0
 razorpay>=1.4.3
 tzdata
 psycopg2-binary>=2.9.0
+mangum>=0.17.0
