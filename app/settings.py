@@ -20,15 +20,23 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"
     LOG_LEVEL: str = "INFO"
 
+    @field_validator("SECURE_COOKIES", mode="before")
+    @classmethod
+    def parse_secure_cookies(cls, v):
+        if isinstance(v, str):
+            val = v.strip().lower()
+            return val in ("true", "1", "yes", "on", "t")
+        return bool(v) if v is not None else False
+
     @field_validator("RATE_LIMIT_PER_MINUTE", mode="before")
     @classmethod
     def parse_rate_limit(cls, v):
         if isinstance(v, str):
-            v = v.strip()
-            if not v:
+            val = v.strip()
+            if not val:
                 return 60
             try:
-                return int(v)
+                return int(val)
             except ValueError:
                 return 60
         if v is None:
