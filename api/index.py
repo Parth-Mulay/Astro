@@ -14,6 +14,15 @@ try:
 except Exception as e:
     print(f"Database table initialization warning: {e}", file=sys.stderr)
 
+# Seed default admin, client, and astrologer accounts on first startup
+try:
+    from app.seed import run_seed
+    run_seed()
+    print("Database seeding completed successfully.", file=sys.stderr)
+except Exception as e:
+    print(f"Database seeding warning (non-fatal): {e}", file=sys.stderr)
+
+
 try:
     from mangum import Mangum
     from app.main import app
