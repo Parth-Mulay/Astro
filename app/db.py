@@ -8,7 +8,10 @@ from app.settings import settings
 import os
 import shutil
 
-db_url = settings.DATABASE_URL
+db_url = settings.DATABASE_URL.strip() if settings.DATABASE_URL else ""
+if not db_url:
+    db_url = "sqlite:///./app.db"
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
