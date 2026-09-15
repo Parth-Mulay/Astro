@@ -19,12 +19,18 @@ if db_url.startswith("sqlite"):
     # On read-only filesystems (e.g. Vercel), fallback to /tmp/app.db and pre-copy seeded app.db
     if not os.access('.', os.W_OK) or db_url == "sqlite:///./app.db":
         tmp_db_path = "/tmp/app.db"
-        if not os.path.exists(tmp_db_path) and os.path.exists("app.db"):
+        # Use absolute path to find app.db (works correctly on Vercel at /var/task/app.db)
+        _this_dir = os.path.dirname(os.path.abspath(__file__))
+        _project_root = os.path.dirname(_this_dir)
+        _source_db = os.path.join(_project_root, "app.db")
+        if not os.path.exists(tmp_db_path) and os.path.exists(_source_db):
             try:
-                shutil.copy("app.db", tmp_db_path)
-            except Exception:
-                pass
+                shutil.copy(_source_db, tmp_db_path)
+                print(f"Copied seeded app.db from {_source_db} to {tmp_db_path}", flush=True)
+            except Exception as _copy_err:
+                print(f"Could not copy app.db: {_copy_err}", flush=True)
         db_url = f"sqlite:///{tmp_db_path}"
+
 
 connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 engine = create_engine(db_url, echo=False, connect_args=connect_args)

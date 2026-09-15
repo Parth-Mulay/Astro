@@ -21,6 +21,7 @@ try:
     print("Database seeding completed successfully.", file=sys.stderr)
 except Exception as e:
     print(f"Database seeding warning (non-fatal): {e}", file=sys.stderr)
+    traceback.print_exc(file=sys.stderr)
 
 
 try:
