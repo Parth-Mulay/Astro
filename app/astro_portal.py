@@ -312,7 +312,8 @@ def astro_profile_save(
         account_id = create_astrologer_linked_account(
             astro_name=astro.display_name,
             email=user.email or f"astro_{astro.id}@platform.com",
-            phone=user.mobile_number or "9999999999",
+            phone=getattr(user, 'mobile_number', None) or "9999999999",
+
             account_number=astro.bank_account_number,
             ifsc_code=astro.ifsc_code
         )
