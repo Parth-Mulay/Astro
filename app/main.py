@@ -41,6 +41,7 @@ from app.models import (
 from app.routes import account_routes, admin_routes, auth_routes, tools_routes, payment_routes
 from app.routes._shared import templates
 from app.services.reports import session_report_html
+from app.services.chat_guard import validate_chat_message
 from app.ui_helpers import get_featured_astrologers, get_specialty_names_for_astrologer, page_context
 from app.astro_portal import router as astro_router
 from app.settings import settings
@@ -796,7 +797,7 @@ def pay_confirm(request: Request, session_id: int, session_db: Session = Depends
 
 
 @app.get("/flow/chat/{session_id}", response_class=HTMLResponse)
-def chat_page(request: Request, session_id: int, session_db: Session = Depends(get_session)):
+def chat_page(request: Request, session_id: int, error: Optional[str] = None, session_db: Session = Depends(get_session)):
     user = require_user(request, session_db)
     sess = session_db.get(ConsultationSession, session_id)
     if not sess or sess.user_id != user.id:
@@ -813,7 +814,7 @@ def chat_page(request: Request, session_id: int, session_db: Session = Depends(g
     return templates.TemplateResponse(
         request,
         "chat.html",
-        page_context(session_db, user, sess=sess, astrologer=astrologer, messages=messages),
+        page_context(session_db, user, sess=sess, astrologer=astrologer, messages=messages, error_msg=error),
     )
 
 
@@ -833,6 +834,11 @@ def user_send_chat(
         return RedirectResponse(url=f"/flow/pay/{sess.id}", status_code=303)
     text = (body or "").strip()
     if text:
+        try:
+            text = validate_chat_message(text)
+        except HTTPException as e:
+            from urllib.parse import quote
+            return RedirectResponse(url=f"/flow/chat/{sess.id}?error={quote(e.detail)}", status_code=303)
         session_db.add(
             ChatMessage(
                 session_id=sess.id,
@@ -843,6 +849,7 @@ def user_send_chat(
         )
         session_db.commit()
     return RedirectResponse(url=f"/flow/chat/{sess.id}", status_code=303)
+
 
 
 @app.get("/flow/session/{session_id}", response_class=HTMLResponse)

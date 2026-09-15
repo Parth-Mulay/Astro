@@ -146,8 +146,11 @@ def astro_dashboard(request: Request, session_db: Session = Depends(get_session)
     )
 
 
+from app.services.chat_guard import validate_chat_message
+from app.services.razorpay_service import create_astrologer_linked_account
+
 @router.get("/chat/{session_id}", response_class=HTMLResponse)
-def astro_chat(request: Request, session_id: int, session_db: Session = Depends(get_session)):
+def astro_chat(request: Request, session_id: int, error: Optional[str] = None, session_db: Session = Depends(get_session)):
     user = _require_astrologer_user(request, session_db)
     astro = session_db.exec(select(Astrologer).where(Astrologer.user_id == user.id)).first()
     if not astro:
@@ -156,17 +159,15 @@ def astro_chat(request: Request, session_id: int, session_db: Session = Depends(
     if not sess or sess.astrologer_id != astro.id:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    payment = session_db.exec(select(Payment).where(Payment.session_id == sess.id)).first()
-    paid = (payment is None) or (payment.status == PaymentStatus.completed)
-
     messages = session_db.exec(
         select(ChatMessage)
         .where(ChatMessage.session_id == sess.id)
         .order_by(ChatMessage.created_at.asc(), ChatMessage.id.asc())
     ).all()
     
-    from app.models import Intake
-    intake = session_db.get(Intake, sess.intake_id)
+    payment = session_db.exec(select(Payment).where(Payment.session_id == sess.id)).first()
+    paid = (payment and payment.status == PaymentStatus.completed)
+    intake = session_db.exec(select(Intake).where(Intake.session_id == sess.id)).first()
     
     # Calculate custom birth chart for client details display
     from app.services.kundli import build_kundli
@@ -196,7 +197,8 @@ def astro_chat(request: Request, session_id: int, session_db: Session = Depends(
             messages=messages, 
             paid=paid, 
             intake=intake,
-            chart=chart
+            chart=chart,
+            error_msg=error
         ),
     )
 
@@ -218,6 +220,11 @@ def astro_send_chat(
 
     text = (body or "").strip()
     if text:
+        try:
+            text = validate_chat_message(text)
+        except HTTPException as e:
+            from urllib.parse import quote
+            return RedirectResponse(url=f"/astro/chat/{sess.id}?error={quote(e.detail)}", status_code=303)
         session_db.add(
             ChatMessage(
                 session_id=sess.id,
@@ -272,6 +279,10 @@ def astro_profile_save(
     min_budget: int = Form(...),
     languages: str = Form(""),
     specialty_ids: list[int] = Form([]),
+    account_holder_name: Optional[str] = Form(None),
+    bank_account_number: Optional[str] = Form(None),
+    ifsc_code: Optional[str] = Form(None),
+    pan_number: Optional[str] = Form(None),
     session_db: Session = Depends(get_session)
 ):
     user = _require_astrologer_user(request, session_db)
@@ -285,6 +296,29 @@ def astro_profile_save(
     astro.primary_language = primary_language.strip()
     astro.min_budget = min_budget
     astro.max_budget = min_budget * 5
+
+    # Update Bank & Payout details
+    if account_holder_name:
+        astro.account_holder_name = account_holder_name.strip()
+    if bank_account_number:
+        astro.bank_account_number = bank_account_number.strip()
+    if ifsc_code:
+        astro.ifsc_code = ifsc_code.strip().upper()
+    if pan_number:
+        astro.pan_number = pan_number.strip().upper()
+
+    # Automatically generate Razorpay Route Linked Account ID if bank details provided
+    if (not astro.razorpay_account_id) and astro.bank_account_number and astro.ifsc_code:
+        account_id = create_astrologer_linked_account(
+            astro_name=astro.display_name,
+            email=user.email or f"astro_{astro.id}@platform.com",
+            phone=user.mobile_number or "9999999999",
+            account_number=astro.bank_account_number,
+            ifsc_code=astro.ifsc_code
+        )
+        if account_id:
+            astro.razorpay_account_id = account_id
+
     session_db.add(astro)
     
     from app.models import AstrologerLanguage, AstrologerSpecialty
@@ -313,6 +347,7 @@ def astro_profile_save(
         
     session_db.commit()
     return RedirectResponse(url="/astro/profile", status_code=303)
+
 
 
 @router.post("/child-orders/{order_id}/complete")

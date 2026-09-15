@@ -70,6 +70,14 @@ class Astrologer(SQLModel, table=True):
     clarity_success_rate: float = 0.0
     helpfulness_success_rate: float = 0.0
 
+    # Razorpay Route Linked Account & Bank Details for Direct Payouts
+    razorpay_account_id: Optional[str] = Field(default=None, index=True)
+    account_holder_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    pan_number: Optional[str] = None
+
+
 
 class AstrologerSpecialty(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

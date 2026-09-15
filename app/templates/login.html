@@ -9,21 +9,22 @@
 <div class="as-panel" style="max-width:440px; margin: 0 auto; padding: 24px;">
   {% if error %}<div class="as-alert as-alert-error">{{ error }}</div>{% endif %}
 
-  <!-- Toggle tabs to visually separate Client vs Jyotishi login -->
-  <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--as-navy); padding-bottom: 8px;">
-    <button id="btn-login-client" class="as-btn" style="flex: 1; background: var(--as-navy); color: #fff; border: none; font-weight: bold; padding: 8px; cursor: pointer;" onclick="switchLoginRole('client')">{{ "Client Login"|t(lang) }}</button>
-    <button id="btn-login-astro" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 8px; cursor: pointer;" onclick="switchLoginRole('astro')">{{ "Jyotishi Login"|t(lang) }}</button>
+  <!-- Toggle tabs to visually separate Client vs Jyotishi vs Admin login -->
+  <div style="display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 2px solid var(--as-navy); padding-bottom: 8px;">
+    <button id="btn-login-client" class="as-btn" style="flex: 1; background: var(--as-navy); color: #fff; border: none; font-weight: bold; padding: 8px 4px; font-size: 13px; cursor: pointer;" onclick="switchLoginRole('client')">{{ "Client"|t(lang) }}</button>
+    <button id="btn-login-astro" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 8px 4px; font-size: 13px; cursor: pointer;" onclick="switchLoginRole('astro')">{{ "Jyotishi"|t(lang) }}</button>
+    <button id="btn-login-admin" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 8px 4px; font-size: 13px; cursor: pointer; border-color: var(--as-orange); color: var(--as-orange);" onclick="switchLoginRole('admin')">⚙️ {{ "Admin"|t(lang) }}</button>
   </div>
 
   <form method="post" action="/auth/login" id="login-form">
     <input type="hidden" name="next" id="login-next" value="{{ next|default('/flow/problem') }}" />
     <div class="as-form-group">
       <label>{{ "Email Address"|t(lang) }}</label>
-      <input class="as-input" name="email" type="email" placeholder="{{ 'name@example.com'|t(lang) }}" required style="width:100%" />
+      <input class="as-input" id="email-input" name="email" type="email" placeholder="{{ 'name@example.com'|t(lang) }}" required style="width:100%" />
     </div>
     <div class="as-form-group">
       <label>{{ "Password"|t(lang) }}</label>
-      <input class="as-input" name="password" type="password" required placeholder="{{ 'Enter password'|t(lang) }}" style="width:100%" />
+      <input class="as-input" id="password-input" name="password" type="password" required placeholder="{{ 'Enter password'|t(lang) }}" style="width:100%" />
     </div>
     <button type="submit" id="btn-submit-login" class="as-btn as-btn-primary" style="width:100%;padding:12px;font-weight:bold;cursor:pointer">{{ "SIGN IN AS CLIENT"|t(lang) }}</button>
   </form>
@@ -36,35 +37,52 @@
 function switchLoginRole(role) {
   const btnClient = document.getElementById('btn-login-client');
   const btnAstro = document.getElementById('btn-login-astro');
+  const btnAdmin = document.getElementById('btn-login-admin');
   const btnSubmit = document.getElementById('btn-submit-login');
   const inputNext = document.getElementById('login-next');
+  const emailInput = document.getElementById('email-input');
   const isHindi = document.cookie.includes('lang=hi');
   
+  [btnClient, btnAstro, btnAdmin].forEach(btn => {
+    btn.style.background = 'none';
+    btn.style.color = 'var(--as-navy)';
+    btn.classList.add('as-btn-outline');
+  });
+
   if (role === 'client') {
     btnClient.style.background = 'var(--as-navy)';
     btnClient.style.color = '#fff';
     btnClient.classList.remove('as-btn-outline');
     
-    btnAstro.style.background = 'none';
-    btnAstro.style.color = 'var(--as-navy)';
-    btnAstro.classList.add('as-btn-outline');
-    
     btnSubmit.innerText = isHindi ? 'क्लाइंट के रूप में साइन इन करें' : 'SIGN IN AS CLIENT';
     btnSubmit.style.background = 'var(--as-orange)';
     inputNext.value = '/flow/problem';
-  } else {
+  } else if (role === 'astro') {
     btnAstro.style.background = 'var(--as-navy)';
     btnAstro.style.color = '#fff';
     btnAstro.classList.remove('as-btn-outline');
     
-    btnClient.style.background = 'none';
-    btnClient.style.color = 'var(--as-navy)';
-    btnClient.classList.add('as-btn-outline');
-    
     btnSubmit.innerText = isHindi ? 'ज्योतिषी के रूप में साइन इन करें' : 'SIGN IN AS JYOTISHI';
     btnSubmit.style.background = 'var(--as-navy)';
     inputNext.value = '/astro';
+  } else if (role === 'admin') {
+    btnAdmin.style.background = 'var(--as-navy)';
+    btnAdmin.style.color = '#fff';
+    btnAdmin.classList.remove('as-btn-outline');
+    
+    btnSubmit.innerText = isHindi ? 'एडमिन के रूप में साइन इन करें' : 'SIGN IN AS ADMIN';
+    btnSubmit.style.background = '#1e293b';
+    inputNext.value = '/admin';
+    if (!emailInput.value) {
+      emailInput.value = 'admin@example.com';
+    }
   }
+}
+
+// Auto-select Admin tab if next=/admin
+if (window.location.search.includes('next=/admin')) {
+  switchLoginRole('admin');
 }
 </script>
 {% endblock %}
+

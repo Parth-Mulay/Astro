@@ -71,6 +71,14 @@ def create_db_and_tables() -> None:
         except Exception:
             pass
 
+        # Alter astrologer table for Razorpay & Bank Details
+        for col in ["razorpay_account_id", "account_holder_name", "bank_account_number", "ifsc_code", "pan_number"]:
+            try:
+                conn.execute(text(f"ALTER TABLE astrologer ADD COLUMN {col} VARCHAR"))
+            except Exception:
+                pass
+
+
 
 def get_session():
     with Session(engine) as session:

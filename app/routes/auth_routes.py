@@ -131,13 +131,16 @@ def login(
             status_code=400,
         )
     get_or_create_profile(session, user)
-    if user.role == Role.astrologer:
+    if user.role == Role.admin:
+        resp = RedirectResponse(url="/admin", status_code=303)
+    elif user.role == Role.astrologer:
         resp = RedirectResponse(url="/astro", status_code=303)
     else:
-        dest = next if next.startswith("/") else "/flow/problem"
+        dest = next if (next and next.startswith("/") and next != "/") else "/flow/problem"
         resp = RedirectResponse(url=dest, status_code=303)
     set_session(resp, user.id)
     return resp
+
 
 
 @router.post("/logout")

@@ -39,6 +39,7 @@ def get_razorpay_client():
 async def create_razorpay_order(
     request: Request,
     amount: int = Form(...),
+    astrologer_id: Optional[int] = Form(None),
     session: Session = Depends(get_session)
 ):
     user = require_user(request, session)
@@ -46,6 +47,13 @@ async def create_razorpay_order(
         raise HTTPException(status_code=400, detail="Invalid recharge amount")
 
     client = get_razorpay_client()
+
+    # Check if this order is linked to an astrologer with Razorpay Route Linked Account
+    astro = None
+    if astrologer_id:
+        from app.models import Astrologer
+        astro = session.get(Astrologer, astrologer_id)
+
     if not client:
         # Fallback to local simulation if Razorpay is not configured
         logger.warning("Razorpay credentials not set. Simulating order creation.")
@@ -57,17 +65,29 @@ async def create_razorpay_order(
         }
 
     try:
-        # Amount in paise (1 INR = 100 paise)
-        order_data = {
-            "amount": amount * 100,
-            "currency": "INR",
-            "receipt": f"rcpt_wallet_{user.id}_{int(request.scope.get('time', 0)) if 'time' in request.scope else 0}",
-            "notes": {
-                "user_id": str(user.id),
-                "type": "wallet_recharge"
+        receipt_id = f"rcpt_wallet_{user.id}_{int(request.scope.get('time', 0)) if 'time' in request.scope else 0}"
+
+        if astro and astro.razorpay_account_id:
+            from app.services.razorpay_service import create_split_payment_order
+            order = create_split_payment_order(
+                amount_in_rupees=amount,
+                receipt_id=receipt_id,
+                astro_razorpay_account_id=astro.razorpay_account_id,
+                platform_commission_pct=20.0 # 20% platform fee, 80% to astrologer bank account
+            )
+        else:
+            # Standard order
+            order_data = {
+                "amount": amount * 100,
+                "currency": "INR",
+                "receipt": receipt_id,
+                "notes": {
+                    "user_id": str(user.id),
+                    "astrologer_id": str(astrologer_id) if astrologer_id else "",
+                    "type": "wallet_recharge"
+                }
             }
-        }
-        order = client.order.create(data=order_data)
+            order = client.order.create(data=order_data)
         
         # Save a pending payment record
         payment_record = Payment(
@@ -86,6 +106,7 @@ async def create_razorpay_order(
             "key": settings.RAZORPAY_KEY_ID
         }
     except Exception as e:
+
         logger.error(f"Error creating Razorpay order: {e}")
         raise HTTPException(status_code=500, detail="Failed to initiate payment gateway order")
 

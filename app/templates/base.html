@@ -161,6 +161,9 @@
 
       <div class="as-header-actions">
         {% if user %}
+          {% if user.role.value == 'admin' %}
+            <a href="/admin" class="as-btn as-btn-primary as-btn-sm" style="background:var(--as-navy)">⚙️ {{ "Admin Dashboard"|t(lang) }}</a>
+          {% endif %}
           <a href="/account/wallet" class="as-wallet">🪙 {{ wallet|default(0) }} {{ "Credits"|t(lang) }}</a>
           <a href="/account/history" class="as-btn as-btn-outline as-btn-sm">{{ "My Account"|t(lang) }}</a>
           <form method="post" action="/auth/logout" style="margin:0">
@@ -168,8 +171,10 @@
           </form>
         {% else %}
           <a href="/auth/login" class="as-btn as-btn-primary as-btn-sm">{{ "Sign In"|t(lang) }}</a>
+          <a href="/auth/login?next=/admin" class="as-btn as-btn-outline as-btn-sm" style="border-color:var(--as-navy);color:var(--as-navy);font-weight:bold">⚙️ {{ "Admin Login"|t(lang) }}</a>
         {% endif %}
       </div>
+
     </div>
   </header>
 

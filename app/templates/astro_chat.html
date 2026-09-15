@@ -82,9 +82,20 @@
 {% endif %}
 
 <div class="as-panel" style="min-height:360px;background:#fafafa">
+  {% if error_msg %}
+  <div style="padding:12px;background:#ffebee;color:#c62828;border:1px solid #ef9a9a;border-radius:8px;margin-bottom:14px;font-weight:600;font-size:13px">
+    ⚠️ {{ error_msg }}
+  </div>
+  {% endif %}
+
+  <div style="padding:10px 14px;background:#fff3e0;color:#e65100;border:1px solid #ffe0b2;border-radius:8px;margin-bottom:14px;font-size:12px">
+    🔒 <strong>Astrologer Policy:</strong> Personal UPI scanners, phone numbers, or off-platform payment links must NOT be shared in chat. All payments go through your website profile linked bank account. Violation leads to immediate account suspension.
+  </div>
+
   <div style="padding:12px;border-bottom:1px solid var(--as-border);margin:-24px -24px 16px;background:var(--as-orange-light)">
     You are logged in as <strong>{{ astro.display_name }}</strong>
   </div>
+
 
   <div style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow:auto;padding-right:6px">
     {% if messages and messages|length > 0 %}
