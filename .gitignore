@@ -8,11 +8,13 @@ venv/
 ENV/
 .env
 
-# Database
-*.db
+# Database - exclude all EXCEPT the seeded app.db for Vercel deployment
 *.sqlite3
 *.backup
 *.db.backup
+# Allow app.db to be committed so Vercel has pre-seeded data
+!app.db
+
 
 
 # Runtime & dynamic media files
