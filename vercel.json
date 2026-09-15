@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/index.py": {
-      "includeFiles": "de421.bsp"
+      "includeFiles": "{app/**,de421.bsp,app.db}"
     }
   },
   "routes": [

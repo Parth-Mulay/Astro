@@ -16,8 +16,9 @@ if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 if db_url.startswith("sqlite"):
-    # On read-only filesystems (e.g. Vercel), fallback to /tmp/app.db and pre-copy seeded app.db
-    if not os.access('.', os.W_OK) or db_url == "sqlite:///./app.db":
+    # On read-only filesystems (e.g. Vercel serverless), fallback to /tmp/app.db and pre-copy seeded app.db
+    is_vercel = os.environ.get("VERCEL") == "1" or "/var/task" in os.path.abspath(__file__)
+    if is_vercel or not os.access('.', os.W_OK):
         tmp_db_path = "/tmp/app.db"
         # Use absolute path to find app.db (works correctly on Vercel at /var/task/app.db)
         _this_dir = os.path.dirname(os.path.abspath(__file__))
