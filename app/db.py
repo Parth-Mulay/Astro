@@ -23,11 +23,11 @@ if db_url.startswith("sqlite"):
         # Use absolute path to find app.db (works correctly on Vercel at /var/task/app.db)
         _this_dir = os.path.dirname(os.path.abspath(__file__))
         _project_root = os.path.dirname(_this_dir)
-        _source_db = os.path.join(_project_root, "app.db")
-        if not os.path.exists(tmp_db_path) and os.path.exists(_source_db):
+        if os.path.exists(_source_db):
             try:
-                shutil.copy(_source_db, tmp_db_path)
-                print(f"Copied seeded app.db from {_source_db} to {tmp_db_path}", flush=True)
+                if not os.path.exists(tmp_db_path) or os.path.getmtime(_source_db) > os.path.getmtime(tmp_db_path):
+                    shutil.copy2(_source_db, tmp_db_path)
+                    print(f"Copied seeded app.db from {_source_db} to {tmp_db_path}", flush=True)
             except Exception as _copy_err:
                 print(f"Could not copy app.db: {_copy_err}", flush=True)
         db_url = f"sqlite:///{tmp_db_path}"
