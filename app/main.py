@@ -372,11 +372,14 @@ async def custom_403_handler(request: Request, exc):
     return JSONResponse(status_code=403, content={"detail": "Forbidden"})
 
 @app.exception_handler(500)
+@app.exception_handler(Exception)
 async def custom_500_handler(request: Request, exc):
+    import traceback
     logger.error(f"Unhandled server error: {exc}", exc_info=True)
+    traceback.print_exc()
     if "text/html" in request.headers.get("accept", ""):
         return templates.TemplateResponse(request, "errors/500.html", {"request": request}, status_code=500)
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+    return JSONResponse(status_code=500, content={"detail": f"Internal Server Error: {str(exc)}"})
 
 @app.exception_handler(503)
 async def custom_503_handler(request: Request, exc):

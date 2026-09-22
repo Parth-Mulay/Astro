@@ -276,12 +276,26 @@ def submit_consultation(
     ).first()
     if not category:
         category = session.exec(select(IssueCategory)).first()
+    if not category:
+        category = IssueCategory(slug="relationships", name="Love & Relationships")
+        session.add(category)
+        session.commit()
+        session.refresh(category)
         
-    d = date.fromisoformat(dob) if dob else None
+    d = None
+    if dob:
+        try:
+            d = date.fromisoformat(dob.strip())
+        except Exception:
+            try:
+                from datetime import datetime as _dt
+                d = _dt.strptime(dob.strip(), "%d-%m-%Y").date()
+            except Exception:
+                d = None
     
     intake = Intake(
         user_id=user_id,
-        issue_category_id=category.id if category else 1,
+        issue_category_id=category.id,
         sub_issue=problem[:200],
         language="English",
         budget_min=0,
