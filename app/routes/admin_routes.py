@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -57,7 +57,7 @@ def log_audit(session: Session, action: str, target: str, user_id: Optional[int]
         action=action,
         target=target,
         ip_address=ip_address or "",
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     session.add(log)
     session.commit()
@@ -249,7 +249,7 @@ def admin_add_temple(
     image_url = "/static/images/temple_of_the_week.jpg"  # default fallback
     if image_file and image_file.filename:
         APP_DIR = Path(__file__).resolve().parent.parent
-        filename = f"temple_{int(datetime.utcnow().timestamp())}_{image_file.filename}"
+        filename = f"temple_{int(datetime.now(timezone.utc).timestamp())}_{image_file.filename}"
         target_path = APP_DIR / "static" / "images" / filename
         os.makedirs(target_path.parent, exist_ok=True)
         with open(target_path, "wb") as f:
@@ -353,7 +353,7 @@ def admin_update_panchang(
     record.kuligai = kuligai.strip()
     record.chandrashtamam = chandrashtamam.strip()
     record.importance = importance.strip()
-    record.last_updated = datetime.utcnow()
+    record.last_updated = datetime.now(timezone.utc)
     session_db.add(record)
     session_db.commit()
     log_audit(session_db, "update_panchang", f"Panchang date: {date_label}", user_id=admin.id, ip_address=request.client.host if request.client else "")
@@ -987,7 +987,7 @@ def trigger_workflow(
         msg = "Recalculated quality metrics (success rate, clarity, complaint rate) from feedback logs."
     elif workflow_type == "clear_slots":
         from app.models import AvailabilitySlot
-        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         stale_slots = session_db.exec(
             select(AvailabilitySlot).where(AvailabilitySlot.start_at < yesterday).where(AvailabilitySlot.is_booked == False)
         ).all()

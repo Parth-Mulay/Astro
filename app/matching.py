@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 
 from sqlmodel import Session, select
@@ -63,7 +63,7 @@ def _budget_fit(intake_min: int, intake_max: int, astro_min: int, astro_max: int
 def _has_availability_soon(
     session: Session, astrologer_id: int, within_hours: int
 ) -> Tuple[bool, datetime | None]:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     window_end = now + timedelta(hours=within_hours)
     slot = session.exec(
         select(AvailabilitySlot)

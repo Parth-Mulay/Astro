@@ -74,8 +74,8 @@ def signup(
         session.commit()
         
         # Seed initial availability slots
-        from datetime import datetime, timedelta
-        now = datetime.utcnow()
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
         for h in [2, 6, 24, 48]:
             start = now + timedelta(hours=h)
             end = start + timedelta(minutes=45)

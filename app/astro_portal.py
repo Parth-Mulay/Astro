@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
@@ -434,7 +435,7 @@ def complete_child_order(
         </div>
 
         <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-            This report was manually analyzed and compiled by our Vedic Astrology expert team on {datetime.utcnow().strftime('%Y-%m-%d')}.
+            This report was manually analyzed and compiled by our Vedic Astrology expert team on {datetime.now(timezone.utc).strftime('%Y-%m-%d')}.
         </div>
     </div>
     """

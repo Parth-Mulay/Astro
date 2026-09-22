@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlmodel import Session, select
 
@@ -112,7 +112,7 @@ def run_seed() -> None:
                     session.rollback()
 
             # availability slots
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             for h in [2, 6, 26, 50]:
                 start = now + timedelta(hours=h)
                 end = start + timedelta(minutes=45)

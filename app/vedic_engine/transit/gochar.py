@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.vedic_engine.astronomy.coords import get_planetary_positions
 
 RASHIS = [
@@ -77,7 +77,7 @@ def calculate_gochar(natal_chart_positions: dict, lat: float, lon: float, calc_m
     Transit placements are calculated relative to the natal Moon and natal Lagna.
     """
     # 1. Get current UTC time for transit positions
-    dt_now_utc = datetime.utcnow()
+    dt_now_utc = datetime.now(timezone.utc)
     transit_data = get_planetary_positions(dt_now_utc, lat, lon, calc_mode=calc_mode)
     
     # Extract natal Moon and Lagna sign indices

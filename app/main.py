@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -401,7 +401,7 @@ def health_check(session: Session = Depends(get_session)):
     if not db_ok:
         raise HTTPException(status_code=500, detail="Database connection down")
         
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/status")
 def status_endpoint(session: Session = Depends(get_session)):
@@ -714,7 +714,7 @@ def book(
         raise HTTPException(status_code=400, detail="Invalid booking request")
 
     price = max(astrologer.min_budget, intake.budget_min or 0) or astrologer.min_budget or 199
-    scheduled_at = datetime.utcnow() + timedelta(hours=1)
+    scheduled_at = datetime.now(timezone.utc) + timedelta(hours=1)
     sess = ConsultationSession(
         user_id=user.id,
         astrologer_id=astrologer.id,

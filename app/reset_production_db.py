@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlmodel import Session, delete, select
 
@@ -170,7 +170,7 @@ def run_reset():
                 )
             )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for offset_hours in [2, 6, 26, 50]:
             start = now + timedelta(hours=offset_hours)
             end = start + timedelta(minutes=45)
