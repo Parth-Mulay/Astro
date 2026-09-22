@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import timedelta
 from typing import Optional
 
@@ -10,7 +11,8 @@ from passlib.context import CryptContext
 from app.settings import settings
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
+
 serializer = URLSafeTimedSerializer(settings.SESSION_SECRET, salt="session")
 
 SESSION_COOKIE = "astro_session"
@@ -18,22 +20,28 @@ SESSION_MAX_AGE_SECONDS = int(timedelta(days=7).total_seconds())
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    return pwd_context.verify(password, password_hash)
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+    except Exception:
+        return False
 
 
 def set_session(response: Response, user_id: int) -> None:
     token = serializer.dumps({"user_id": user_id})
+    is_prod_https = settings.SECURE_COOKIES and (os.environ.get("VERCEL") == "1" or not settings.DATABASE_URL.startswith("sqlite:///."))
     response.set_cookie(
         SESSION_COOKIE,
         token,
         httponly=True,
         max_age=SESSION_MAX_AGE_SECONDS,
         samesite="lax",
-        secure=settings.SECURE_COOKIES,
+        secure=is_prod_https,
     )
 
 

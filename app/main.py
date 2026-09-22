@@ -148,7 +148,16 @@ class CSRFASGIMiddleware:
             or path.startswith("/payment/razorpay/webhook")
         )
 
+        is_https = scope.get("scheme") == "https" or any(h for h in scope.get("headers", []) if h[0].lower() == b"x-forwarded-proto" and h[1].lower() == b"https")
+        secure_flag = "; Secure" if (settings.SECURE_COOKIES and is_https) else ""
+
         cookie_token = request.cookies.get("csrf_token")
+        if not cookie_token:
+            cookie_hdr = request.headers.get("cookie", "")
+            c_match = re.search(r'csrf_token=([^;]+)', cookie_hdr)
+            if c_match:
+                cookie_token = c_match.group(1).strip('"\' ')
+
         generated_token = None
         if not cookie_token and not is_excluded:
             generated_token = secrets.token_urlsafe(32)
@@ -184,14 +193,15 @@ class CSRFASGIMiddleware:
                         if match:
                             submitted_token = match.group(1).decode("utf-8", errors="ignore")
                     
+                    body_queue = list(body_chunks)
                     async def cached_receive():
-                        if body_chunks:
-                            return body_chunks.pop(0)
+                        if body_queue:
+                            return body_queue.pop(0)
                         return {"type": "http.request", "body": b"", "more_body": False}
                     
                     receive = cached_receive
             
-            stored_cookie_token = request.cookies.get("csrf_token")
+            stored_cookie_token = cookie_token
             if not stored_cookie_token or not submitted_token or not secrets.compare_digest(stored_cookie_token, submitted_token):
                 logger.warning(f"CSRF validation failed for IP: {request.client.host if request.client else 'unknown'} on path {path}")
                 
@@ -228,9 +238,7 @@ class CSRFASGIMiddleware:
             async def send_wrapper(message):
                 if message["type"] == "http.response.start":
                     headers = MutableHeaders(raw=message["headers"])
-                    cookie_val = f"csrf_token={generated_token}; HttpOnly; Path=/; SameSite=lax"
-                    if settings.SECURE_COOKIES:
-                        cookie_val += "; Secure"
+                    cookie_val = f"csrf_token={generated_token}; HttpOnly; Path=/; SameSite=lax{secure_flag}"
                     headers.append("set-cookie", cookie_val)
                 await send(message)
             

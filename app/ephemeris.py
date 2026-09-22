@@ -7,9 +7,12 @@ cache_dir = '.' if os.access('.', os.W_OK) else '/tmp'
 load = Loader(cache_dir, verbose=False)
 
 try:
-    ts = load.timescale()
+    ts = load.timescale(builtin=True)
 except Exception:
-    ts = None
+    try:
+        ts = load.timescale()
+    except Exception:
+        ts = None
 
 eph_file = 'de421.bsp'
 eph = None
