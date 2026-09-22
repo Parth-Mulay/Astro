@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import Enum
 from typing import Optional
 
 from sqlmodel import Field, SQLModel, UniqueConstraint
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class Role(str, Enum):
@@ -30,7 +34,7 @@ class User(SQLModel, table=True):
     password_hash: str
     role: Role = Field(default=Role.user, index=True)
     is_suspended: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     __table_args__ = (UniqueConstraint("email"),)
 
@@ -116,7 +120,7 @@ class Intake(SQLModel, table=True):
     urgency: Urgency = Field(default=Urgency.normal, index=True)
     goal: str = ""
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
     # Structured consultation form fields
     full_name: str = ""
@@ -148,7 +152,7 @@ class ConsultationSession(SQLModel, table=True):
 
     price: int = 0
     payout_processed: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class Feedback(SQLModel, table=True):
@@ -164,7 +168,7 @@ class Feedback(SQLModel, table=True):
     repeat_booking_intent: bool = False
 
     notes: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
     __table_args__ = (UniqueConstraint("session_id"),)
 
@@ -176,7 +180,7 @@ class MatchScore(SQLModel, table=True):
 
     score: float = Field(default=0.0, index=True)
     reason: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
     __table_args__ = (UniqueConstraint("intake_id", "astrologer_id"),)
 
@@ -191,7 +195,7 @@ class UserProfile(SQLModel, table=True):
     zodiac_sign: str = "aries"
     preferred_language: str = "English"
     wallet_balance: int = Field(default=500)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class PaymentStatus(str, Enum):
@@ -206,7 +210,7 @@ class Payment(SQLModel, table=True):
     session_id: Optional[int] = Field(default=None, foreign_key="consultationsession.id", index=True)
     amount: int = 0
     status: PaymentStatus = Field(default=PaymentStatus.pending, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class KundliRecord(SQLModel, table=True):
@@ -217,7 +221,7 @@ class KundliRecord(SQLModel, table=True):
     birth_time: str
     birth_place: str
     chart_json: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class KundliMatchRecord(SQLModel, table=True):
@@ -227,7 +231,7 @@ class KundliMatchRecord(SQLModel, table=True):
     girl_name: str
     score_percent: float = 0.0
     report_json: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class ReportType(str, Enum):
@@ -245,7 +249,7 @@ class SavedReport(SQLModel, table=True):
     title: str
     html_content: str = ""
     ref_id: Optional[int] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class ChildAstroOrder(SQLModel, table=True):
@@ -263,7 +267,7 @@ class ChildAstroOrder(SQLModel, table=True):
     status: str = Field(default="pending", index=True)  # pending, in_analysis, completed
     price_credits: int = 100
     pdf_path: Optional[str] = Field(default=None, nullable=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 
@@ -278,7 +282,7 @@ class ChatMessage(SQLModel, table=True):
     sender: ChatSender = Field(index=True)
     sender_user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True)
     body: str
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class SystemConfig(SQLModel, table=True):
@@ -292,7 +296,7 @@ class AuditLog(SQLModel, table=True):
     action: str
     target: str
     ip_address: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class InAppNotification(SQLModel, table=True):
@@ -302,7 +306,7 @@ class InAppNotification(SQLModel, table=True):
     title: str
     body: str
     is_read: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
 class PanchangData(SQLModel, table=True):
@@ -318,7 +322,7 @@ class PanchangData(SQLModel, table=True):
     kuligai: str = Field(default="07.30AM-09.00AM")
     chandrashtamam: str = Field(default="Thulam")
     importance: str = Field(default="Aadi Kirthigai")
-    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=utc_now)
 
 
 class TempleOfTheWeek(SQLModel, table=True):
@@ -328,6 +332,6 @@ class TempleOfTheWeek(SQLModel, table=True):
     description: str = Field(default="")
     image_url: str = Field(default="/static/images/temple_of_the_week.jpg")
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
