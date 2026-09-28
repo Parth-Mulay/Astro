@@ -1,36 +1,130 @@
 {% extends "base.html" %}
-{% block title %}Credit Points – AstroMatch{% endblock %}
+{% block title %}Credit Points & Direct UPI Gateway – AstroMatch{% endblock %}
+
 {% block content %}
-<h1 class="as-page-title">🪙 Credit Points Hub</h1>
-<p class="as-page-sub">Purchase credit points to consult qualified Jyotishis and access premium features (sample Kundali & detailed horoscopes).</p>
-
-{% if message %}
-  <div class="as-alert {% if error %}as-alert-error{% else %}as-alert-success{% endif %}">
-    {{ message }}
-  </div>
-{% endif %}
-
-<div class="as-panel" style="text-align:center; padding: 30px;">
-  <div style="font-size:16px; color:var(--as-muted); margin-bottom: 8px;">Your Available Balance</div>
-  <div style="font-size:48px; font-weight:700; color:var(--as-orange)">🪙 {{ prof.wallet_balance }} Credits</div>
-</div>
-
-<div class="as-panel" style="margin-top:20px; padding: 24px;">
-  <h3 style="margin-top: 0; color: var(--as-navy)">🛍️ Purchase Credit Points Package</h3>
-  <p style="font-size: 13px; color: var(--as-muted); margin-top: -6px;">Choose a credits package below. (Demo payment simulation)</p>
+<div style="max-width: 680px; margin: 0 auto; padding: 10px 15px 40px;">
   
-  <form method="post" action="/account/wallet/recharge">
-    <div class="as-form-group">
-      <label><strong>Select Credits Package</strong></label>
-      <select class="as-select" name="amount" style="width: 100%; margin-top: 8px; padding: 10px;">
-        {% for pkg in packages|default([100, 500, 1000, 2000]) %}
-          <option value="{{ pkg }}" {% if pkg == 500 %}selected{% endif %}>{{ pkg }} Credits — ₹{{ pkg }}</option>
-        {% endfor %}
-      </select>
+  <h1 class="as-page-title">🪙 Credit Points Hub</h1>
+  <p class="as-page-sub">Purchase credit points or recharge directly via free & secure UPI and QR scanner.</p>
+
+  {% if message %}
+    <div class="as-alert {% if error %}as-alert-error{% else %}as-alert-success{% endif %}" style="margin-bottom: 20px;">
+      {{ message }}
     </div>
-    <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 12px; margin-top: 16px; font-size: 15px; font-weight: bold;">
-      Purchase Credits Package
-    </button>
-  </form>
+  {% endif %}
+
+  <!-- Balance Card -->
+  <div class="as-panel" style="text-align: center; padding: 26px; border-radius: 12px; background: linear-gradient(135deg, #0f1d38 0%, #1a2b4c 100%); color: #fff;">
+    <div style="font-size: 14px; color: #cbd5e1; margin-bottom: 6px;">Your Available Balance</div>
+    <div style="font-size: 42px; font-weight: 800; color: #fbbf24;">🪙 {{ prof.wallet_balance }} Credits</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">1 Credit = ₹1.00 Value</div>
+  </div>
+
+  <!-- Direct UPI & QR Recharge Card -->
+  <div class="as-panel" style="margin-top: 20px; padding: 24px; border-radius: 12px; border: 1px solid var(--as-border);">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+      <span style="font-size: 20px;">📱</span>
+      <h3 style="margin: 0; color: var(--as-navy); font-size: 17px;">
+        Direct UPI & QR Scanner Recharge (Free & Instant)
+      </h3>
+    </div>
+    
+    <p style="font-size: 13px; color: var(--as-muted); margin: 0 0 16px;">
+      Zero API key required. Scan the QR code or click the UPI button using any UPI app (GPay, PhonePe, Paytm, BHIM).
+    </p>
+
+    <form method="post" action="/account/wallet/recharge">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+
+      <div class="as-form-group">
+        <label><strong>Select Recharge Package</strong></label>
+        <select class="as-select" id="walletPkgSelect" name="amount" style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;">
+          {% for pkg in packages|default([100, 500, 1000, 2000]) %}
+            <option value="{{ pkg }}" {% if pkg == 500 %}selected{% endif %}>{{ pkg }} Credits — ₹{{ pkg }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- QR & UPI Interactive Area -->
+      <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 18px; margin: 18px 0; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+        <div style="text-align: center; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7; margin: 0 auto;">
+          <img 
+            id="walletQrImg" 
+            src="/static/images/qr_code.jpeg" 
+            alt="QR Code" 
+            style="width: 140px; height: 140px; display: block; border-radius: 4px; object-fit: contain; margin: 0 auto;"
+          />
+          <span style="font-size: 11px; color: #166534; font-weight: 700; display: block; margin-top: 6px;">Scan and Pay with UPI</span>
+        </div>
+
+        <div style="flex: 1; min-width: 220px;">
+          <span style="font-size: 12px; color: #475569; display: block;">Official UPI ID:</span>
+          <div style="display: flex; gap: 8px; align-items: center; margin: 4px 0 12px;">
+            <code style="background: #ffffff; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 700; color: #0f172a; border: 1px solid #cbd5e1;">
+              bhaktiastro@upi
+            </code>
+            <button type="button" id="copyWalletUpiBtn" class="as-btn as-btn-outline" style="padding: 4px 10px; font-size: 11px;">
+              📋 Copy
+            </button>
+          </div>
+
+          <a 
+            id="walletUpiLinkBtn" 
+            href="upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=500&cu=INR&tn=WalletRecharge" 
+            class="as-btn" 
+            style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #ffffff; padding: 10px 18px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);"
+          >
+            <span>⚡</span> Open UPI App (<span id="btnAmtText">₹500</span>)
+          </a>
+        </div>
+      </div>
+
+      <div class="as-form-group">
+        <label style="font-size: 13px; color: #475569;">UPI Reference / UTR Number (Optional):</label>
+        <input type="text" name="utr_number" class="as-input" placeholder="e.g. 12-digit UTR (3241...)" style="width: 100%; margin-top: 4px; padding: 9px; font-size: 13px;" />
+      </div>
+
+      <button type="submit" class="as-btn as-btn-primary" style="width: 100%; padding: 13px; margin-top: 10px; font-size: 15px; font-weight: bold; border-radius: 6px;">
+        ✓ Confirm Recharge & Add Credits to Wallet
+      </button>
+    </form>
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const select = document.getElementById('walletPkgSelect');
+  const qrImg = document.getElementById('walletQrImg');
+  const linkBtn = document.getElementById('walletUpiLinkBtn');
+  const btnAmtText = document.getElementById('btnAmtText');
+  const copyBtn = document.getElementById('copyWalletUpiBtn');
+
+  function updateWalletUpi() {
+    const amt = select ? select.value : '500';
+    const upiUrl = 'upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=' + amt + '&cu=INR&tn=WalletRecharge';
+    if (qrImg) {
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(upiUrl);
+    }
+    if (linkBtn) {
+      linkBtn.href = upiUrl;
+    }
+    if (btnAmtText) {
+      btnAmtText.textContent = '₹' + amt;
+    }
+  }
+
+  if (select) {
+    select.addEventListener('change', updateWalletUpi);
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText('bhaktiastro@upi').then(function() {
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(function() { copyBtn.textContent = '📋 Copy'; }, 2000);
+      });
+    });
+  }
+});
+</script>
 {% endblock %}

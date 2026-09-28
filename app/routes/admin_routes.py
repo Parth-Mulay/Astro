@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import io
 import os
 import shutil
 from datetime import datetime, timedelta, timezone
@@ -7,7 +6,9 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, File
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from sqlmodel import Session, select
 
 from app.db import get_session, get_config, set_config
@@ -32,6 +33,7 @@ from app.models import (
     ConsultType,
     PanchangData,
     TempleOfTheWeek,
+    PitruPakshaBooking,
 )
 from app.routes._shared import templates
 from app.ui_helpers import page_context
@@ -61,6 +63,110 @@ def log_audit(session: Session, action: str, target: str, user_id: Optional[int]
     )
     session.add(log)
     session.commit()
+
+
+def get_astrologer_payment_data(session_db: Session) -> dict:
+    """Generate structured payment data grouped by Astrologer for monthly payout tracking & Excel export."""
+    astrologers = session_db.exec(select(Astrologer)).all()
+    sessions = session_db.exec(select(ConsultationSession).order_by(ConsultationSession.created_at.desc())).all()
+    payments = session_db.exec(select(Payment).order_by(Payment.created_at.desc())).all()
+    users = session_db.exec(select(User)).all()
+    user_map = {u.id: u for u in users}
+    user_profiles = session_db.exec(select(UserProfile)).all()
+    profile_map = {p.user_id: p for p in user_profiles}
+
+    summary_by_astrologer = []
+    grand_total = 0
+    all_payment_rows = []
+
+    for astro in astrologers:
+        astro_sessions = [s for s in sessions if s.astrologer_id == astro.id]
+        astro_session_map = {s.id: s for s in astro_sessions}
+        astro_records = []
+        
+        # 1. From Payment records linked to consultation sessions
+        for p in payments:
+            if p.session_id and p.session_id in astro_session_map:
+                sess = astro_session_map[p.session_id]
+                u = user_map.get(p.user_id)
+                prof = profile_map.get(p.user_id)
+                
+                who_name = (prof.full_name.strip() if prof and prof.full_name else (u.email if u else f"Client #{p.user_id}"))
+                who_email = u.email if u else "N/A"
+                who_paid = f"{who_name} ({who_email})" if who_email != "N/A" and who_name != who_email else who_name
+                to_whom = astro.upi_name or astro.display_name or (f"Astrologer #{astro.id}")
+                amount = p.amount if p.amount > 0 else sess.price
+                status_str = p.status.value if hasattr(p.status, "value") else str(p.status)
+                
+                rec = {
+                    "payment_id": p.id,
+                    "who_paid": who_paid,
+                    "who_name": who_name,
+                    "who_email": who_email,
+                    "to_whom": to_whom,
+                    "astrologer_name": astro.display_name,
+                    "astrologer_id": astro.id,
+                    "amount": amount,
+                    "status": status_str,
+                    "payment_method": p.payment_method or "upi_direct",
+                    "utr_number": p.utr_number or "-",
+                    "created_at": p.created_at,
+                    "session_id": sess.id
+                }
+                astro_records.append(rec)
+                all_payment_rows.append(rec)
+                
+        # 2. Also include consultation sessions booked/completed that don't have separate Payment records
+        linked_sess_ids = set(p.session_id for p in payments if p.session_id)
+        for sess in astro_sessions:
+            if sess.id not in linked_sess_ids and sess.status in [SessionStatus.booked, SessionStatus.completed]:
+                u = user_map.get(sess.user_id)
+                prof = profile_map.get(sess.user_id)
+                
+                who_name = (prof.full_name.strip() if prof and prof.full_name else (u.email if u else f"Client #{sess.user_id}"))
+                who_email = u.email if u else "N/A"
+                who_paid = f"{who_name} ({who_email})" if who_email != "N/A" and who_name != who_email else who_name
+                to_whom = astro.upi_name or astro.display_name or (f"Astrologer #{astro.id}")
+                amount = sess.price
+                status_str = "completed" if sess.status == SessionStatus.completed else "booked"
+                
+                rec = {
+                    "payment_id": f"SESS-{sess.id}",
+                    "who_paid": who_paid,
+                    "who_name": who_name,
+                    "who_email": who_email,
+                    "to_whom": to_whom,
+                    "astrologer_name": astro.display_name,
+                    "astrologer_id": astro.id,
+                    "amount": amount,
+                    "status": status_str,
+                    "payment_method": "direct_consultation",
+                    "utr_number": "-",
+                    "created_at": sess.created_at,
+                    "session_id": sess.id
+                }
+                astro_records.append(rec)
+                all_payment_rows.append(rec)
+                
+        astro_total = sum(r["amount"] for r in astro_records if r["status"] in ["completed", "verified", "booked"])
+        grand_total += astro_total
+        
+        summary_by_astrologer.append({
+            "astrologer": astro,
+            "astrologer_name": astro.display_name,
+            "astrologer_id": astro.id,
+            "upi_id": astro.upi_id or "-",
+            "upi_name": astro.upi_name or astro.display_name,
+            "records": astro_records,
+            "total_amount": astro_total,
+            "count": len(astro_records)
+        })
+
+    return {
+        "summary_by_astrologer": summary_by_astrologer,
+        "grand_total": grand_total,
+        "all_payment_rows": all_payment_rows
+    }
 
 
 @router.get("", response_class=HTMLResponse)
@@ -229,9 +335,30 @@ def admin_dashboard(request: Request, session_db: Session = Depends(get_session)
         call_sessions_count=call_sessions_count,
         total_recharges_count=total_recharges_count,
         panchang_record=session_db.exec(select(PanchangData)).first() or PanchangData(),
-        temples=session_db.exec(select(TempleOfTheWeek).order_by(TempleOfTheWeek.created_at.desc())).all()
+        temples=session_db.exec(select(TempleOfTheWeek).order_by(TempleOfTheWeek.created_at.desc())).all(),
+        pitru_bookings=session_db.exec(select(PitruPakshaBooking).order_by(PitruPakshaBooking.created_at.desc())).all(),
+        astro_payment_data=get_astrologer_payment_data(session_db),
     )
     return templates.TemplateResponse(request, "admin.html", ctx)
+
+
+@router.post("/pitru-paksha/{booking_id}/status")
+def admin_update_pitru_status(
+    request: Request,
+    booking_id: int,
+    status: str = Form(...),
+    session_db: Session = Depends(get_session)
+):
+    admin = require_admin(request, session_db)
+    booking = session_db.get(PitruPakshaBooking, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if status in ["verified", "rejected", "pending"]:
+        booking.payment_status = status
+        session_db.add(booking)
+        session_db.commit()
+        log_audit(session_db, "Update Pitru Paksha Status", f"Updated booking #{booking_id} status to '{status}'", admin.id, request.client.host)
+    return RedirectResponse(url="/admin#tab-pitru", status_code=303)
 
 
 @router.post("/temple/add")
@@ -609,6 +736,218 @@ def delete_payment(
     
     log_audit(session_db, "Delete Order", f"Deleted order record #{payment_id}", admin.id, request.client.host)
     return RedirectResponse(url="/admin#tab-orders", status_code=303)
+
+
+@router.get("/payments/export-excel")
+def export_payments_excel(
+    request: Request,
+    session_db: Session = Depends(get_session)
+):
+    """Export Admin Payment Data to Excel structured by Astrologer with subtotals and grand total."""
+    admin = require_admin(request, session_db)
+    data = get_astrologer_payment_data(session_db)
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Astrologer Payments"
+    
+    # Enable grid lines
+    if ws.views and len(ws.views.sheetView) > 0:
+        ws.views.sheetView[0].showGridLines = True
+    
+    # Styles
+    title_font = Font(name="Calibri", size=16, bold=True, color="0F172A")
+    subtitle_font = Font(name="Calibri", size=11, italic=True, color="475569")
+    
+    section_header_font = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
+    section_header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")  # Navy Blue
+    
+    tbl_header_font = Font(name="Calibri", size=11, bold=True, color="0F172A")
+    tbl_header_fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")  # Light Slate
+    
+    data_font = Font(name="Calibri", size=11, color="0F172A")
+    subtotal_font = Font(name="Calibri", size=11, bold=True, color="0F172A")
+    subtotal_fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")  # Warm Amber
+    
+    grand_total_font = Font(name="Calibri", size=13, bold=True, color="991B1B")
+    grand_total_fill = PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid")  # Rose Accent
+    
+    thin_border = Border(
+        left=Side(style="thin", color="CBD5E1"),
+        right=Side(style="thin", color="CBD5E1"),
+        top=Side(style="thin", color="CBD5E1"),
+        bottom=Side(style="thin", color="CBD5E1")
+    )
+    
+    double_bottom_border = Border(
+        left=Side(style="thin", color="CBD5E1"),
+        right=Side(style="thin", color="CBD5E1"),
+        top=Side(style="thin", color="CBD5E1"),
+        bottom=Side(style="double", color="1E293B")
+    )
+    
+    # Title & Metadata
+    ws.append(["ASTROLOGER PAYMENTS & REVENUE SHARING REPORT"])
+    ws.cell(row=1, column=1).font = title_font
+    
+    ws.append([f"Generated on: {datetime.now().strftime('%d %B %Y, %I:%M %p')} | Admin Payout & Monthly Sharing Ledger"])
+    ws.cell(row=2, column=1).font = subtitle_font
+    ws.append([])  # Blank spacer row
+    
+    current_row = 4
+    headers = [
+        "Payment / Session ID",
+        "Who Paid (Client)",
+        "To Whom Paid (Recipient)",
+        "Astrologer Name",
+        "Amount Paid (₹)",
+        "Payment Method",
+        "UTR / Ref No.",
+        "Date & Time",
+        "Status"
+    ]
+    
+    for astro_item in data["summary_by_astrologer"]:
+        astro_name = astro_item["astrologer_name"]
+        upi_id = astro_item["upi_id"]
+        records = astro_item["records"]
+        total_amt = astro_item["total_amount"]
+        
+        # 1. Astrologer Header Section
+        ws.append([f"Astrologer: {astro_name} (UPI: {upi_id})"])
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.font = section_header_font
+            cell.fill = section_header_fill
+            cell.border = thin_border
+        ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=len(headers))
+        current_row += 1
+        
+        # 2. Table Column Headers
+        ws.append(headers)
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.font = tbl_header_font
+            cell.fill = tbl_header_fill
+            cell.alignment = Alignment(horizontal="center" if col_idx in [1, 5, 6, 8, 9] else "left")
+            cell.border = thin_border
+        current_row += 1
+        
+        # 3. Individual Transactions for this Astrologer
+        if records:
+            for r in records:
+                date_str = r["created_at"].strftime("%Y-%m-%d %H:%M") if r["created_at"] else "-"
+                row_vals = [
+                    f"#{r['payment_id']}",
+                    r["who_paid"],
+                    r["to_whom"],
+                    r["astrologer_name"],
+                    r["amount"],
+                    r["payment_method"].upper(),
+                    r["utr_number"],
+                    date_str,
+                    r["status"].upper()
+                ]
+                ws.append(row_vals)
+                for col_idx in range(1, len(headers) + 1):
+                    cell = ws.cell(row=current_row, column=col_idx)
+                    cell.font = data_font
+                    cell.border = thin_border
+                    if col_idx == 5:
+                        cell.number_format = '"₹"#,##0'
+                        cell.alignment = Alignment(horizontal="right")
+                    elif col_idx in [1, 6, 8, 9]:
+                        cell.alignment = Alignment(horizontal="center")
+                current_row += 1
+        else:
+            ws.append(["-", "No client transactions recorded yet for this astrologer", "-", astro_name, 0, "-", "-", "-", "-"])
+            for col_idx in range(1, len(headers) + 1):
+                cell = ws.cell(row=current_row, column=col_idx)
+                cell.font = Font(name="Calibri", size=10, italic=True, color="64748B")
+                cell.border = thin_border
+                if col_idx == 5:
+                    cell.number_format = '"₹"#,##0'
+                    cell.alignment = Alignment(horizontal="right")
+            current_row += 1
+            
+        # 4. Total Amount for this Astrologer Section
+        subtotal_row = [
+            f"Total for {astro_name}:",
+            "",
+            "",
+            "",
+            total_amt,
+            "",
+            "",
+            f"Total Payments: {len(records)}",
+            ""
+        ]
+        ws.append(subtotal_row)
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.font = subtotal_font
+            cell.fill = subtotal_fill
+            cell.border = thin_border
+            if col_idx == 5:
+                cell.number_format = '"₹"#,##0'
+                cell.alignment = Alignment(horizontal="right")
+        ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=4)
+        current_row += 1
+        
+        # Blank spacer between astrologers
+        ws.append([])
+        current_row += 1
+
+    # 5. Grand Total for all combined Astrologers at the very end
+    grand_total_row = [
+        "GRAND TOTAL (ALL COMBINED ASTROLOGERS)",
+        "",
+        "",
+        "",
+        data["grand_total"],
+        "",
+        "",
+        "",
+        ""
+    ]
+    ws.append(grand_total_row)
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=current_row, column=col_idx)
+        cell.font = grand_total_font
+        cell.fill = grand_total_fill
+        cell.border = double_bottom_border
+        if col_idx == 5:
+            cell.number_format = '"₹"#,##0'
+            cell.alignment = Alignment(horizontal="right")
+    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=4)
+    current_row += 1
+
+    # Adjust Column Widths for readability
+    col_widths = {
+        "A": 22,  # ID
+        "B": 34,  # Who Paid
+        "C": 28,  # To Whom Paid
+        "D": 26,  # Astrologer Name
+        "E": 18,  # Amount
+        "F": 20,  # Method
+        "G": 20,  # UTR
+        "H": 22,  # Date
+        "I": 16   # Status
+    }
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    log_audit(session_db, "Export Payments Excel", "Exported monthly astrologer payments spreadsheet", admin.id, request.client.host)
+    filename = f"Astrologer_Payments_Ledger_{datetime.now().strftime('%Y_%m_%d')}.xlsx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 
 # -------------------------------------------------------------

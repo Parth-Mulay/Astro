@@ -270,7 +270,10 @@
     <div class="admin-sidebar-title">Transactions</div>
     <ul class="admin-sidebar-menu">
       <li class="admin-sidebar-item">
-        <a class="admin-sidebar-link" onclick="switchTab('tab-orders')">🪙 Order Management</a>
+        <a class="admin-sidebar-link" onclick="switchTab('tab-pitru')">🪔 Pitru Paksha Bookings</a>
+      </li>
+      <li class="admin-sidebar-item">
+        <a class="admin-sidebar-link" onclick="switchTab('tab-orders')">💳 Astrologer Payments & Orders</a>
       </li>
       <li class="admin-sidebar-item">
         <a class="admin-sidebar-link" onclick="switchTab('tab-payouts')">💸 Weekly Payouts</a>
@@ -677,11 +680,275 @@
       </div>
     </section>
 
-    <!-- 5. ORDER MANAGEMENT PANEL -->
-    <section id="tab-orders" class="admin-panel">
+    <!-- PITRU PAKSHA BOOKINGS PANEL -->
+    <section id="tab-pitru" class="admin-panel">
       <div class="card-container">
         <div class="section-header">
-          <h2 class="section-title">Order Management & Recharge History</h2>
+          <h2 class="section-title">🪔 Pitru Paksha Sacred Ritual Bookings</h2>
+          <span style="font-size:13px; color:var(--as-muted)">{{ pitru_bookings|length if pitru_bookings else 0 }} Total Bookings Received</span>
+        </div>
+
+        <div class="as-table-wrap">
+          <table class="as-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Karta & Gotram</th>
+                <th>Contact & Email</th>
+                <th>Tithi & Date</th>
+                <th>Tirtha Location</th>
+                <th>Pitru (Ancestors)</th>
+                <th>Total (Fee + Dakshina)</th>
+                <th>Proof / Screenshot</th>
+                <th>Status & Verification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pb in pitru_bookings|default([]) %}
+                <tr>
+                  <td><strong>#PP-{{ pb.id }}</strong></td>
+                  <td>
+                    <strong>{{ pb.karta_name }}</strong><br/>
+                    <small style="color:#64748b;">Gotram: {{ pb.gotram }}</small>
+                  </td>
+                  <td>
+                    <span>📞 {{ pb.contact_number }}</span><br/>
+                    <small style="color:#64748b;">{{ pb.email }}</small>
+                  </td>
+                  <td>
+                    <strong>{{ pb.tithi }}</strong><br/>
+                    <small style="color:#64748b;">📅 {{ pb.calendar_date.strftime('%d %b %Y') if pb.calendar_date else '' }}</small>
+                  </td>
+                  <td><span style="color:#0284c7; font-weight:600;">📍 {{ pb.location }}</span></td>
+                  <td><small style="color:#334155;">{{ pb.pitru_details }}</small></td>
+                  <td>
+                    <strong style="color:var(--as-orange);">₹{{ pb.total_amount }}</strong><br/>
+                    <small style="color:#64748b;">(Puja: ₹{{ pb.base_puja_amount }} + Dakshina: ₹{{ pb.dakshina_amount }})</small>
+                  </td>
+                  <td>
+                    {% if pb.screenshot_path %}
+                      <a href="{{ pb.screenshot_path }}" target="_blank" class="as-btn as-btn-outline as-btn-sm" style="padding:2px 8px; font-size:11px;">
+                        🖼️ View JPG
+                      </a>
+                    {% else %}
+                      <span style="color:#94a3b8; font-size:11px;">No Proof</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div style="margin-bottom:6px;">
+                      {% if pb.payment_status == 'verified' %}
+                        <span class="badge-status badge-active">VERIFIED</span>
+                      {% elif pb.payment_status == 'rejected' %}
+                        <span class="badge-status badge-paused">REJECTED</span>
+                      {% else %}
+                        <span class="badge-status" style="background:#fef9c3; color:#854d0e;">PENDING</span>
+                      {% endif %}
+                    </div>
+                    <form method="post" action="/admin/pitru-paksha/{{ pb.id }}/status" style="display:flex; gap:4px; margin:0;">
+                      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+                      <input type="hidden" name="status" value="verified" />
+                      <button type="submit" class="as-btn as-btn-green as-btn-sm" style="padding:2px 6px; font-size:10px;" title="Approve Verification">✓ Approve</button>
+                    </form>
+                    <form method="post" action="/admin/pitru-paksha/{{ pb.id }}/status" style="display:flex; gap:4px; margin-top:2px;">
+                      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+                      <input type="hidden" name="status" value="rejected" />
+                      <button type="submit" class="as-btn as-btn-outline as-btn-sm" style="padding:2px 6px; font-size:10px; color:#dc2626;" title="Reject">✕ Reject</button>
+                    </form>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="9" style="text-align:center; padding:20px; color:#64748b;">
+                    No Pitru Paksha bookings received yet.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. ORDER MANAGEMENT & ASTROLOGER PAYMENTS PANEL -->
+    <section id="tab-orders" class="admin-panel">
+      
+      <!-- ASTROLOGER PAYMENTS & MONTHLY DISTRIBUTION -->
+      <div class="card-container" style="margin-bottom: 24px; border: 1px solid #cbd5e1; background: #ffffff; border-radius: 12px; padding: 22px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; border-bottom: 2px solid #f1f5f9; padding-bottom: 14px;">
+          <div>
+            <h2 class="section-title" style="margin: 0; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span>💳</span> Astrologer Payments & Revenue Distribution (Monthly Ledger)
+            </h2>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">
+              Track who paid which astrologer and how much to facilitate monthly revenue sharing.
+            </p>
+          </div>
+          <div>
+            <a 
+              href="/admin/payments/export-excel" 
+              class="as-btn as-btn-green" 
+              style="padding: 10px 20px; font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);"
+            >
+              <span>📥</span> Download Payments (Excel Sheet)
+            </a>
+          </div>
+        </div>
+
+        <!-- Summary KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 22px;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px;">
+            <span style="font-size: 12px; color: #166534; font-weight: 600;">Total Astrologer Share</span>
+            <div style="font-size: 24px; font-weight: 800; color: #15803d; margin-top: 4px;">
+              ₹ {{ "{:,}".format(astro_payment_data.grand_total if astro_payment_data else 0) }}
+            </div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+            <span style="font-size: 12px; color: #475569; font-weight: 600;">Astrologers Active</span>
+            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 4px;">
+              {{ astro_payment_data.summary_by_astrologer|length if astro_payment_data else 0 }} Astrologers
+            </div>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px;">
+            <span style="font-size: 12px; color: #1e40af; font-weight: 600;">Client Consultation Payments</span>
+            <div style="font-size: 24px; font-weight: 800; color: #1d4ed8; margin-top: 4px;">
+              {{ astro_payment_data.all_payment_rows|length if astro_payment_data else 0 }} Transactions
+            </div>
+          </div>
+        </div>
+
+        <!-- Grouped By Astrologer Sections -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          {% for a_sum in (astro_payment_data.summary_by_astrologer if astro_payment_data else []) %}
+            <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+              
+              <!-- Astrologer Header -->
+              <div style="background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); color: #ffffff; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 18px;">🔮</span>
+                  <strong style="font-size: 15px; color: #ffffff;">{{ a_sum.astrologer_name }}</strong>
+                  <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
+                    UPI: {{ a_sum.upi_id }}
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <span style="font-size: 13px; color: #cbd5e1;">{{ a_sum.count }} Payments</span>
+                  <span style="background: #fbbf24; color: #78350f; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 14px;">
+                    Total: ₹ {{ "{:,}".format(a_sum.total_amount) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Transactions for this Astrologer -->
+              <div class="as-table-wrap" style="margin: 0; border: none; border-radius: 0;">
+                <table class="as-table" style="margin: 0; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #f8fafc;">
+                      <th style="padding: 9px 12px;">ID</th>
+                      <th style="padding: 9px 12px;">Who Paid (Client)</th>
+                      <th style="padding: 9px 12px;">To Whom Paid (Recipient)</th>
+                      <th style="padding: 9px 12px;">Astrologer Name</th>
+                      <th style="padding: 9px 12px;">Amount Paid</th>
+                      <th style="padding: 9px 12px;">Payment Method</th>
+                      <th style="padding: 9px 12px;">UTR / Reference</th>
+                      <th style="padding: 9px 12px;">Date & Time</th>
+                      <th style="padding: 9px 12px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for r in a_sum.records %}
+                      <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 9px 12px; font-weight: 700; color: #475569;">#{{ r.payment_id }}</td>
+                        <td style="padding: 9px 12px;">
+                          <strong style="color: #0f172a;">{{ r.who_name }}</strong>
+                          {% if r.who_email != 'N/A' and r.who_email != r.who_name %}
+                            <br><small style="color: #64748b;">{{ r.who_email }}</small>
+                          {% endif %}
+                        </td>
+                        <td style="padding: 9px 12px; color: #334155;">{{ r.to_whom }}</td>
+                        <td style="padding: 9px 12px; font-weight: 600; color: #1e3a8a;">{{ r.astrologer_name }}</td>
+                        <td style="padding: 9px 12px; font-weight: 800; color: #ea580c; font-size: 14px;">
+                          ₹ {{ "{:,}".format(r.amount) }}
+                        </td>
+                        <td style="padding: 9px 12px;">
+                          <span style="background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700;">
+                            {{ r.payment_method|upper }}
+                          </span>
+                        </td>
+                        <td style="padding: 9px 12px;">
+                          <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 11px; color: #0f172a;">
+                            {{ r.utr_number }}
+                          </code>
+                        </td>
+                        <td style="padding: 9px 12px; font-size: 12px; color: #64748b;">
+                          {{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '-' }}
+                        </td>
+                        <td style="padding: 9px 12px;">
+                          <span class="badge-status {% if r.status in ['completed', 'verified'] %}badge-active{% else %}badge-paused{% endif %}" style="font-size: 10px;">
+                            {{ r.status|upper }}
+                          </span>
+                        </td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="9" style="text-align: center; padding: 14px; color: #94a3b8; font-style: italic;">
+                          No payments recorded yet for {{ a_sum.astrologer_name }}.
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #fefce8; border-top: 2px solid #fef08a;">
+                      <td colspan="4" style="padding: 10px 14px; font-weight: 700; color: #854d0e;">
+                        Total Amount for {{ a_sum.astrologer_name }}:
+                      </td>
+                      <td style="padding: 10px 14px; font-weight: 800; font-size: 15px; color: #b45309;">
+                        ₹ {{ "{:,}".format(a_sum.total_amount) }}
+                      </td>
+                      <td colspan="4" style="padding: 10px 14px; text-align: right; color: #854d0e; font-size: 12px;">
+                        Monthly Astrologer Share Total
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+            </div>
+          {% endfor %}
+
+          <!-- Combined Grand Total Banner -->
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border-radius: 10px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);">
+            <div>
+              <div style="font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+                Grand Total Across All Astrologers
+              </div>
+              <div style="font-size: 13px; color: #cbd5e1; margin-top: 2px;">
+                Complete ledger of client payments distributed to all platform astrologers
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 18px;">
+              <div style="text-align: right;">
+                <span style="font-size: 12px; color: #94a3b8; display: block;">Combined Total</span>
+                <span style="font-size: 26px; font-weight: 800; color: #38bdf8;">
+                  ₹ {{ "{:,}".format(astro_payment_data.grand_total if astro_payment_data else 0) }}
+                </span>
+              </div>
+              <a 
+                href="/admin/payments/export-excel" 
+                class="as-btn as-btn-green" 
+                style="padding: 10px 18px; font-weight: 700; border-radius: 6px; text-decoration: none;"
+              >
+                📥 Export Excel
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- GENERAL ORDER & RECHARGE LOGS -->
+      <div class="card-container">
+        <div class="section-header">
+          <h2 class="section-title">All Platform Payment Logs & Direct Recharges</h2>
           <input type="text" id="order-search" class="search-input" placeholder="Search by email..." onkeyup="filterTable('order-table', 'order-search', 1)">
         </div>
 

@@ -39,6 +39,7 @@ engine = create_engine(db_url, echo=False, connect_args=connect_args)
 
 
 def create_db_and_tables() -> None:
+    import app.models  # Ensure all SQLModel table definitions are registered
     SQLModel.metadata.create_all(engine)
     
     # Dynamically alter tables to add new columns if they do not exist (compatible with SQLite and PostgreSQL)
@@ -79,10 +80,17 @@ def create_db_and_tables() -> None:
         except Exception:
             pass
 
-        # Alter astrologer table for Razorpay & Bank Details
-        for col in ["razorpay_account_id", "account_holder_name", "bank_account_number", "ifsc_code", "pan_number"]:
+        # Alter astrologer table for Razorpay & Direct UPI Details
+        for col in ["razorpay_account_id", "account_holder_name", "bank_account_number", "ifsc_code", "pan_number", "upi_id", "upi_name"]:
             try:
                 conn.execute(text(f"ALTER TABLE astrologer ADD COLUMN {col} VARCHAR"))
+            except Exception:
+                pass
+
+        # Alter payment table for Direct UPI fields
+        for col in ["payment_method", "utr_number", "screenshot_path"]:
+            try:
+                conn.execute(text(f"ALTER TABLE payment ADD COLUMN {col} VARCHAR"))
             except Exception:
                 pass
 

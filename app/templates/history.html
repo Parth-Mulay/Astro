@@ -171,13 +171,67 @@
   {% endif %}
 </section>
 
+<!-- PITRU PAKSHA RITUAL BOOKINGS -->
 <section class="as-section">
-  <h2 class="as-section-title">Saved Consultation Reports</h2>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+    <h2 class="as-section-title" style="margin:0;">🪔 Pitru Paksha Ritual Bookings</h2>
+    <a href="/tools/pitru-paksha" class="as-btn as-btn-primary as-btn-sm" style="font-size:12px;">+ New Ritual Booking</a>
+  </div>
+  {% if pitru_bookings %}
+    <div class="as-table-wrap">
+      <table class="as-table">
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Karta Name</th>
+            <th>Gotram</th>
+            <th>Tithi</th>
+            <th>Ritual Date</th>
+            <th>Location</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pb in pitru_bookings %}
+            <tr>
+              <td><strong>#PP-{{ pb.id }}</strong></td>
+              <td>{{ pb.karta_name }}</td>
+              <td>{{ pb.gotram }}</td>
+              <td>{{ pb.tithi }}</td>
+              <td>{{ pb.calendar_date.strftime('%d %b %Y') if pb.calendar_date else '' }}</td>
+              <td><span style="color:#0284c7; font-weight:600;">📍 {{ pb.location }}</span></td>
+              <td style="color:var(--as-orange); font-weight:700;">₹{{ pb.total_amount }}</td>
+              <td>
+                {% if pb.payment_status == 'verified' %}
+                  <span class="as-badge as-badge-success" style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:12px;">Verified</span>
+                {% elif pb.payment_status == 'rejected' %}
+                  <span class="as-badge as-badge-danger" style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:12px;">Rejected</span>
+                {% else %}
+                  <span class="as-badge as-badge-warning" style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:12px;">Verification Pending</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="/tools/pitru-paksha" class="as-btn as-btn-outline as-btn-sm" style="padding:4px 8px; font-size:12px;">View Details</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="as-page-sub">No Pitru Paksha Rituals booked yet. <a href="/tools/pitru-paksha">Book Pitru Paksha Puja (Advance Booking)</a>.</p>
+  {% endif %}
+</section>
+
+<section class="as-section">
+  <h2 class="as-section-title">Saved Consultation Reports & Ritual Confirmations</h2>
   {% if reports %}
     {% set has_session_reports = namespace(val=false) %}
     <ul>
       {% for r in reports %}
-        {% if r.report_type == 'session' or r.report_type.value == 'session' or r.report_type == 'child_astro' or r.report_type.value == 'child_astro' %}
+        {% if r.report_type == 'session' or r.report_type.value == 'session' or r.report_type == 'child_astro' or r.report_type.value == 'child_astro' or r.report_type == 'pitru_paksha' or r.report_type.value == 'pitru_paksha' %}
           {% set has_session_reports.val = true %}
           <li><a href="/account/reports/{{ r.id }}">{{ r.title }}</a> — {{ r.report_type.value if r.report_type.value is defined else r.report_type }}</li>
         {% endif %}

@@ -284,6 +284,8 @@ def astro_profile_save(
     bank_account_number: Optional[str] = Form(None),
     ifsc_code: Optional[str] = Form(None),
     pan_number: Optional[str] = Form(None),
+    upi_id: Optional[str] = Form("astromatch@upi"),
+    upi_name: Optional[str] = Form(None),
     session_db: Session = Depends(get_session)
 ):
     user = _require_astrologer_user(request, session_db)
@@ -297,6 +299,12 @@ def astro_profile_save(
     astro.primary_language = primary_language.strip()
     astro.min_budget = min_budget
     astro.max_budget = min_budget * 5
+
+    # Update Direct UPI Details
+    if upi_id:
+        astro.upi_id = upi_id.strip()
+    if upi_name:
+        astro.upi_name = upi_name.strip()
 
     # Update Bank & Payout details
     if account_holder_name:

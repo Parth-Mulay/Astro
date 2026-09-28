@@ -59,6 +59,25 @@
       {% endfor %}
     </div>
 
+    <h3 style="border-bottom: 2px solid var(--as-orange); padding-bottom: 8px; margin-top: 30px; margin-bottom: 20px; color: var(--as-navy)">📱 Direct UPI Payment Gateway (Free & Secure)</h3>
+    <p style="font-size: 13px; color: var(--as-muted); margin-top: -12px; margin-bottom: 16px;">
+      Direct client-to-astrologer UPI payment gateway. Clients scan your dynamic QR code or click the direct UPI button to pay consultation fees directly to your UPI account with <strong>0% commission & no API keys required</strong>.
+    </p>
+
+    <div class="as-form-row">
+      <div class="as-form-group">
+        <label><strong>Your UPI ID (VPA) <span style="color:var(--as-orange)">*</span></strong></label>
+        <input class="as-input" name="upi_id" required value="{{ astro.upi_id or 'astromatch@upi' }}" placeholder="e.g. yourname@okaxis, 9876543210@paytm, name@upi" />
+        <small style="color:var(--as-muted)">Clients will transfer consultation fees directly to this UPI address.</small>
+      </div>
+
+      <div class="as-form-group">
+        <label><strong>UPI Beneficiary / Display Name</strong></label>
+        <input class="as-input" name="upi_name" value="{{ astro.upi_name or astro.display_name }}" placeholder="e.g. Pt. Ramesh Sharma" />
+        <small style="color:var(--as-muted)">Name displayed in the client's UPI payment app.</small>
+      </div>
+    </div>
+
     <button type="submit" class="as-btn as-btn-primary" style="width:100%; padding:14px; margin-top:10px; font-size:16px; font-weight:bold;">
       Save Profile Changes
     </button>

@@ -37,6 +37,7 @@ from app.models import (
     SavedReport,
     SessionStatus,
     User,
+    InAppNotification,
 )
 from app.routes import account_routes, admin_routes, auth_routes, tools_routes, payment_routes
 from app.routes._shared import templates
@@ -600,6 +601,11 @@ def services_page(request: Request, session: Session = Depends(get_session)):
     return templates.TemplateResponse(request, "services.html", page_context(session, user))
 
 
+@app.get("/pitru-paksha")
+def pitru_paksha_redirect():
+    return RedirectResponse(url="/tools/pitru-paksha", status_code=301)
+
+
 @app.get("/flow/problem", response_class=HTMLResponse)
 def problem_selection(request: Request, session: Session = Depends(get_session)):
     user = require_user(request, session)
@@ -760,7 +766,13 @@ def pay_page(request: Request, session_id: int, session_db: Session = Depends(ge
 
 
 @app.post("/flow/pay/{session_id}")
-def pay_confirm(request: Request, session_id: int, session_db: Session = Depends(get_session)):
+async def pay_confirm(
+    request: Request,
+    session_id: int,
+    payment_method: str = Form("upi_direct"),
+    utr_number: Optional[str] = Form(None),
+    session_db: Session = Depends(get_session)
+):
     user = require_user(request, session_db)
     sess = session_db.get(ConsultationSession, session_id)
     if not sess or sess.user_id != user.id:
@@ -772,25 +784,55 @@ def pay_confirm(request: Request, session_id: int, session_db: Session = Depends
     if payment and payment.status == PaymentStatus.completed:
         return RedirectResponse(url=f"/flow/chat/{sess.id}", status_code=303)
 
-    if not deduct_wallet(session_db, user.id, sess.price):
-        return templates.TemplateResponse(
-            request,
-            "payment.html",
-            page_context(
-                session_db,
-                user,
-                sess=sess,
-                astrologer=astrologer,
-                prof=prof,
-                payment=payment,
-                error=f"Insufficient Credit Points. Need {sess.price} Credits, you have {prof.wallet_balance} Credits.",
-            ),
-            status_code=400,
+    if payment_method == "wallet":
+        if not deduct_wallet(session_db, user.id, sess.price):
+            return templates.TemplateResponse(
+                request,
+                "payment.html",
+                page_context(
+                    session_db,
+                    user,
+                    sess=sess,
+                    astrologer=astrologer,
+                    prof=prof,
+                    payment=payment,
+                    error=f"Insufficient Credit Points. Need {sess.price} Credits, you have {prof.wallet_balance} Credits.",
+                ),
+                status_code=400,
+            )
+        method_used = "wallet"
+    else:
+        # Direct UPI Gateway (Free, 0% Fee, Zero API Key)
+        method_used = "upi_direct"
+
+    if not payment:
+        payment = Payment(
+            user_id=user.id,
+            session_id=sess.id,
+            amount=sess.price,
+            status=PaymentStatus.completed,
+            payment_method=method_used,
+            utr_number=utr_number.strip() if utr_number else None,
+        )
+    else:
+        payment.status = PaymentStatus.completed
+        payment.payment_method = method_used
+        if utr_number:
+            payment.utr_number = utr_number.strip()
+
+    session_db.add(payment)
+
+    # In-app notification for astrologer
+    astro_user = session_db.get(User, astrologer.user_id) if astrologer else None
+    if astro_user:
+        session_db.add(
+            InAppNotification(
+                user_id=astro_user.id,
+                title=f"New Direct Consultation Booking (#{sess.id})",
+                body=f"Client {prof.full_name or user.email} booked a consultation (₹{sess.price}) via {method_used.upper()}."
+            )
         )
 
-    if payment:
-        payment.status = PaymentStatus.completed
-        session_db.add(payment)
     category = session_db.get(IssueCategory, session_db.get(Intake, sess.intake_id).issue_category_id)
     session_db.add(
         SavedReport(

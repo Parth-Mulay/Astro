@@ -9,7 +9,7 @@ from sqlmodel import Session, select
 from app.account import add_wallet, get_or_create_profile
 from app.db import get_session
 from app.deps import require_user
-from app.models import ChildAstroOrder, ConsultationSession, Feedback, Intake, IssueCategory, KundliMatchRecord, KundliRecord, SavedReport
+from app.models import ChildAstroOrder, ConsultationSession, Feedback, Intake, IssueCategory, KundliMatchRecord, KundliRecord, SavedReport, PitruPakshaBooking
 from app.routes._shared import templates
 from app.services.horoscope import sun_sign_from_dob
 
@@ -75,6 +75,9 @@ def history_page(request: Request, session: Session = Depends(get_session)):
     child_orders = session.exec(
         select(ChildAstroOrder).where(ChildAstroOrder.user_id == user.id).order_by(ChildAstroOrder.created_at.desc())
     ).all()
+    pitru_bookings = session.exec(
+        select(PitruPakshaBooking).where(PitruPakshaBooking.user_id == user.id).order_by(PitruPakshaBooking.created_at.desc())
+    ).all()
     return templates.TemplateResponse(
         request,
         "history.html",
@@ -86,6 +89,7 @@ def history_page(request: Request, session: Session = Depends(get_session)):
             "matches": matches,
             "reports": reports,
             "child_orders": child_orders,
+            "pitru_bookings": pitru_bookings,
         },
     )
 

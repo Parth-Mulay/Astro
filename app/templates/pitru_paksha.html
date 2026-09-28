@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+{% block title %}{{ "Booking 3 days in advance on date performed with Payment completed"|t(lang) }} — Pitru Paksha Puja{% endblock %}
+
+{% block content %}
+{% set lang = request.cookies.get('lang', 'en') %}
+
+<div class="as-pitru-page-container" style="max-width: 880px; margin: 0 auto; padding: 10px 15px 40px;">
+  
+  <!-- Header Card -->
+  <div class="as-panel" style="background: linear-gradient(135deg, #2b1103 0%, #4a2108 50%, #1e0b02 100%); color: #ffffff; border: 1px solid #7c3a12; border-radius: 14px; padding: 28px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(43, 17, 3, 0.35);">
+    <div style="display: inline-block; background: rgba(255, 216, 155, 0.15); border: 1px solid rgba(255, 216, 155, 0.4); color: #ffd89b; font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+      🪔 Sacred Tirtha Ritual Booking
+    </div>
+    <h1 style="margin: 0 0 12px; font-size: 26px; color: #fff; font-family: 'Georgia', serif; line-height: 1.35; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+      Booking 3 days in advance on date performed with Payment completed
+    </h1>
+    <p style="font-size: 15px; color: #fed7aa; margin: 0 auto; max-width: 680px; line-height: 1.55;">
+      Offer sacred <strong>Tarpan, Pinda Daan & Shraddha</strong> rituals for your revered ancestors at holy Vedic tirthas (<strong>Kurukshetra</strong> & <strong>Nashik</strong>) performed by certified Tirtha Purohits.
+    </p>
+  </div>
+
+  <!-- Messages / Alerts -->
+  {% if error_message %}
+    <div class="as-alert as-alert-error" style="margin-bottom: 20px; font-weight: 600;">
+      ⚠️ {{ error_message }}
+    </div>
+  {% endif %}
+
+  {% if success_message %}
+    <div class="as-alert as-alert-success" style="margin-bottom: 20px; font-weight: 600;">
+      ✅ {{ success_message }}
+    </div>
+  {% endif %}
+
+  <!-- Devotee Registration Check -->
+  {% if not user %}
+    <div class="as-panel" style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
+      <div style="font-size: 28px; margin-bottom: 8px;">🔒</div>
+      <h3 style="margin: 0 0 8px; color: #92400e;">User Registration Required</h3>
+      <p style="color: #78350f; font-size: 14px; margin: 0 0 16px; line-height: 1.5;">
+        All devotees must be <strong>registered and signed in</strong> before completing Pitru Paksha puja booking and submitting payment details.
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="/auth/login?next=/tools/pitru-paksha" class="as-btn as-btn-primary" style="padding: 10px 24px; font-weight: 700;">
+          Sign In to Your Account
+        </a>
+        <a href="/auth/signup?next=/tools/pitru-paksha" class="as-btn as-btn-outline" style="padding: 10px 24px; font-weight: 700;">
+          Register New Account
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Main Booking Form Card -->
+  <div class="as-panel" style="background: #ffffff; border: 1px solid var(--as-border); border-radius: 14px; padding: 28px; box-shadow: var(--as-shadow);">
+    
+    <div style="border-bottom: 2px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 24px;">
+      <h2 style="margin: 0; font-size: 20px; color: var(--as-navy); display: flex; align-items: center; gap: 8px;">
+        <span>📋</span> Pitru Paksha Advance Booking Form
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">
+        Please fill in all sacred ritual details. Booking must be submitted at least 3 days in advance of the ritual date.
+      </p>
+    </div>
+
+    <form id="pitruForm" method="post" action="/tools/pitru-paksha" enctype="multipart/form-data">
+      <!-- CSRF Token -->
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+
+      <!-- Section 1: Contact Information -->
+      <div style="background: #f8fafc; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <h4 style="margin: 0 0 12px; color: #334155; font-size: 15px; font-weight: 700;">
+          👤 Devotee Contact Information
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              Contact Number (WhatsApp) <span style="color: #dc2626;">*</span>
+            </label>
+            <input 
+              type="tel" 
+              name="contact_number" 
+              class="as-input" 
+              placeholder="e.g. +91 9876543210" 
+              required 
+              style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;"
+              value="{{ prof.phone if prof and prof.phone else '' }}"
+            />
+          </div>
+
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              Email ID <span style="color: #dc2626;">*</span>
+            </label>
+            <input 
+              type="email" 
+              name="email" 
+              class="as-input" 
+              placeholder="e.g. devotee@example.com" 
+              required 
+              style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;"
+              value="{{ user.email if user else '' }}"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Karta Details -->
+      <div style="background: #f8fafc; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <h4 style="margin: 0 0 12px; color: #334155; font-size: 15px; font-weight: 700;">
+          🪔 Karta Details (Performing Person)
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              * Karta Name (Performing Person) <span style="color: #dc2626;">*</span>
+            </label>
+            <input 
+              type="text" 
+              name="karta_name" 
+              class="as-input" 
+              placeholder="Full Name of the Karta" 
+              required 
+              style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;"
+              value="{{ prof.full_name if prof and prof.full_name else '' }}"
+            />
+          </div>
+
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              * Gotram <span style="color: #dc2626;">*</span>
+            </label>
+            <input 
+              type="text" 
+              name="gotram" 
+              class="as-input" 
+              placeholder="e.g. Kashyapa, Bharadwaja, Vashistha" 
+              required 
+              style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Sacred Tithi & Tirtha Location -->
+      <div style="background: #f8fafc; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <h4 style="margin: 0 0 12px; color: #334155; font-size: 15px; font-weight: 700;">
+          📍 Ritual Schedule & Tirtha Location
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              * Tithi to be performed <span style="color: #dc2626;">*</span>
+            </label>
+            <select name="tithi" class="as-select" required style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;">
+              <option value="">-- Select Auspicious Tithi --</option>
+              <option value="Pratipada (Day 1)">Pratipada (Day 1)</option>
+              <option value="Dwitiya (Day 2)">Dwitiya (Day 2)</option>
+              <option value="Tritiya (Day 3)">Tritiya (Day 3)</option>
+              <option value="Chaturthi (Day 4 - Maha Bharani)">Chaturthi (Day 4 - Maha Bharani)</option>
+              <option value="Panchami (Day 5)">Panchami (Day 5)</option>
+              <option value="Sashti (Day 6)">Sashti (Day 6)</option>
+              <option value="Saptami (Day 7)">Saptami (Day 7)</option>
+              <option value="Ashtami (Day 8 - Madhyashtami)">Ashtami (Day 8 - Madhyashtami)</option>
+              <option value="Navami (Day 9 - Matri Navami / Avidha Navami)">Navami (Day 9 - Matri Navami / Mother's Shraddha)</option>
+              <option value="Dashami (Day 10)">Dashami (Day 10)</option>
+              <option value="Ekadashi (Day 11)">Ekadashi (Day 11)</option>
+              <option value="Dwadashi (Day 12 - Sanyasi Shraddha)">Dwadashi (Day 12 - Sanyasi Shraddha)</option>
+              <option value="Trayodashi (Day 13 - Magha Shraddha)">Trayodashi (Day 13 - Magha Shraddha)</option>
+              <option value="Chaturdashi (Day 14 - Ghata Chaturdashi)">Chaturdashi (Day 14 - Ghata Chaturdashi)</option>
+              <option value="Sarva Pitru Amavasya (Mahalaya Amavasya - All Ancestors)">Sarva Pitru Amavasya (Mahalaya Amavasya - All Ancestors)</option>
+              <option value="Specific Family Death Anniversary Tithi">Specific Family Death Anniversary Tithi</option>
+            </select>
+          </div>
+
+          <div class="as-form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 13px; color: #334155;">
+              * Location <span style="color: #dc2626;">*</span>
+            </label>
+            <select name="location" class="as-select" required style="width: 100%; margin-top: 6px; padding: 10px; border-radius: 6px;">
+              <option value="Kurukshetra">Kurukshetra (Brahma Sarovar / Pehowa Tirtha)</option>
+              <option value="Nashik">Nashik (Ramkund / Trimbakeshwar)</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 4: Pitru Details (Ancestors Details) -->
+      <div style="background: #f8fafc; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h4 style="margin: 0; color: #334155; font-size: 15px; font-weight: 700;">
+            🕊️ * Pitru Details (Ancestors Details)
+          </h4>
+          <button type="button" id="addAncestorBtn" class="as-btn as-btn-outline" style="padding: 4px 12px; font-size: 12px; border-radius: 4px;">
+            + Add Another Ancestor
+          </button>
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin: 0 0 12px;">
+          Specify names and sacred relationships of the ancestors for whom Tarpan and Pinda Daan are being performed.
+        </p>
+
+        <div id="ancestorsList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Row 1 -->
+          <div class="ancestor-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center;">
+            <input 
+              type="text" 
+              name="ancestor_name[]" 
+              class="as-input" 
+              placeholder="Ancestor Name (e.g. Late Ramesh Chandra)" 
+              required 
+              style="padding: 9px; border-radius: 6px;"
+            />
+            <select name="ancestor_rel[]" class="as-select" required style="padding: 9px; border-radius: 6px;">
+              <option value="Father (Pitaji)">Father (Pitaji)</option>
+              <option value="Mother (Mataji)">Mother (Mataji)</option>
+              <option value="Paternal Grandfather (Dadaji)">Paternal Grandfather (Dadaji)</option>
+              <option value="Paternal Grandmother (Dadiji)">Paternal Grandmother (Dadiji)</option>
+              <option value="Maternal Grandfather (Nanaji)">Maternal Grandfather (Nanaji)</option>
+              <option value="Maternal Grandmother (Naniji)">Maternal Grandmother (Naniji)</option>
+              <option value="Late Spouse (Pati/Patni)">Late Spouse (Pati/Patni)</option>
+              <option value="Uncle / Aunt (Chacha/Mama/Bua/Mausi)">Uncle / Aunt (Chacha/Mama/Bua/Mausi)</option>
+              <option value="Brother / Sister (Bhai/Behen)">Brother / Sister (Bhai/Behen)</option>
+              <option value="All Paternal & Maternal Ancestors (Sarva Pitru)">All Paternal & Maternal Ancestors (Sarva Pitru)</option>
+              <option value="Other Relative / Family Elder">Other Relative / Family Elder</option>
+            </select>
+            <div style="width: 32px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Pricing & Dakshina Breakdown -->
+      <div style="background: #fffdf5; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #fef08a;">
+        <h4 style="margin: 0 0 10px; color: #854d0e; font-size: 15px; font-weight: 700;">
+          🪙 Puja Fee & Dakshina Breakdown
+        </h4>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #fde047; font-size: 14px;">
+          <span style="color: #475569;">Sacred Tirtha Ritual & Samagri Base Fee:</span>
+          <strong style="color: #0f172a;">₹2,500</strong>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px dashed #fde047;">
+          <div>
+            <label style="font-weight: 600; font-size: 13px; color: #334155; display: block;">
+              Extra Purohit Dakshina (Voluntary Priest Seva)
+            </label>
+            <span style="font-size: 11px; color: #64748b;">
+              Optional voluntary Dakshina directly offered to the performing Tirtha Brahmins.
+            </span>
+          </div>
+          <div style="width: 140px;">
+            <input 
+              type="number" 
+              name="dakshina_amount" 
+              id="dakshinaInput" 
+              class="as-input" 
+              value="0" 
+              min="0" 
+              step="51" 
+              placeholder="₹ 0" 
+              style="width: 100%; padding: 8px; text-align: right; font-weight: 700; border-radius: 6px;"
+            />
+          </div>
+        </div>
+
+        <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; padding: 10px 14px; margin-top: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: #a16207;">
+            The Dakshina will be: ₹2500
+          </div>
+          <p style="margin: 4px 0 0; font-size: 12px; color: #713f12; line-height: 1.45; font-style: italic;">
+            *Excluding any extra Purohit Dakshina
+          </p>
+          <p style="margin: 4px 0 0; font-size: 12px; color: #713f12; line-height: 1.45;">
+            The base payment includes complete Vedic puja materials (Pinda Daan grains, black til, kusha grass, pure ghee, milk, honey, flowers) and Tirtha priest coordination.
+          </p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 10px; border-top: 2px solid #facc15;">
+          <span style="font-size: 16px; font-weight: 700; color: #0f172a;">Total Payable Amount:</span>
+          <span id="totalAmountText" style="font-size: 22px; font-weight: 800; color: var(--as-orange);">₹2,500</span>
+        </div>
+      </div>
+
+      <!-- Section 6: UPI Payment & Screenshot Upload -->
+      <div style="background: #f0fdf4; border-radius: 12px; padding: 22px; margin-bottom: 24px; border: 1px solid #bbf7d0;">
+        <h4 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span>📱</span> Step 1: Scan and Pay with UPI
+        </h4>
+        <p style="font-size: 13px; color: #14532d; margin: 0 0 16px;">
+          Scan the official QR code below or tap the <strong>UPI Payment Button</strong> using GPay, PhonePe, Paytm, or BHIM.
+        </p>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; background: #ffffff; border: 1px solid #dcfce7; border-radius: 10px; padding: 18px; margin-bottom: 18px;">
+          <!-- QR Code display -->
+          <div style="text-align: center; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <img 
+              id="upiQrCode" 
+              src="/static/images/qr_code.jpeg" 
+              alt="QR Code" 
+              style="width: 140px; height: 140px; display: block; border-radius: 6px; object-fit: contain; margin: 0 auto;"
+            />
+            <span style="font-size: 11px; color: #166534; margin-top: 6px; display: block; font-weight: 700;">Scan and Pay with UPI</span>
+          </div>
+
+          <!-- UPI Info & Buttons -->
+          <div style="flex: 1; min-width: 240px;">
+            <div style="margin-bottom: 12px;">
+              <span style="font-size: 12px; color: #64748b; display: block;">Official Platform UPI ID:</span>
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                <code style="background: #f1f5f9; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: 700; color: #0f172a; border: 1px solid #cbd5e1;">
+                  bhaktiastro@upi
+                </code>
+                <button type="button" id="copyUpiBtn" class="as-btn as-btn-outline" style="padding: 4px 10px; font-size: 12px; border-radius: 4px;">
+                  📋 Copy
+                </button>
+              </div>
+            </div>
+
+            <!-- UPI Payment Button -->
+            <a 
+              id="upiDeepLinkBtn" 
+              href="upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=2500&cu=INR&tn=PitruPakshaPuja" 
+              class="as-btn" 
+              style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #ffffff; padding: 10px 20px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);"
+            >
+              <span>⚡</span> Scan and Pay with UPI (Instant)
+            </a>
+          </div>
+        </div>
+
+        <h4 style="margin: 0 0 8px; color: #166534; font-size: 15px; font-weight: 700;">
+          🖼️ Step 2: Upload Payment Screenshot (only jpg)
+        </h4>
+        <p style="font-size: 12px; color: #15803d; margin: 0 0 12px;">
+          Please attach the transaction screenshot from your UPI app as proof of payment. Only <strong>.jpg / .jpeg</strong> images are permitted.
+        </p>
+
+        <div class="as-form-group" style="margin-bottom: 0;">
+          <label style="font-weight: 600; font-size: 13px; color: #334155;">
+            * Payment screenshot (only jpg) <span style="color: #dc2626;">*</span>
+          </label>
+          <input 
+            type="file" 
+            name="payment_screenshot" 
+            id="screenshotInput"
+            accept=".jpg,.jpeg,image/jpeg" 
+            required 
+            style="width: 100%; margin-top: 6px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;"
+          />
+          <span style="font-size: 11px; color: #64748b; display: block; margin-top: 4px;">
+            Supported Format: <strong>.JPG / .JPEG</strong> only (Max Size: 5MB)
+          </span>
+        </div>
+      </div>
+
+      <!-- Submission Button -->
+      <div>
+        {% if user %}
+          <button 
+            type="submit" 
+            id="submitBookingBtn"
+            class="as-btn as-btn-primary" 
+            style="width: 100%; padding: 14px; font-size: 16px; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #f26522 0%, #d94e0f 100%);"
+          >
+            🪔 Confirm Pitru Paksha Booking & Upload Payment
+          </button>
+        {% else %}
+          <a 
+            href="/auth/login?next=/tools/pitru-paksha" 
+            class="as-btn as-btn-primary" 
+            style="width: 100%; padding: 14px; font-size: 16px; font-weight: 700; border-radius: 8px; text-align: center; display: block; text-decoration: none;"
+          >
+            🔒 Sign In to Complete Booking & Payment
+          </a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+
+  <!-- User's Existing Pitru Paksha Bookings (if any) -->
+  {% if user and bookings and bookings|length > 0 %}
+    <div class="as-panel" style="margin-top: 30px; background: #ffffff; border: 1px solid var(--as-border); border-radius: 14px; padding: 24px;">
+      <h3 style="margin: 0 0 16px; font-size: 18px; color: var(--as-navy);">
+        📜 Your Pitru Paksha Ritual Bookings
+      </h3>
+      
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+          <thead>
+            <tr style="background: #f1f5f9; color: #475569; border-bottom: 2px solid #cbd5e1;">
+              <th style="padding: 10px;">Booking ID</th>
+              <th style="padding: 10px;">Karta Name</th>
+              <th style="padding: 10px;">Gotram</th>
+              <th style="padding: 10px;">Auspicious Tithi</th>
+              <th style="padding: 10px;">Location</th>
+              <th style="padding: 10px;">Amount</th>
+              <th style="padding: 10px;">Payment Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px; font-weight: 700;">#PP-{{ b.id }}</td>
+                <td style="padding: 10px; font-weight: 600;">{{ b.karta_name }}</td>
+                <td style="padding: 10px;">{{ b.gotram }}</td>
+                <td style="padding: 10px;"><span style="font-weight: 600; color: #1e293b;">{{ b.tithi }}</span></td>
+                <td style="padding: 10px;"><span style="font-weight: 600; color: #0284c7;">📍 {{ b.location }}</span></td>
+                <td style="padding: 10px; font-weight: 700; color: var(--as-orange);">₹{{ b.total_amount }}</td>
+                <td style="padding: 10px;">
+                  {% if b.payment_status == 'verified' %}
+                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">Verified</span>
+                  {% elif b.payment_status == 'rejected' %}
+                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">Rejected</span>
+                  {% else %}
+                    <span style="background: #fef9c3; color: #854d0e; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">Verification Pending</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Interactive Client-side Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const basePujaAmount = 2500;
+  const dakshinaInput = document.getElementById('dakshinaInput');
+  const totalAmountText = document.getElementById('totalAmountText');
+  const upiDeepLinkBtn = document.getElementById('upiDeepLinkBtn');
+  const copyUpiBtn = document.getElementById('copyUpiBtn');
+  const addAncestorBtn = document.getElementById('addAncestorBtn');
+  const ancestorsList = document.getElementById('ancestorsList');
+  const screenshotInput = document.getElementById('screenshotInput');
+  const pitruForm = document.getElementById('pitruForm');
+
+  // Dynamic Calculation
+  function updateTotal() {
+    let dakshina = parseInt(dakshinaInput ? dakshinaInput.value : 0, 10);
+    if (isNaN(dakshina) || dakshina < 0) dakshina = 0;
+    const total = basePujaAmount + dakshina;
+    
+    if (totalAmountText) {
+      totalAmountText.textContent = '₹' + total.toLocaleString('en-IN');
+    }
+
+    // Update UPI Link
+    const upiUrl = 'upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=' + total + '&cu=INR&tn=PitruPakshaPuja';
+    if (upiDeepLinkBtn) {
+      upiDeepLinkBtn.href = upiUrl;
+    }
+  }
+
+  if (dakshinaInput) {
+    dakshinaInput.addEventListener('input', updateTotal);
+  }
+
+  // Copy UPI ID
+  if (copyUpiBtn) {
+    copyUpiBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText('bhaktiastro@upi').then(function() {
+        copyUpiBtn.textContent = '✅ Copied!';
+        setTimeout(function() { copyUpiBtn.textContent = '📋 Copy'; }, 2000);
+      });
+    });
+  }
+
+  // Add Ancestor Row
+  if (addAncestorBtn && ancestorsList) {
+    addAncestorBtn.addEventListener('click', function() {
+      const row = document.createElement('div');
+      row.className = 'ancestor-row';
+      row.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center;';
+      
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.name = 'ancestor_name[]';
+      nameInput.className = 'as-input';
+      nameInput.placeholder = 'Ancestor Name (e.g. Late Smt. Kamala Devi)';
+      nameInput.required = true;
+      nameInput.style.cssText = 'padding: 9px; border-radius: 6px;';
+
+      const relSelect = document.createElement('select');
+      relSelect.name = 'ancestor_rel[]';
+      relSelect.className = 'as-select';
+      relSelect.required = true;
+      relSelect.style.cssText = 'padding: 9px; border-radius: 6px;';
+      
+      const options = [
+        ['Father (Pitaji)', 'Father (Pitaji)'],
+        ['Mother (Mataji)', 'Mother (Mataji)'],
+        ['Paternal Grandfather (Dadaji)', 'Paternal Grandfather (Dadaji)'],
+        ['Paternal Grandmother (Dadiji)', 'Paternal Grandmother (Dadiji)'],
+        ['Maternal Grandfather (Nanaji)', 'Maternal Grandfather (Nanaji)'],
+        ['Maternal Grandmother (Naniji)', 'Maternal Grandmother (Naniji)'],
+        ['Late Spouse (Pati/Patni)', 'Late Spouse (Pati/Patni)'],
+        ['Uncle / Aunt (Chacha/Mama/Bua/Mausi)', 'Uncle / Aunt (Chacha/Mama/Bua/Mausi)'],
+        ['Brother / Sister (Bhai/Behen)', 'Brother / Sister (Bhai/Behen)'],
+        ['All Paternal & Maternal Ancestors (Sarva Pitru)', 'All Paternal & Maternal Ancestors (Sarva Pitru)'],
+        ['Other Relative / Family Elder', 'Other Relative / Family Elder']
+      ];
+
+      options.forEach(function(opt) {
+        const o = document.createElement('option');
+        o.value = opt[0];
+        o.textContent = opt[1];
+        relSelect.appendChild(o);
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'as-btn';
+      removeBtn.textContent = '✕';
+      removeBtn.title = 'Remove Ancestor';
+      removeBtn.style.cssText = 'padding: 6px 10px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 4px; cursor: pointer;';
+      removeBtn.addEventListener('click', function() {
+        ancestorsList.removeChild(row);
+      });
+
+      row.appendChild(nameInput);
+      row.appendChild(relSelect);
+      row.appendChild(removeBtn);
+      ancestorsList.appendChild(row);
+    });
+  }
+
+  // Strict File Upload JPG check
+  if (screenshotInput) {
+    screenshotInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.jpg') && !fileName.endsWith('.jpeg')) {
+          alert('⚠️ Invalid File Type: Only JPG/JPEG images are allowed. Please upload a .jpg file.');
+          this.value = '';
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert('⚠️ File Too Large: Maximum allowed file size is 5MB.');
+          this.value = '';
+          return;
+        }
+      }
+    });
+  }
+
+  // Form Validation Before Submission
+  if (pitruForm) {
+    pitruForm.addEventListener('submit', function(e) {
+      if (screenshotInput && screenshotInput.files.length === 0) {
+        alert('⚠️ Please upload your UPI payment screenshot (.jpg only).');
+        e.preventDefault();
+        return false;
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import json
 import random
-from datetime import date, time
+from datetime import date, time, timedelta
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
 from app.db import get_session, get_config
 from app.deps import current_user, require_user
+from app.settings import settings
 from app.models import (
     KundliMatchRecord,
     KundliRecord,
@@ -23,6 +26,7 @@ from app.models import (
     InAppNotification,
     PanchangData,
     TempleOfTheWeek,
+    PitruPakshaBooking,
 )
 from app.matching import recommend_astrologers
 from app.routes._shared import templates
@@ -720,5 +724,288 @@ def temple_of_the_week_page(request: Request, session: Session = Depends(get_ses
             "temple": temple
         }
     )
+
+
+@router.get("/pitru-paksha", response_class=HTMLResponse)
+def pitru_paksha_page(request: Request, session: Session = Depends(get_session)):
+    user = current_user(request, session)
+    prof = None
+    bookings = []
+    if user:
+        from app.account import get_or_create_profile
+        prof = get_or_create_profile(session, user)
+        bookings = session.exec(
+            select(PitruPakshaBooking)
+            .where(PitruPakshaBooking.user_id == user.id)
+            .order_by(PitruPakshaBooking.created_at.desc())
+        ).all()
+    
+    min_date = (date.today() + timedelta(days=3)).isoformat()
+    return templates.TemplateResponse(
+        request,
+        "pitru_paksha.html",
+        {
+            "user": user,
+            "prof": prof,
+            "bookings": bookings,
+            "min_date": min_date,
+        },
+    )
+
+
+@router.post("/pitru-paksha", response_class=HTMLResponse)
+async def submit_pitru_paksha_booking(
+    request: Request,
+    session: Session = Depends(get_session)
+):
+    user = current_user(request, session)
+    min_date = (date.today() + timedelta(days=3)).isoformat()
+    
+    if not user:
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": None,
+                "prof": None,
+                "bookings": [],
+                "min_date": min_date,
+                "error_message": "User Registration Required: All devotees must be registered and signed in before booking and making a payment."
+            },
+            status_code=401
+        )
+    
+    from app.account import get_or_create_profile
+    prof = get_or_create_profile(session, user)
+    
+    form_data = await request.form()
+    karta_name = str(form_data.get("karta_name", "")).strip()
+    gotram = str(form_data.get("gotram", "")).strip()
+    tithi = str(form_data.get("tithi", "")).strip()
+    calendar_date_str = str(form_data.get("calendar_date", "")).strip()
+    location = str(form_data.get("location", "")).strip()
+    contact_number = str(form_data.get("contact_number", "")).strip()
+    email = str(form_data.get("email", "")).strip()
+    dakshina_raw = form_data.get("dakshina_amount", 0)
+    payment_screenshot = form_data.get("payment_screenshot")
+    
+    # Extract ancestors list
+    ancestor_names = form_data.getlist("ancestor_name[]")
+    ancestor_rels = form_data.getlist("ancestor_rel[]")
+    
+    ancestor_pairs = []
+    for n, r in zip(ancestor_names, ancestor_rels):
+        n_clean = str(n).strip()
+        r_clean = str(r).strip()
+        if n_clean:
+            ancestor_pairs.append(f"{n_clean} ({r_clean})")
+            
+    pitru_details = ", ".join(ancestor_pairs) if ancestor_pairs else "All Family Ancestors (Sarva Pitru)"
+    
+    # Helper to re-fetch bookings on return
+    def get_user_bookings():
+        return session.exec(
+            select(PitruPakshaBooking)
+            .where(PitruPakshaBooking.user_id == user.id)
+            .order_by(PitruPakshaBooking.created_at.desc())
+        ).all()
+
+    # Validate basic required fields
+    if not karta_name or not gotram or not tithi or not contact_number or not email:
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Please fill in all mandatory fields (Karta Name, Gotram, Tithi, Location, Contact, Email)."
+            },
+            status_code=400
+        )
+
+    # Optional Calendar Date parsing if provided
+    cal_date = None
+    if calendar_date_str:
+        try:
+            cal_date = date.fromisoformat(calendar_date_str)
+        except Exception:
+            cal_date = None
+
+    # Parse Dakshina (Base is ₹2500 *Excluding any extra Purohit Dakshina)
+    try:
+        dakshina_amount = max(0, int(dakshina_raw))
+    except Exception:
+        dakshina_amount = 0
+        
+    base_puja_amount = 2500
+    total_amount = base_puja_amount + dakshina_amount
+
+    # Validate Payment Screenshot (strictly JPG/JPEG)
+    if not payment_screenshot or not hasattr(payment_screenshot, "filename") or not payment_screenshot.filename:
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Payment screenshot is required. Please attach your UPI transaction screenshot."
+            },
+            status_code=400
+        )
+
+    filename = payment_screenshot.filename.lower()
+    if not (filename.endswith(".jpg") or filename.endswith(".jpeg")):
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Invalid file format: Only .JPG and .JPEG image files are permitted for payment screenshots."
+            },
+            status_code=400
+        )
+
+    screenshot_bytes = await payment_screenshot.read()
+    if len(screenshot_bytes) > 5 * 1024 * 1024:
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Uploaded screenshot file is too large (maximum allowed is 5MB)."
+            },
+            status_code=400
+        )
+
+    # Validate JPEG Magic Bytes (\xff\xd8\xff)
+    if not screenshot_bytes.startswith(b"\xff\xd8\xff"):
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Corrupted or invalid image file. Please upload a genuine JPG payment screenshot."
+            },
+            status_code=400
+        )
+
+    # Save file safely to uploads/pitru_paksha/
+    upload_dir = Path(settings.UPLOADS_DIR) / "pitru_paksha"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    safe_filename = f"pp_{uuid4().hex}.jpg"
+    dest_path = (upload_dir / safe_filename).resolve()
+
+    if not str(dest_path).startswith(str(upload_dir.resolve())):
+        return templates.TemplateResponse(
+            request,
+            "pitru_paksha.html",
+            {
+                "user": user,
+                "prof": prof,
+                "bookings": get_user_bookings(),
+                "min_date": min_date,
+                "error_message": "Security error occurred while saving file."
+            },
+            status_code=400
+        )
+
+    with open(dest_path, "wb") as f:
+        f.write(screenshot_bytes)
+
+    screenshot_url = f"/uploads/pitru_paksha/{safe_filename}"
+
+    # Create Booking Record
+    booking = PitruPakshaBooking(
+        user_id=user.id,
+        karta_name=karta_name,
+        gotram=gotram,
+        tithi=tithi,
+        calendar_date=cal_date,
+        location=location,
+        pitru_details=pitru_details,
+        contact_number=contact_number,
+        email=email,
+        dakshina_amount=dakshina_amount,
+        base_puja_amount=base_puja_amount,
+        total_amount=total_amount,
+        screenshot_path=screenshot_url,
+        payment_status="pending",
+        booking_status="confirmed",
+    )
+    session.add(booking)
+    session.flush()
+
+    # Create InAppNotification
+    date_info = f"on {cal_date.strftime('%d %B %Y')}" if cal_date else f"on {tithi}"
+    session.add(
+        InAppNotification(
+            user_id=user.id,
+            title=f"Pitru Paksha Booking Confirmed (#PP-{booking.id})",
+            body=f"Sacred Tarpan & Shraddha booking received for {karta_name} (Gotram: {gotram}) at {location} {date_info}. Payment screenshot under verification."
+        )
+    )
+
+    # Create SavedReport record for user dashboard
+    summary_html = f"""
+    <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 620px; margin: 0 auto; border: 1px solid #fed7aa; border-radius: 12px; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #2b1103 0%, #4a2108 100%); color: #ffffff; padding: 16px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            <h2 style="margin: 0; font-size: 20px; color: #ffd89b;">🪔 Pitru Paksha Ritual Booking Confirmation</h2>
+            <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 13px;">Booking ID: #PP-{booking.id}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr><td style="padding: 8px 0; color: #64748b; width: 160px;">Karta Name:</td><td style="font-weight: 600; color: #0f172a;">{karta_name}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Gotram:</td><td style="font-weight: 600; color: #0f172a;">{gotram}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Auspicious Tithi:</td><td style="font-weight: 600; color: #0f172a;">{tithi}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Holy Tirtha Location:</td><td style="font-weight: 600; color: #0284c7;">📍 {location}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Pitru (Ancestors):</td><td style="font-weight: 600; color: #0f172a;">{pitru_details}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Contact / WhatsApp:</td><td style="font-weight: 600; color: #0f172a;">{contact_number}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Email:</td><td style="font-weight: 600; color: #0f172a;">{email}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Dakshina Base:</td><td style="font-weight: 600; color: #0f172a;">₹{base_puja_amount}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Extra Purohit Dakshina:</td><td style="font-weight: 600; color: #0f172a;">₹{dakshina_amount}</td></tr>
+            <tr><td style="padding: 8px 0; color: #64748b;">Total Paid:</td><td style="font-weight: 700; color: #ea580c; font-size: 16px;">₹{total_amount}</td></tr>
+        </table>
+        <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 14px; margin-top: 20px; border-radius: 4px; color: #14532d; font-size: 13px;">
+            🙏 <strong>Sacred Ritual Coordination:</strong> Our assigned Tirtha Purohit will perform the complete Vedic Tarpan & Pinda Daan vidhi with your Sankalp on {tithi}. Video and ritual blessings will be shared to {contact_number}.
+        </div>
+    </div>
+    """
+
+    session.add(
+        SavedReport(
+            user_id=user.id,
+            report_type=ReportType.pitru_paksha,
+            title=f"Pitru Paksha Ritual — {karta_name} ({location})",
+            html_content=summary_html,
+            ref_id=booking.id,
+        )
+    )
+
+    session.commit()
+
+    return templates.TemplateResponse(
+        request,
+        "pitru_paksha.html",
+        {
+            "user": user,
+            "prof": prof,
+            "bookings": get_user_bookings(),
+            "min_date": min_date,
+            "success_message": f"Sacred Pitru Paksha booking (#PP-{booking.id}) successfully confirmed for {karta_name}! Payment proof uploaded. Our Tirtha Purohit team will coordinate with you at {contact_number}."
+        }
+    )
+
 
 

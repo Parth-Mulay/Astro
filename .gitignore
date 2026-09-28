@@ -22,6 +22,9 @@ logs/
 backups/
 uploads/
 reports/
+scratch/
+*.log
+test_report.pdf
 
 # IDE files
 .idea/

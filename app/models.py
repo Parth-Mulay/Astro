@@ -81,6 +81,10 @@ class Astrologer(SQLModel, table=True):
     ifsc_code: Optional[str] = None
     pan_number: Optional[str] = None
 
+    # Free & Secure Direct UPI Payment Gateway (Zero API Key required)
+    upi_id: Optional[str] = Field(default="astromatch@upi", nullable=True)
+    upi_name: Optional[str] = None
+
 
 
 class AstrologerSpecialty(SQLModel, table=True):
@@ -210,6 +214,9 @@ class Payment(SQLModel, table=True):
     session_id: Optional[int] = Field(default=None, foreign_key="consultationsession.id", index=True)
     amount: int = 0
     status: PaymentStatus = Field(default=PaymentStatus.pending, index=True)
+    payment_method: str = Field(default="upi_direct")  # upi_direct, wallet
+    utr_number: Optional[str] = None
+    screenshot_path: Optional[str] = None
     created_at: datetime = Field(default_factory=utc_now, index=True)
 
 
@@ -240,6 +247,7 @@ class ReportType(str, Enum):
     session = "session"
     horoscope = "horoscope"
     child_astro = "child_astro"
+    pitru_paksha = "pitru_paksha"
 
 
 class SavedReport(SQLModel, table=True):
@@ -333,5 +341,32 @@ class TempleOfTheWeek(SQLModel, table=True):
     image_url: str = Field(default="/static/images/temple_of_the_week.jpg")
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=utc_now)
+
+
+class PitruPakshaBooking(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+
+    # Required Sacred Details
+    karta_name: str
+    gotram: str
+    tithi: str
+    calendar_date: Optional[date] = Field(default=None, nullable=True)
+    location: str  # Kurukshetra or Nashik
+    pitru_details: str  # Ancestor Names and Relationships
+
+    # Contact Details
+    contact_number: str
+    email: str
+
+    # Payment & Dakshina (₹2500 *Excluding any extra Purohit Dakshina)
+    dakshina_amount: int = Field(default=0)
+    base_puja_amount: int = Field(default=2500)
+    total_amount: int = Field(default=2500)
+    screenshot_path: Optional[str] = Field(default=None, nullable=True)
+    payment_status: str = Field(default="pending", index=True)  # pending, verified, rejected
+    booking_status: str = Field(default="confirmed", index=True)  # confirmed, completed, cancelled
+    created_at: datetime = Field(default_factory=utc_now, index=True)
+
 
 
