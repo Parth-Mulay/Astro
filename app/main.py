@@ -978,8 +978,10 @@ def submit_feedback(
 
 
 @app.get("/sitemap.xml")
-def sitemap():
-    base = "https://astro-6eq0.onrender.com"
+def sitemap(request: Request):
+    host = request.headers.get("host", "astro-six-dusky.vercel.app")
+    scheme = "https" if ("vercel" in host or "https" in str(request.url)) else request.url.scheme
+    base = f"{scheme}://{host}"
     xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -1048,12 +1050,15 @@ def sitemap():
     <priority>0.8</priority>
   </url>
 </urlset>"""
-    return Response(content=xml_content, media_type="application/xml")
+    return Response(content=xml_content.strip(), media_type="application/xml")
 
 
 @app.get("/robots.txt")
-def robots():
-    content = """User-agent: *
+def robots(request: Request):
+    host = request.headers.get("host", "astro-six-dusky.vercel.app")
+    scheme = "https" if ("vercel" in host or "https" in str(request.url)) else request.url.scheme
+    base = f"{scheme}://{host}"
+    content = f"""User-agent: *
 Allow: /
 Disallow: /auth/
 Disallow: /account/
@@ -1062,6 +1067,6 @@ Disallow: /flow/
 Disallow: /payment/
 Disallow: /astro/
 
-Sitemap: https://astro-6eq0.onrender.com/sitemap.xml
+Sitemap: {base}/sitemap.xml
 """
-    return Response(content=content, media_type="text/plain")
+    return Response(content=content.strip(), media_type="text/plain")
