@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /account/
+Disallow: /admin/
+Disallow: /flow/
+Disallow: /payment/
+Disallow: /astro/
+
+Sitemap: https://astro-six-dusky.vercel.app/sitemap.xml
