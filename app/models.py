@@ -82,8 +82,9 @@ class Astrologer(SQLModel, table=True):
     pan_number: Optional[str] = None
 
     # Free & Secure Direct UPI Payment Gateway (Zero API Key required)
-    upi_id: Optional[str] = Field(default="astromatch@upi", nullable=True)
+    upi_id: Optional[str] = Field(default=None, nullable=True)
     upi_name: Optional[str] = None
+    upi_scanner: Optional[str] = Field(default=None, nullable=True)
 
 
 

@@ -1,6 +1,8 @@
-from __future__ import annotations
+import uuid
+from pathlib import Path
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
@@ -10,6 +12,7 @@ from app.db import get_session
 from app.deps import current_user
 from app.models import Role, User
 from app.routes._shared import templates
+from app.settings import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -36,11 +39,14 @@ def signup(
     email: str = Form(...),
     password: str = Form(...),
     full_name: str = Form(""),
+    astro_name: str = Form(""),
     user_type: str = Form("client"),
     years_of_experience: int = Form(5),
     primary_language: str = Form("English"),
     min_budget: int = Form(199),
     bio: str = Form(""),
+    upi_id: Optional[str] = Form(None),
+    upi_scanner: Optional[UploadFile] = File(None),
     session: Session = Depends(get_session),
 ):
     email = email.strip().lower()
@@ -59,9 +65,23 @@ def signup(
     
     if role == Role.astrologer:
         from app.models import Astrologer, AvailabilitySlot, AstrologerSpecialty, IssueCategory
+        
+        # Save UPI scanner file if provided
+        upi_scanner_path = None
+        if upi_scanner and upi_scanner.filename:
+            uploads_dir = Path(settings.UPLOADS_DIR)
+            uploads_dir.mkdir(parents=True, exist_ok=True)
+            ext = Path(upi_scanner.filename).suffix or ".png"
+            filename = f"upi_scanner_{user.id}_{uuid.uuid4().hex[:8]}{ext}"
+            target_file = uploads_dir / filename
+            with open(target_file, "wb") as f:
+                f.write(upi_scanner.file.read())
+            upi_scanner_path = f"/uploads/{filename}"
+
+        display_name = (astro_name.strip() or full_name.strip() or email.split("@")[0])
         astro = Astrologer(
             user_id=user.id,
-            display_name=full_name.strip() or email.split("@")[0],
+            display_name=display_name,
             bio=bio.strip() or f"{years_of_experience}+ years experience in Vedic Astrology.",
             active_status=True,
             verified_identity=True,
@@ -69,6 +89,8 @@ def signup(
             primary_language=primary_language,
             min_budget=min_budget,
             max_budget=min_budget * 5,
+            upi_id=upi_id.strip() if upi_id else None,
+            upi_scanner=upi_scanner_path,
         )
         session.add(astro)
         session.commit()

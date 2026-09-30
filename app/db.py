@@ -81,7 +81,7 @@ def create_db_and_tables() -> None:
             pass
 
         # Alter astrologer table for Razorpay & Direct UPI Details
-        for col in ["razorpay_account_id", "account_holder_name", "bank_account_number", "ifsc_code", "pan_number", "upi_id", "upi_name"]:
+        for col in ["razorpay_account_id", "account_holder_name", "bank_account_number", "ifsc_code", "pan_number", "upi_id", "upi_name", "upi_scanner"]:
             try:
                 conn.execute(text(f"ALTER TABLE astrologer ADD COLUMN {col} VARCHAR"))
             except Exception:

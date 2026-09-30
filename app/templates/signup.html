@@ -15,7 +15,7 @@
     <button id="btn-astrologer" class="as-btn as-btn-outline" style="flex: 1; font-weight: bold; padding: 10px; cursor: pointer;" type="button" onclick="switchSignupRole('astrologer')">{{ "Provide Guidance (Jyotishi)"|t(lang) }}</button>
   </div>
 
-  <form method="post" action="/auth/signup" id="signup-form">
+  <form method="post" action="/auth/signup" id="signup-form" enctype="multipart/form-data">
     <input type="hidden" name="user_type" id="input-user-type" value="client" />
 
     <!-- Shared fields: Email and Password -->
@@ -66,6 +66,17 @@
       <div class="as-form-group">
         <label><strong>{{ "Short Bio / Qualifications"|t(lang) }}</strong></label>
         <textarea class="as-input" name="bio" rows="3" placeholder="{{ 'Briefly describe your specialization, line of lineage, or certifications.'|t(lang) }}" style="width:100%; resize: vertical;"></textarea>
+      </div>
+
+      <div class="as-form-group" style="margin-top: 12px;">
+        <label><strong>{{ "UPI ID for Payouts"|t(lang) }}</strong> <span style="color:var(--as-muted); font-size:12px;">({{ "Admin Only"|t(lang) }})</span></label>
+        <input class="as-input" name="upi_id" placeholder="{{ 'e.g. username@upi or mobile@paytm'|t(lang) }}" style="width:100%" />
+      </div>
+
+      <div class="as-form-group" style="margin-top: 12px;">
+        <label><strong>{{ "UPI QR Code Scanner Image"|t(lang) }}</strong> <span style="color:var(--as-muted); font-size:12px;">({{ "Admin Only"|t(lang) }})</span></label>
+        <input type="file" class="as-input" name="upi_scanner" accept="image/*" style="width:100%; padding: 8px; background: #fff;" />
+        <small style="color:var(--as-muted); font-size:11px;">Upload your GPay / PhonePe / Paytm QR Code image (JPG or PNG).</small>
       </div>
       
       <button type="submit" class="as-btn as-btn-navy" style="width:100%;padding:14px;margin-top:16px;font-weight:bold;background-color:var(--as-navy);color:#fff;border:none;cursor:pointer">
@@ -119,7 +130,7 @@ function switchSignupRole(role) {
     
     // Toggle input requirements
     clientFields.querySelectorAll('input').forEach(el => el.required = false);
-    astrologerFields.querySelectorAll('input[name="astro_name"], input[name="years_of_experience"], input[name="primary_language"], input[name="min_budget"]').forEach(el => el.required = true);
+    astrologerFields.querySelectorAll('input[name="astro_name"], input[name="years_of_experience"], input[name="primary_language"], input[name="min_budget"], input[name="upi_id"], input[name="upi_scanner"]').forEach(el => el.required = true);
   }
 }
 </script>

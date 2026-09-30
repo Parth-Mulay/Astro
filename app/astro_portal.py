@@ -284,8 +284,9 @@ def astro_profile_save(
     bank_account_number: Optional[str] = Form(None),
     ifsc_code: Optional[str] = Form(None),
     pan_number: Optional[str] = Form(None),
-    upi_id: Optional[str] = Form("astromatch@upi"),
+    upi_id: Optional[str] = Form(None),
     upi_name: Optional[str] = Form(None),
+    upi_scanner: Optional[UploadFile] = File(None),
     session_db: Session = Depends(get_session)
 ):
     user = _require_astrologer_user(request, session_db)
@@ -305,6 +306,19 @@ def astro_profile_save(
         astro.upi_id = upi_id.strip()
     if upi_name:
         astro.upi_name = upi_name.strip()
+
+    if upi_scanner and upi_scanner.filename:
+        import uuid
+        from pathlib import Path
+        from app.settings import settings
+        uploads_dir = Path(settings.UPLOADS_DIR)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        ext = Path(upi_scanner.filename).suffix or ".png"
+        filename = f"upi_scanner_{user.id}_{uuid.uuid4().hex[:8]}{ext}"
+        target_file = uploads_dir / filename
+        with open(target_file, "wb") as f:
+            f.write(upi_scanner.file.read())
+        astro.upi_scanner = f"/uploads/{filename}"
 
     # Update Bank & Payout details
     if account_holder_name:

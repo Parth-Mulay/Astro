@@ -157,6 +157,7 @@ def get_astrologer_payment_data(session_db: Session) -> dict:
             "astrologer_id": astro.id,
             "upi_id": astro.upi_id or "-",
             "upi_name": astro.upi_name or astro.display_name,
+            "upi_scanner": astro.upi_scanner,
             "records": astro_records,
             "total_amount": astro_total,
             "count": len(astro_records)
@@ -663,6 +664,8 @@ def edit_astrologer(
     min_budget: int = Form(0),
     max_budget: int = Form(9999),
     response_time_minutes: int = Form(30),
+    upi_id: Optional[str] = Form(None),
+    upi_scanner: Optional[UploadFile] = File(None),
     session_db: Session = Depends(get_session)
 ):
     admin = require_admin(request, session_db)
@@ -677,7 +680,20 @@ def edit_astrologer(
     astro.min_budget = min_budget
     astro.max_budget = max_budget
     astro.response_time_minutes = response_time_minutes
-    
+    if upi_id:
+        astro.upi_id = upi_id.strip()
+
+    if upi_scanner and upi_scanner.filename:
+        import uuid
+        uploads_dir = Path(settings.UPLOADS_DIR)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        ext = Path(upi_scanner.filename).suffix or ".png"
+        filename = f"upi_scanner_{astro.user_id}_{uuid.uuid4().hex[:8]}{ext}"
+        target_file = uploads_dir / filename
+        with open(target_file, "wb") as f:
+            f.write(upi_scanner.file.read())
+        astro.upi_scanner = f"/uploads/{filename}"
+        
     session_db.add(astro)
     session_db.commit()
     

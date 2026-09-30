@@ -584,6 +584,7 @@
             <thead>
               <tr>
                 <th>DisplayName / Email</th>
+                <th>UPI & Scanner (Admin Only)</th>
                 <th>Status</th>
                 <th>Experience</th>
                 <th>Budgets</th>
@@ -600,6 +601,19 @@
                     <td>
                       <strong>{{ a.display_name }}</strong><br>
                       <small style="color:var(--as-muted)">{{ u.email }} | {{ a.primary_language }}</small>
+                    </td>
+                    <td>
+                      <div style="font-size: 12px; font-weight: 700; color: #1e3a8a;">
+                        💳 {{ a.upi_id or 'Not set' }}
+                      </div>
+                      {% if a.upi_scanner %}
+                        <a href="{{ a.upi_scanner }}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #0284c7; margin-top: 4px; font-weight: bold; text-decoration: none;">
+                          <img src="{{ a.upi_scanner }}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;" />
+                          <span>👁️ View Scanner</span>
+                        </a>
+                      {% else %}
+                        <span style="font-size: 11px; color: #94a3b8; font-style: italic;">No QR Scanner</span>
+                      {% endif %}
                     </td>
                     <td>
                       <span class="badge-status {% if u.is_suspended %}badge-suspended{% elif a.active_status %}badge-active{% else %}badge-paused{% endif %}">
@@ -624,7 +638,7 @@
                           {% if a.active_status %}Active{% else %}Paused{% endif %}
                         </button>
                       </form>
-                      <button class="as-btn as-btn-sm as-btn-outline" onclick="openAstroModal({{ a.id }}, '{{ a.display_name }}', '{{ a.bio|escape }}', {{ a.years_of_experience }}, '{{ a.primary_language }}', {{ a.min_budget }}, {{ a.max_budget }}, {{ a.response_time_minutes }})">✏️ Edit</button>
+                      <button class="as-btn as-btn-sm as-btn-outline" onclick="openAstroModal({{ a.id }}, '{{ a.display_name|escape }}', '{{ a.bio|escape }}', {{ a.years_of_experience }}, '{{ a.primary_language }}', {{ a.min_budget }}, {{ a.max_budget }}, {{ a.response_time_minutes }}, '{{ a.upi_id or '' }}', '{{ a.upi_scanner or '' }}')">✏️ Edit</button>
                     </td>
                   </tr>
                 {% endif %}
@@ -829,6 +843,11 @@
                   <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
                     UPI: {{ a_sum.upi_id }}
                   </span>
+                  {% if a_sum.upi_scanner %}
+                    <a href="{{ a_sum.upi_scanner }}" target="_blank" style="background: rgba(255,255,255,0.25); color: #ffffff; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                      <span>📱 View QR Scanner</span>
+                    </a>
+                  {% endif %}
                 </div>
                 <div style="display: flex; align-items: center; gap: 14px;">
                   <span style="font-size: 13px; color: #cbd5e1;">{{ a_sum.count }} Payments</span>
@@ -1825,7 +1844,7 @@
     <button class="modal-close" onclick="closeModal('astro-modal')">×</button>
     <h3 style="margin-top:0">🔮 Edit Astrologer Profile</h3>
     
-    <form method="post" id="astro-form">
+    <form method="post" id="astro-form" enctype="multipart/form-data">
       <div class="as-form-group" style="margin-bottom:12px">
         <label><strong>Display Name</strong></label>
         <input class="as-input" type="text" name="display_name" id="ast-name" required style="width:100%">
@@ -1854,9 +1873,18 @@
           <input class="as-input" type="number" name="max_budget" id="ast-max" required style="width:100%">
         </div>
       </div>
-      <div class="as-form-group" style="margin-bottom:16px">
+      <div class="as-form-group" style="margin-bottom:12px">
         <label><strong>Response Time Minutes</strong></label>
         <input class="as-input" type="number" name="response_time_minutes" id="ast-resp" required style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:12px">
+        <label><strong>UPI ID (Admin Only)</strong></label>
+        <input class="as-input" type="text" name="upi_id" id="ast-upi-id" placeholder="username@upi" style="width:100%">
+      </div>
+      <div class="as-form-group" style="margin-bottom:16px">
+        <label><strong>Update UPI QR Scanner File (Admin Only)</strong></label>
+        <input type="file" class="as-input" name="upi_scanner" accept="image/*" style="width:100%; padding:6px; background:#fff;">
+        <div id="ast-scanner-preview" style="margin-top:6px;"></div>
       </div>
       <button type="submit" class="as-btn as-btn-primary" style="width:100%">Save Astrologer Profile</button>
     </form>
@@ -2022,7 +2050,7 @@
   }
 
   // Astrologer Modal population
-  function openAstroModal(astroId, name, bio, exp, lang, min, max, resp) {
+  function openAstroModal(astroId, name, bio, exp, lang, min, max, resp, upiId, upiScanner) {
     document.getElementById('ast-name').value = name;
     document.getElementById('ast-bio').value = bio;
     document.getElementById('ast-exp').value = exp;
@@ -2030,6 +2058,13 @@
     document.getElementById('ast-min').value = min;
     document.getElementById('ast-max').value = max;
     document.getElementById('ast-resp').value = resp;
+    document.getElementById('ast-upi-id').value = upiId || '';
+    const scannerPrev = document.getElementById('ast-scanner-preview');
+    if (upiScanner) {
+      scannerPrev.innerHTML = `<a href="${upiScanner}" target="_blank" style="font-size:12px; color:#0284c7; font-weight:bold;">Current QR Scanner File: View Image 👁️</a>`;
+    } else {
+      scannerPrev.innerHTML = '<span style="font-size:12px; color:#94a3b8;">No QR scanner image uploaded</span>';
+    }
     document.getElementById('astro-form').action = "/admin/astrologer/" + astroId + "/edit";
     openModal('astro-modal');
   }

@@ -147,6 +147,7 @@ class CSRFASGIMiddleware:
             or path.startswith("/static")
             or path.startswith("/uploads")
             or path.startswith("/payment/razorpay/webhook")
+            or path.startswith("/google")
         )
 
         is_https = scope.get("scheme") == "https" or any(h for h in scope.get("headers", []) if h[0].lower() == b"x-forwarded-proto" and h[1].lower() == b"https")
@@ -296,7 +297,7 @@ rate_limit_records = defaultdict(list)
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     path = request.url.path
-    if path in ["/health", "/status", "/version", "/robots.txt", "/sitemap.xml"] or path.startswith("/static") or path.startswith("/uploads"):
+    if path in ["/health", "/status", "/version", "/robots.txt", "/sitemap.xml"] or path.startswith("/static") or path.startswith("/uploads") or path.startswith("/google"):
         return await call_next(request)
         
     client_ip = request.client.host if request.client else "unknown"
@@ -428,6 +429,15 @@ def status_endpoint(session: Session = Depends(get_session)):
 @app.get("/version")
 def version_endpoint():
     return {"version": "1.0.0"}
+
+# --- GOOGLE SEARCH CONSOLE VERIFICATION ROUTES ---
+@app.get("/google9d1d24afe9c652e7.html", response_class=Response)
+def google_verification_exact():
+    return Response(content="google-site-verification: google9d1d24afe9c652e7.html", media_type="text/html")
+
+@app.get("/google{code}.html", response_class=Response)
+def google_verification_dynamic(code: str):
+    return Response(content=f"google-site-verification: google{code}.html", media_type="text/html")
 
 
 @app.middleware("http")
