@@ -10,7 +10,7 @@ import time
 from typing import Optional
 from collections import defaultdict
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Request, UploadFile, File
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -173,11 +173,9 @@ class CSRFASGIMiddleware:
             if not submitted_token:
                 content_type = request.headers.get("content-type", "")
                 if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
-                    body_chunks = []
                     body_bytes = b""
                     while True:
                         message = await receive()
-                        body_chunks.append(message)
                         if message["type"] == "http.request":
                             body_bytes += message.get("body", b"")
                             if not message.get("more_body", False):
@@ -195,10 +193,17 @@ class CSRFASGIMiddleware:
                         if match:
                             submitted_token = match.group(1).decode("utf-8", errors="ignore")
                     
-                    body_queue = list(body_chunks)
+                    # Replay the entire body as a single ASGI message so that
+                    # Starlette's multipart parser receives the complete body
+                    # in one chunk.  The previous approach replayed individual
+                    # chunks whose more_body flags confused the parser, causing
+                    # file-upload data to be silently truncated.
+                    body_sent = False
                     async def cached_receive():
-                        if body_queue:
-                            return body_queue.pop(0)
+                        nonlocal body_sent
+                        if not body_sent:
+                            body_sent = True
+                            return {"type": "http.request", "body": body_bytes, "more_body": False}
                         return {"type": "http.request", "body": b"", "more_body": False}
                     
                     receive = cached_receive
@@ -783,6 +788,7 @@ async def pay_confirm(
     session_id: int,
     payment_method: str = Form("upi_direct"),
     utr_number: Optional[str] = Form(None),
+    payment_screenshot: Optional[UploadFile] = File(None),
     session_db: Session = Depends(get_session)
 ):
     user = require_user(request, session_db)
@@ -796,6 +802,7 @@ async def pay_confirm(
     if payment and payment.status == PaymentStatus.completed:
         return RedirectResponse(url=f"/flow/chat/{sess.id}", status_code=303)
 
+    screenshot_path = None
     if payment_method == "wallet":
         if not deduct_wallet(session_db, user.id, sess.price):
             return templates.TemplateResponse(
@@ -816,6 +823,37 @@ async def pay_confirm(
     else:
         # Direct UPI Gateway (Free, 0% Fee, Zero API Key)
         method_used = "upi_direct"
+        if payment_screenshot and hasattr(payment_screenshot, "filename") and payment_screenshot.filename:
+            filename = payment_screenshot.filename.lower()
+            if not (filename.endswith(".jpg") or filename.endswith(".jpeg")):
+                return templates.TemplateResponse(
+                    request, "payment.html",
+                    page_context(session_db, user, sess=sess, astrologer=astrologer, prof=prof, payment=payment, error="Invalid file format: Only .JPG and .JPEG images are permitted."),
+                    status_code=400
+                )
+            screenshot_bytes = await payment_screenshot.read()
+            if len(screenshot_bytes) > 5 * 1024 * 1024:
+                return templates.TemplateResponse(
+                    request, "payment.html",
+                    page_context(session_db, user, sess=sess, astrologer=astrologer, prof=prof, payment=payment, error="Uploaded file is too large (max 5MB)."),
+                    status_code=400
+                )
+            if not screenshot_bytes.startswith(b"\xff\xd8\xff"):
+                return templates.TemplateResponse(
+                    request, "payment.html",
+                    page_context(session_db, user, sess=sess, astrologer=astrologer, prof=prof, payment=payment, error="Corrupted image file."),
+                    status_code=400
+                )
+            from pathlib import Path
+            from uuid import uuid4
+            from app.settings import settings
+            upload_dir = Path(settings.UPLOADS_DIR) / "consultations"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            safe_filename = f"sess_{sess.id}_{uuid4().hex}.jpg"
+            dest_path = (upload_dir / safe_filename).resolve()
+            with open(dest_path, "wb") as f:
+                f.write(screenshot_bytes)
+            screenshot_path = f"/uploads/consultations/{safe_filename}"
 
     if not payment:
         payment = Payment(
@@ -825,12 +863,15 @@ async def pay_confirm(
             status=PaymentStatus.completed,
             payment_method=method_used,
             utr_number=utr_number.strip() if utr_number else None,
+            screenshot_path=screenshot_path
         )
     else:
         payment.status = PaymentStatus.completed
         payment.payment_method = method_used
         if utr_number:
             payment.utr_number = utr_number.strip()
+        if screenshot_path:
+            payment.screenshot_path = screenshot_path
 
     session_db.add(payment)
 

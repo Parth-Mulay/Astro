@@ -292,7 +292,7 @@
           Scan the official QR code below or tap the <strong>UPI Payment Button</strong> using GPay, PhonePe, Paytm, or BHIM.
         </p>
 
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; background: #ffffff; border: 1px solid #dcfce7; border-radius: 10px; padding: 18px; margin-bottom: 18px;">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; background: #ffffff; border: 1px solid #dcfce7; border-radius: 10px; padding: 18px; margin-bottom: 18px; justify-content: center;">
           <!-- QR Code display -->
           <div style="text-align: center; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
             <img 
@@ -302,31 +302,6 @@
               style="width: 140px; height: 140px; display: block; border-radius: 6px; object-fit: contain; margin: 0 auto;"
             />
             <span style="font-size: 11px; color: #166534; margin-top: 6px; display: block; font-weight: 700;">Scan and Pay with UPI</span>
-          </div>
-
-          <!-- UPI Info & Buttons -->
-          <div style="flex: 1; min-width: 240px;">
-            <div style="margin-bottom: 12px;">
-              <span style="font-size: 12px; color: #64748b; display: block;">Official Platform UPI ID:</span>
-              <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                <code style="background: #f1f5f9; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: 700; color: #0f172a; border: 1px solid #cbd5e1;">
-                  bhaktiastro@upi
-                </code>
-                <button type="button" id="copyUpiBtn" class="as-btn as-btn-outline" style="padding: 4px 10px; font-size: 12px; border-radius: 4px;">
-                  📋 Copy
-                </button>
-              </div>
-            </div>
-
-            <!-- UPI Payment Button -->
-            <a 
-              id="upiDeepLinkBtn" 
-              href="upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=2500&cu=INR&tn=PitruPakshaPuja" 
-              class="as-btn" 
-              style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #ffffff; padding: 10px 20px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);"
-            >
-              <span>⚡</span> Scan and Pay with UPI (Instant)
-            </a>
           </div>
         </div>
 
@@ -450,26 +425,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (totalAmountText) {
       totalAmountText.textContent = '₹' + total.toLocaleString('en-IN');
     }
-
-    // Update UPI Link
-    const upiUrl = 'upi://pay?pa=bhaktiastro@upi&pn=Bhakti%20Astro&am=' + total + '&cu=INR&tn=PitruPakshaPuja';
-    if (upiDeepLinkBtn) {
-      upiDeepLinkBtn.href = upiUrl;
-    }
   }
 
   if (dakshinaInput) {
     dakshinaInput.addEventListener('input', updateTotal);
-  }
-
-  // Copy UPI ID
-  if (copyUpiBtn) {
-    copyUpiBtn.addEventListener('click', function() {
-      navigator.clipboard.writeText('bhaktiastro@upi').then(function() {
-        copyUpiBtn.textContent = '✅ Copied!';
-        setTimeout(function() { copyUpiBtn.textContent = '📋 Copy'; }, 2000);
-      });
-    });
   }
 
   // Add Ancestor Row

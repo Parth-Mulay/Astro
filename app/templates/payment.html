@@ -134,7 +134,27 @@
         <input type="hidden" name="payment_method" value="upi_direct" />
 
         <div style="background: #ffffff; border: 1px solid #dcfce7; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
-          <label style="font-weight: 600; font-size: 13px; color: #166534; display: block; margin-bottom: 4px;">
+          <h4 style="margin: 0 0 8px; color: #166534; font-size: 14px; font-weight: 700;">
+            🖼️ Step 2: Upload Payment Screenshot (only jpg)
+          </h4>
+          <p style="font-size: 11px; color: #15803d; margin: 0 0 10px;">
+            Please attach the transaction screenshot from your UPI app as proof of payment. Only <strong>.jpg / .jpeg</strong> images are permitted.
+          </p>
+          <div class="as-form-group" style="margin-bottom: 12px;">
+            <input 
+              type="file" 
+              name="payment_screenshot" 
+              id="screenshotInput"
+              accept=".jpg,.jpeg,image/jpeg" 
+              required 
+              style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; font-size: 13px;"
+            />
+            <span style="font-size: 10px; color: #64748b; display: block; margin-top: 4px;">
+              Supported Format: <strong>.JPG / .JPEG</strong> only (Max Size: 5MB)
+            </span>
+          </div>
+
+          <label style="font-weight: 600; font-size: 13px; color: #166534; display: block; margin-bottom: 4px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
             UPI Reference / UTR Number (Optional)
           </label>
           <input 

@@ -110,6 +110,7 @@ def get_astrologer_payment_data(session_db: Session) -> dict:
                     "status": status_str,
                     "payment_method": p.payment_method or "upi_direct",
                     "utr_number": p.utr_number or "-",
+                    "screenshot_path": p.screenshot_path or "No Screenshot",
                     "created_at": p.created_at,
                     "session_id": sess.id
                 }
@@ -142,6 +143,7 @@ def get_astrologer_payment_data(session_db: Session) -> dict:
                     "status": status_str,
                     "payment_method": "direct_consultation",
                     "utr_number": "-",
+                    "screenshot_path": "No Screenshot",
                     "created_at": sess.created_at,
                     "session_id": sess.id
                 }
@@ -819,6 +821,7 @@ def export_payments_excel(
         "Amount Paid (₹)",
         "Payment Method",
         "UTR / Ref No.",
+        "Payment Screenshot",
         "Date & Time",
         "Status"
     ]
@@ -845,7 +848,7 @@ def export_payments_excel(
             cell = ws.cell(row=current_row, column=col_idx)
             cell.font = tbl_header_font
             cell.fill = tbl_header_fill
-            cell.alignment = Alignment(horizontal="center" if col_idx in [1, 5, 6, 8, 9] else "left")
+            cell.alignment = Alignment(horizontal="center" if col_idx in [1, 5, 6, 9, 10] else "left")
             cell.border = thin_border
         current_row += 1
         
@@ -853,6 +856,7 @@ def export_payments_excel(
         if records:
             for r in records:
                 date_str = r["created_at"].strftime("%Y-%m-%d %H:%M") if r["created_at"] else "-"
+                screenshot_val = "Yes" if r.get("screenshot_path") and r.get("screenshot_path") != "No Screenshot" else "No"
                 row_vals = [
                     f"#{r['payment_id']}",
                     r["who_paid"],
@@ -861,6 +865,7 @@ def export_payments_excel(
                     r["amount"],
                     r["payment_method"].upper(),
                     r["utr_number"],
+                    screenshot_val,
                     date_str,
                     r["status"].upper()
                 ]
@@ -869,10 +874,16 @@ def export_payments_excel(
                     cell = ws.cell(row=current_row, column=col_idx)
                     cell.font = data_font
                     cell.border = thin_border
+                    
+                    if col_idx == 8 and screenshot_val == "Yes":
+                        # Make screenshot link clickable
+                        cell.hyperlink = r.get("screenshot_path")
+                        cell.style = "Hyperlink"
+                        
                     if col_idx == 5:
                         cell.number_format = '"₹"#,##0'
                         cell.alignment = Alignment(horizontal="right")
-                    elif col_idx in [1, 6, 8, 9]:
+                    elif col_idx in [1, 6, 8, 9, 10]:
                         cell.alignment = Alignment(horizontal="center")
                 current_row += 1
         else:

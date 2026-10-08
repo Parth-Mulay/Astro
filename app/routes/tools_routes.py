@@ -830,7 +830,20 @@ async def submit_pitru_paksha_booking(
     if calendar_date_str:
         try:
             cal_date = date.fromisoformat(calendar_date_str)
-        except Exception:
+            if cal_date < date.today() + timedelta(days=3):
+                return templates.TemplateResponse(
+                    request,
+                    "pitru_paksha.html",
+                    {
+                        "user": user,
+                        "prof": prof,
+                        "bookings": get_user_bookings(),
+                        "min_date": min_date,
+                        "error_message": "Puja date must be at least 3 days in advance."
+                    },
+                    status_code=400
+                )
+        except ValueError:
             cal_date = None
 
     # Parse Dakshina (Base is ₹2500 *Excluding any extra Purohit Dakshina)
