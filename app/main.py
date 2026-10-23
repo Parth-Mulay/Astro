@@ -357,12 +357,12 @@ async def security_headers_middleware(request: Request, call_next):
         
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; "
+        "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https://*.razorpay.com; "
         "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; "
-        "connect-src 'self' https://api.razorpay.com;"
+        "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://analytics.google.com;"
     )
     return response
 
