@@ -713,7 +713,7 @@
                 <th>Tirtha Location</th>
                 <th>Pitru (Ancestors)</th>
                 <th>Total (Fee + Dakshina)</th>
-                <th>Proof / Screenshot</th>
+                
                 <th>Status & Verification</th>
               </tr>
             </thead>
@@ -739,15 +739,7 @@
                     <strong style="color:var(--as-orange);">₹{{ pb.total_amount }}</strong><br/>
                     <small style="color:#64748b;">(Puja: ₹{{ pb.base_puja_amount }} + Dakshina: ₹{{ pb.dakshina_amount }})</small>
                   </td>
-                  <td>
-                    {% if pb.screenshot_path %}
-                      <a href="{{ pb.screenshot_path }}" target="_blank" class="as-btn as-btn-outline as-btn-sm" style="padding:2px 8px; font-size:11px;">
-                        🖼️ View JPG
-                      </a>
-                    {% else %}
-                      <span style="color:#94a3b8; font-size:11px;">No Proof</span>
-                    {% endif %}
-                  </td>
+
                   <td>
                     <div style="margin-bottom:6px;">
                       {% if pb.payment_status == 'verified' %}
@@ -772,7 +764,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="9" style="text-align:center; padding:20px; color:#64748b;">
+                  <td colspan="8" style="text-align:center; padding:20px; color:#64748b;">
                     No Pitru Paksha bookings received yet.
                   </td>
                 </tr>
